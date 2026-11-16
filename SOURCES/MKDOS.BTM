@@ -1,14 +1,14 @@
 @echo off
 :
-:  Compile 4DOS with MSC7
+:  Compile 4DOS with MSVC
 :
-call mkproc 4dos 4dos.com msc7 dos bp NONE %&
+call mkproc 4dos 4dos.com msvc dos bp NONE %&
 :
-:  Compile BATCOMP with MSC7
+:  Compile BATCOMP with MSVC
 :
-call mkproc batcomp batcomp.exe msc7 dos bp NONE %&
+call mkproc batcomp batcomp.exe msvc dos bp NONE %&
 :
 :  Compile KSTACK with MASM6
 :
-call mkproc kstack kstack.com msc7 dos bp NONE %&
+call mkproc kstack kstack.com msvc dos bp NONE %&
 

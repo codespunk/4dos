@@ -6,7 +6,7 @@
 :
 :     %1  = Base name of make file and EXE file (eg 4DOS), max 8 chars
 :     %2  = Executable file name (.COM or .EXE)
-:     %3  = Compiler environment to load (e.g. MSC7), max 5 chars
+:     %3  = Compiler environment to load (e.g. MSVC), max 5 chars
 :     %4  = Object directory
 :     %5  = Product family
 :     %6  = Post-build brand flag (Y/N)

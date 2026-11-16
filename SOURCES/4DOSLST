@@ -53,7 +53,7 @@ brbeta.btm
 build.btm
 mkdos.btm
 mkproc.btm
-msc7.btm
+msvc.btm
 pr16.btm
 batch.c
 batcomp.c

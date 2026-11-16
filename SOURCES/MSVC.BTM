@@ -1,0 +1,9 @@
+:
+: Append RTL source header directory (for "msdos.h")
+:
+rem Configure build environment for MSVC 1.52 and MASM 6.11.
+set path=%msvc\bin;%masm\bin;%path
+set lib=%msvc\lib;%lib
+set include=%msvc\include;%msvc\source\startup;%include
+
+set _masm=ml

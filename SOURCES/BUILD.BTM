@@ -1,11 +1,34 @@
-iff isdir caveman then
-   echo #define BUILD %1 > caveman\build.h
-   echo BUILD     =         %1 > caveman\build.inc
-endiff
-echo #define VER_BUILD %1 > build.h
-echo INTVER    =         %1 > intver.asm
+@echo off
+setlocal
+
+echo INTVER = %1 > intver.asm
 echo %1 > build.txt
 echo %1 > build.dos
 echo %1 > build.dsr
 echo %1 > build.w16
 
+rem INTVER contains the compatibility ID
+if not exist INTVER goto NoIntver
+set intver=%@line[INTVER,0]
+if "%intver" == "" goto BadIntver
+
+rem Public version constants used by C sources
+echo BUILD.BTM: Generating version files using internal version %intver
+echo #define VER_BUILD %intver > build.h
+
+rem Preserve the assembly loader's independent internal version
+echo INTVER = %intver > intver.asm
+
+rem Legacy plain-text build stamp required by NMAKE
+echo %intver > build.txt
+echo %intver > build.dos
+echo %intver > build.dsr
+echo %intver > build.w16
+goto End
+
+:NoIntver
+echo BUILD.BTM: INTVER file is missing
+goto End
+
+:BadIntver
+echo BUILD.BTM: INTVER must contain a numeric compatibility ID

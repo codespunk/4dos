@@ -150,6 +150,7 @@ DGROUP    group     _DATA               ;define group
           ;
 LOAD_TEXT segment   at 0                ;just an address template
           org       100h                ;start at end of PSP
+LOAD_TEMPLATE equ       1               ;offsets only, no initialized data
           include   loaddata.asm        ;include loader data info
 LOAD_TEXT ends
           ;

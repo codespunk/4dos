@@ -65,7 +65,7 @@ ANAME=ML
 
 # C flags vary for each compiler.
 
-!IF "$(COMPNAME)" == "MSC7"
+!IF "$(COMPNAME)" == "MSVC"
 !IF ("$(ENV)" == "NT") || ("$(ENV)" == "W32")
 !IF "$(DLL)" == "Y"
 CFLAGS_ENV=$(CBASE) /Di386=1 /D_X86_ /DSTRICT /G3 /J /LD /W3 /Ot /Og /Gz /MT
@@ -86,7 +86,7 @@ CFLAGS_ENV=$(CBASE) /AM /J /Ocs /Gf /Gs /W3 /Zp1
 !ENDIF
 !ENDIF
 !ELSE
-!IF "$(COMPNAME)" == "MSC7S"
+!IF "$(COMPNAME)" == "MSVCS"
 CNAME=CL
 CFLAGS_ENV=$(CBASE) /AS /J /Ocs /Gs /W3 /Zp1
 !ENDIF

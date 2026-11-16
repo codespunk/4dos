@@ -4,7 +4,7 @@
 PRODUCT=__4DOS
 ENV=DOS
 ENV_D=DOS_D
-COMPNAME=MSC7
+COMPNAME=MSVC
 EXENAME=4DOS.COM
 MAPNAME=4DOS.MAP
 LNKNAME=4DOS.LNK
@@ -52,7 +52,8 @@ $(OBJ)\4dostart.obj : 4dostart.asm
         $(LASM)
 
 4dostart.lib : $(OBJ)\4dostart.obj
-        lib /nologo 4dostart -+$(OBJ)\4dostart.obj;
+        if exist 4dostart.lib lib /nologo 4dostart -+$(OBJ)\4dostart.obj;
+        if not exist 4dostart.lib lib /nologo 4dostart +$(OBJ)\4dostart.obj;
 
 
 

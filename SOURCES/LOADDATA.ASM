@@ -59,14 +59,32 @@ LMEParms  EXECPARM  <>                  ;EXEC parameter block
                                         ;  ** Following 2 bytes are PUSHed
                                         ;  together by INT 2E code and must
                                         ;  stay together!
+          ifdef     LOAD_TEMPLATE
+LMFlags   db        ?                   ;low-memory flags
+LMFlag2   db        ?                   ;low-memory flags 2
+          else
 LMFlags   db        0                   ;low-memory flags
 LMFlag2   db        0                   ;low-memory flags 2
+          endif
+
 LMHandle  dw        ?                   ;local swap handle (EMS / XMS / disk)
+
+          ifdef     LOAD_TEMPLATE
+DiskSig   db        4 dup (?)           ;disk swap signature
+DSigTime  db        (SIGBYTES-4) dup (?) ;swap signature time area
+          else
 DiskSig   db        "4DOS"              ;disk swap signature
-DSigTime  db        (SIGBYTES-4) dup (0)  ;swap signature time area
+DSigTime  db        (SIGBYTES-4) dup (0) ;swap signature time area
+          endif
+
 OldInt    farptr    <>                  ;old interrupt 2F pointer
 PSPSeg    dw        ?                   ;loader PSP segment
+
+          ifdef     LOAD_TEMPLATE
+ExecSig   db        ?                   ;EXEC active signature
+          else
 ExecSig   db        0                   ;EXEC active signature
+          endif
 ServLenW  dw        ?                   ;high memory server length (words)
 ServChk   dd        ?                   ;server checksum for disk swapping
 ReOpenP   farptr    <>                  ;disk swap file reopen pointer
@@ -77,9 +95,18 @@ Err24Hdl  dw        ?                   ;system input / output file handles
           ; to another in a single copy operation, and hence must appear
           ; together and in this order.
           ;
+          ifdef     LOAD_TEMPLATE
+ShellInf  label     ShellDat
+          db        (size ShellDat) dup (?)
+CodeReg   label     RegSCB
+          db        (size RegSCB) dup (?)
+CodeDev   label     DevSCB
+          db        (size DevSCB) dup (?)
+          else
 ShellInf  ShellDat  <>                  ;local shell data
 CodeReg   RegSCB    <>                  ;code swap region
 CodeDev   DevSCB    <>                  ;code swap device
+          endif
           ;
 
 
