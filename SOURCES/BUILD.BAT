@@ -1,10 +1,10 @@
 @echo off
 
-if exist EXIST.TMP del EXIST.TMP
+if exist EXIST.TMP del /q EXIST.TMP
 
 4dos /c echo.>EXIST.TMP
 if not exist EXIST.TMP goto no4dos
-del EXIST.TMP
+del /q EXIST.TMP
 
 goto args
 
