@@ -1,34 +1,109 @@
 @echo off
 setlocal
 
-echo INTVER = %1 > intver.asm
-echo %1 > build.txt
-echo %1 > build.dos
-echo %1 > build.dsr
-echo %1 > build.w16
+goto args
 
-rem INTVER contains the compatibility ID
-if not exist INTVER goto NoIntver
-set intver=%@line[INTVER,0]
-if "%intver" == "" goto BadIntver
+:args
+   if "%1"=="" goto check_tools
+   if "%1"=="clean" goto clean
+   if "%1"=="-h" goto help
+   if "%1"=="--help" goto help
+   echo Unknown argument: %1
+   echo Use BUILD --help for usage.
+   quit
 
-rem Public version constants used by C sources
-echo BUILD.BTM: Generating version files using internal version %intver
-echo #define VER_BUILD %intver > build.h
+:help
+   echo 4DOS Build Script
+   echo.
+   echo Usage: BUILD [clean]
+   echo.
+   echo Builds 4DOS using MKDOS.BTM.
+   echo By default, performs an incremental build without deleting files.
+   echo.
+   echo Commands:
+   echo   clean       Delete files in SOURCES\DOS and exit
+   echo   -h, --help  Display this help and exit
+   echo.
+   quit
+   
+:clean
+   4dos /c del /y /e %=
+      DOS\*.BAK %=
+      DOS\*.COM %=
+      DOS\*.EXE %=
+      DOS\*.MAP %=
+      DOS\*.OBJ
+   4dos /c del /y /e %=
+      4DOSTART.BAK %=
+      4DOSTART.LIB %=
+      CRITERRS.ASM %=
+      INITERRS.ASM %=
+      PARSERRS.ASM %=
+      SERVERRS.ASM
+   4dos /c del /y /e %=
+      INTVER.ASM %=
+      BUILD.TXT %=
+      BUILD.DOS %=
+      BUILD.DSR %=
+      BUILD.W16 %=
+      BUILD.H
+   quit
 
-rem Preserve the assembly loader's independent internal version
-echo INTVER = %intver > intver.asm
+:check_tools
+   iff "%MSVC%"=="" .or. not exist %MSVC%\NUL then
+      echo ERROR: %%MSVC%% is undefined or does not point to a valid directory
+      quit
+   endiff
+   iff "%MASM%"=="" .or. not exist %MASM%\NUL then
+      echo ERROR: %%MASM%% is undefined or does not point to a valid directory
+      quit
+   endiff
+   iff not exist %MSVC%\BIN\CL.EXE then
+      echo ERROR: CL.EXE not found in "%MSVC%\BIN"
+      quit
+   endiff
+   iff not exist %MASM%\BIN\ML.EXE then
+      echo ERROR: ML.EXE not found in "%MASM%\BIN"
+      quit
+   endiff
+   goto build
 
-rem Legacy plain-text build stamp required by NMAKE
-echo %intver > build.txt
-echo %intver > build.dos
-echo %intver > build.dsr
-echo %intver > build.w16
-goto End
+:no_intver
+   echo BUILD.BTM: INTVER file is missing
+   quit
 
-:NoIntver
-echo BUILD.BTM: INTVER file is missing
-goto End
+:bad_intver
+   echo BUILD.BTM: INTVER must contain a numeric compatibility ID
+   quit
 
-:BadIntver
-echo BUILD.BTM: INTVER must contain a numeric compatibility ID
+:set_intver
+   echo INTVER = %1 > intver.asm
+   echo %1 > build.txt
+   echo %1 > build.dos
+   echo %1 > build.dsr
+   echo %1 > build.w16
+
+   rem INTVER contains the compatibility ID
+   if not exist INTVER goto no_intver
+   set intver=%@line[INTVER,0]
+
+   if "%intver" == "" goto bad_intver
+
+   rem Public version constants used by C sources
+   echo BUILD.BTM: Generating version files using internal version %intver
+   echo #define VER_BUILD %intver > build.h
+
+   rem Preserve the assembly loader's independent internal version
+   echo INTVER = %intver > intver.asm
+
+   rem Legacy plain-text build stamp required by NMAKE
+   echo %intver > build.txt
+   echo %intver > build.dos
+   echo %intver > build.dsr
+   echo %intver > build.w16
+   return
+
+:build
+   if not exist INTVER.ASM gosub set_intver
+   4dos /e:2048 /c mkdos.btm
+   quit
