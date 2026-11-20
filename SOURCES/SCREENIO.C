@@ -942,11 +942,9 @@ StayInLoop:
 					if (( gpIniptr->UnixPaths ) && ( szInvalidChars[0] == _TEXT('/') ))
 						szInvalidChars[0] = _TEXT(' ');
 
-					// Win95 LFNs use '"', but everything else doesn't
-					if ( fWin95LFN == 0 ) {
-						szInvalidChars[2] = '"';
-						szInvalidChars[3] = '=';
-					}
+					// Reset delimiters for the current filename mode after HelpWord.
+					szInvalidChars[2] = ( fWin95LFN ) ? ',' : '"';
+					szInvalidChars[3] = ( fWin95LFN ) ? ' ' : '=';
 
 RedoFileName:
 					// find start of filename
