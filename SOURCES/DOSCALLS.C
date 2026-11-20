@@ -1985,13 +1985,15 @@ RetryFindFirst:
 			}
 		}
 
-		// check unusual wildcard matches
-		if (( stricmp( pszNamePart, dir->szFileName ) == 0 ) || ( wild_cmp( (char _far *)pszNamePart, (char _far *)dir->szFileName, TRUE, fWildBrackets ) == 0 ) || ( attrib & _A_VOLID ))
+		// check unusual wildcard matches, including Win95 SFNs
+		if (( stricmp( pszNamePart, dir->szFileName ) == 0 ) || ( wild_cmp( (char _far *)pszNamePart, (char _far *)dir->szFileName, TRUE, fWildBrackets ) == 0 ) || ( attrib & _A_VOLID ) ||
+		    (( fWin95SFN ) && ( dir->fLFN ) && ( wild_cmp( (char _far *)pszNamePart, (char _far *)dir->szAlternateFileName, TRUE, fWildBrackets ) == 0 ))) {
+			ptr = ((( attrib & FIND_SFN ) && ( dir->szAlternateFileName[0] )) ? dir->szAlternateFileName : dir->szFileName );
+			// nPathLength includes the initial quote, when present.
+			if (( filename != NULL ) && ( nPathLength + (int)strlen( ptr ) >= MAXFILENAME + ( *arg == '"' )))
+				continue;
 			break;
-
-		// Win95: try for a match on the SFN
-		if (( fWin95SFN ) && ( dir->fLFN ) && ( wild_cmp( (char _far *)pszNamePart, (char _far *)dir->szAlternateFileName, TRUE, fWildBrackets ) == 0 ))
-			break;
+		}
 	}
 
 	// close global search handle
@@ -2012,7 +2014,7 @@ RetryFindFirst:
 	}
 
 	// copy the saved source path
-	insert_path( filename, ((( attrib & FIND_SFN ) && ( dir->szAlternateFileName[0] )) ? dir->szAlternateFileName : dir->szFileName ), pszFileName );
+	insert_path( filename, ptr, pszFileName );
 
 	// put the DR-DOS password back
 	if (( ptr = strchr( pszFileName, ';' )) != NULL )
