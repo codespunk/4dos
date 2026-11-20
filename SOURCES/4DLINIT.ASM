@@ -2133,7 +2133,7 @@ PTPop2:	pop	ds		;restore DS
 PTPopPSP:	pop	si		;restore old tail pointer
 	;
 PTSavPSP:	dstore	TailPtr,si,ds	;save pointer for later
-	jmp	PTINI		;and get out
+	; Fall through to PTINI (only comments intervene).
 	;
 ;          ;
 ;          ; Move the rest of the tail, if any, back to the PSP
@@ -2412,7 +2412,7 @@ SetDV:    mov       IFData.I_DVMode,al  ;save DV flag
 	mov	ax, 04A33h	;undoc'd call to see if it's MS-DOS7
 	int	2Fh		;  versus PC-DOS7
 	popm	ds		;restore DS
-	cmp	ax, 0		;is it MS-DOS 7?
+	test	ax,ax		;is it MS-DOS 7?
 	 jne	FIAutoEx		;if not go on
         mov	ax,(D_VERSION shl 8)	;if so check OEM ID
 	int	21h
@@ -2830,7 +2830,7 @@ AODone:   add       ax,0Fh              ;add for roundoff
           mov       [bx].AHPType,dh     ;save previous type
           mov       [bx].AHPSeg,di      ;save previous segment
           mov       [bx].AHPLenB,si     ;save previous length
-          cmp       dl,0                ;local in current shell?
+          test      dl,dl               ;local in current shell?
            je       SAHGlob             ;if not, handle global
           mov       [bx].AHType,AHLOCAL ;set up for local aliases
           mov       [bx].AHLocB,ax      ;store local byte size

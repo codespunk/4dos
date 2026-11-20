@@ -1377,10 +1377,8 @@ cd_bye:
           mov	ah,02h
           mov	dx,lpt_num
           int	17h			; get printer status
-          cmp	ah,090h
-          mov	bl,ah
+          cmp	ah,090h		; if printer ready ah == 0x90
           mov	ax,1
-          cmp	bl,090h		; if printer ready ah == 0x90
           je	lpt_return
           xor	al,al
 lpt_return:
@@ -3073,7 +3071,7 @@ write_bye:
           xor       ax,ax               ;get zero
           mov       es,ax               ;point es to ROM BIOS data area
           mov       ax,es:[044Ah]       ;get line length
-          cmp       ax, 0
+          test      ax,ax
           jne       ValidColumns
           mov       ax, 80
           mov       bx,_gpIniptr        ;point to INI data
@@ -3116,7 +3114,7 @@ NoInitBIOS:
           ja        mda_cga             ;older than EGA (source: TECH Help!)
           cmp       bh,1
           je        mono                ;mono mode in effect
-          cmp       bh,0
+          test      bh,bh
           je        vga                 ;colour mode in effect
 mda_cga:
           cmp       byte ptr es:[0449h],7  ;check video mode

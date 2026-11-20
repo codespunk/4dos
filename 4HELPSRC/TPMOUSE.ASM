@@ -251,7 +251,6 @@ suxGo:
         MUL     BL              ;multiply by coordinate in BL
         RET
 
-        RET
 
 ScaleUpX        ENDP
 
@@ -264,7 +263,7 @@ ScaleUpX        ENDP
 ScaleDownY      PROC NEAR
 
         PUSH    BX              ;save BX
-        CMP     AX,0            ;check for > 0
+        TEST    AX,AX           ;check for > 0
         JG      sdyOK
         MOV     AL,MouseYLo     ;force it to a valid range
         JMP     SHORT sdyExit
@@ -288,7 +287,7 @@ ScaleDownY      ENDP
 ScaleDownX      PROC NEAR
 
         PUSH    BX              ;save BX
-        CMP     AX,0            ;check for > 0
+        TEST    AX,AX           ;check for > 0
         JG      sdxOK
         MOV     AL,MouseXLo     ;force it to a valid range
         JMP     SHORT sdxExit
