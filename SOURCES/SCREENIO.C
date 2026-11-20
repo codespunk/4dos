@@ -967,7 +967,7 @@ RedoFileName:
 						if ( pszStart[-1] == _TEXT(';') ) {
 
 							// check for DR-DOS password
-							if ( pszStart[-2] == _TEXT(';') )
+							if (( pszStart > pszCmdBase + 1 ) && ( pszStart[-2] == _TEXT(';') ))
 								pszStart--;
 							else if ( pszArg == NULL ) {
 								fIncludeList = 1;
