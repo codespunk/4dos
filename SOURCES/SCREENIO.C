@@ -86,7 +86,7 @@ int PASCAL egets( LPTSTR pszStr, int nMaxLength, int fFlags )
 	register int c;
 	register LPTSTR pszPtr;
 	int i, n, fEcho = 1, fLFN = 1, fExecuteNow = 0, nMatches, fQuote;
-	TCHAR *pszArg, szSource[MAXFILENAME+1];
+	TCHAR *pszArg, szSource[MAXFILENAME+4];
 	TCHAR _far *lpszPtr, _far *pszKeys;
 	LPTSTR fpStartCP;
 
