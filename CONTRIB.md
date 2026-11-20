@@ -1,0 +1,1 @@
+By submitting a contribution, you agree to license your original material under the MIT License. See [License for project contributions](LICENSE.md#license-for-project-contributions).
