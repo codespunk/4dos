@@ -601,7 +601,7 @@ SaveBoot: mov       BootDrv,dl          ;save boot drive
           dec       bx                  ;get our MCB segment
           ;
 MCBLoop:  cmp       ax,bx               ;up to our MCB?
-           jae      SetRoot             ;if so, we are root shell
+           jae      CheckParent         ;if so, check for a parent elsewhere
           mov       es,ax               ;move to next MCB
           mov       cx,wptr es:[1]      ;get owner field
            jcxz     NextMCB             ;if free skip it
@@ -613,6 +613,27 @@ MCBLoop:  cmp       ax,bx               ;up to our MCB?
 NextMCB:  inc       ax                  ;skip this MCB
           add       ax,wptr es:[3]      ;skip data to get to next MCB
           jmp       short MCBLoop       ;and keep looking
+          ;
+          ; The parent can be above us in memory, for example with SHELLHIGH.
+          ; A distinct parent PSP that owns its MCB identifies a child
+          ; even if the scan below our MCB found only DOS-owned blocks.
+          ;
+CheckParent:
+          mov       cx,ds:[PSP_CHN]     ;get parent PSP from our startup PSP
+          cmp       cx,8                ;DOS system PSP or no parent?
+           jbe      SetRoot             ;if so keep original root detection
+          cmp       cx,PSPSeg           ;are we our own parent?
+           je       SetRoot             ;if so keep original root detection
+          mov       bx,cx               ;get parent MCB segment
+          dec       bx
+          mov       es,bx
+          cmp       es:[MCB_OWN],cx     ;does the parent own this block?
+           jne      SetRoot             ;if not keep original root detection
+          mov       bl,es:[MCB_FLAG]    ;get parent MCB signature
+          cmp       bl,'M'              ;valid DOS memory block?
+           je       CheckEnv
+          cmp       bl,'Z'              ;or valid last memory block?
+           je       CheckEnv
           ;
 SetRoot:  bset      InitFlag,PERMLOAD   ;force /P in primary shell
           bset      LMFlags,ROOTFLAG    ;set root shell flag
