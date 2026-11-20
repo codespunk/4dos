@@ -21,11 +21,11 @@ For a bug report, list the steps to reproduce the problem and describe what you 
 
 For a patch, describe what changed and how you tested it. Original material you submit for inclusion is licensed under MIT. [Contribution terms](CONTRIB.md)
 
-AI assistance is welcome. If you use it for code, documentation, or summaries, briefly disclose what it helped with in your submission. [Contributor code of conduct](CODE_OF_CONDUCT.md)
+AI assistance is welcome. If you use it for code, documentation, or summaries, briefly disclose what it helped with in your submission. [Contributor code of conduct](CONDUCT.md)
 
 ## Licensing
 
-The inherited 4DOS source and third-party material are covered by their respective license terms and notices. Original project contributions are licensed under MIT. [4DOS license and notices](LICENSE.md) · [MIT license](LICENSE_MIT.md)
+The inherited 4DOS source and third-party material are covered by their respective license terms and notices. Original project contributions are licensed under MIT. [4DOS license and notices](LICENSE.md) · [MIT license](LIC_MIT.md)
 
 ## Historical resources
 

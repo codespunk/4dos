@@ -1,0 +1,32 @@
+name: Question
+description: Ask for support or start a discussion
+labels: question
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Please fill out the form as cleanly as possible.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: A clear and concise description of what your question is. If applicable, add screenshots to help in explaining.
+    validations:
+      required: true
+  - type: checkboxes
+    id: alreadyexists
+    attributes:
+      label: Have you checked that no similar question(s) exist?
+      description: Please try to search for similar questions in the issues before creating this issue.
+      options:
+        - label: I have searched and didn't find any similar question.
+          required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct & Contributing Guidelines
+      description: By submitting this issue, you agree to follow our [contributing guidelines](/codespunk/4dos/blob/main/CONTRIB.md) and [code of conduct](/codespunk/4dos/blob/main/CONDUCT.md).
+      options:
+        - label: I agree to follow the code of conduct and the contributing guidelines.
+          required: true

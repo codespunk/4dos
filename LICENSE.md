@@ -35,7 +35,7 @@ Conn attributed the wording to the FreeDOS team and suggested it reflected the d
 
 # License for project contributions
 
-Original material added to this fork by its maintainer is licensed under the [MIT License](LICENSE_MIT.md).
+Original material added to this fork by its maintainer is licensed under the [MIT License](LIC_MIT.md).
 
 By submitting a contribution for inclusion in this project, you agree to license the original material you contribute under the MIT License and confirm that you have the right to grant that license.
 

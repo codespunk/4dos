@@ -1,0 +1,89 @@
+name: Bug report
+description: File a bug report to help us improve the project
+labels: bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Please fill out the form as cleanly as possible.
+        It's highly recommended for you to fill in all the fields (even optional ones) if possible, so it's easier for us to solve the problem. Also, make sure that you have properly filled in the title of the bug report.
+  - type: textarea
+    id: issue
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is. If applicable, add screenshots to help in explaining.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce the behaviour
+      description: How can we reproduce this bug? For example, doing what actions in what software causes the bug to occur?
+    validations:
+      required: true
+  - type: textarea
+    id: excepted
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what did you expect to happen. If applicable, add screenshots to help in explaining.
+    validations:
+      required: false
+  - type: input
+    id: os
+    attributes:
+      label: What operating system(s) this bug have occurred on?
+      description: Put in the release and version of the OS where problem have occurred on. Include whether the test was performed on real hardware or in an emulator.
+      placeholder: "Ex. MS-DOS 6.22, FreeDOS 1.4, VMware, DOSBox-X, QEMU x86, etc."
+    validations:
+      required: true
+  # This is confusing
+  #- type: input
+  #  id: hardware
+  #  attributes:
+  #    label: Relevant hardware info
+  #    description: If relevant, describe the hardware this bug have occurred on.
+  #    placeholder: "CPU, GPU, device brand/model, installed drivers, etc. Ex. Raspberry Pi 3B+, etc."
+  #  validations:
+  #    required: false
+  - type: input
+    id: version
+    attributes:
+      label: What commit version of 4DOS has this bug?
+      description: Put in the release version or git commit/branch that this problem occurred on. Please always check if the bug occurs in the latest version/commit.
+      placeholder: "Ex. commit 88370683291f5c681d2a7d6fff088b947b783bd4, etc."
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Used configuration
+      description: Share your options (e.g.`4dos.ini`) that caused the bug to occur. You may upload and put the link of your config in the "Additional information" box instead.
+      render: ini # Syntax highlighting
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional information
+      description: Add more information about the problem here.
+    validations:
+      required: false
+  - type: checkboxes
+    id: alreadyexists
+    attributes:
+      label: Have you checked that no similar bug report(s) exist?
+      description: Please try to search for this bug in the issues before creating this bug report.
+      options:
+        - label: I have searched and didn't find any similar bug report.
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct & Contributing Guidelines
+      description: By submitting this issue, you agree to follow our [contributing guidelines]/codespunk/4dos/blob/main/CONTRIB.md) and [code of conduct](/codespunk/4dos/blob/main/CONDUCT.md).
+      options:
+        - label: I agree to follow the code of conduct and the contributing guidelines.
+    validations:
+      required: true
