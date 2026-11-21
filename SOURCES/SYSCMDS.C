@@ -306,7 +306,7 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 		if ( getline( nFH, szLine, sizeof(szLine) / sizeof(TCHAR), nEditFlags ) <= 0 )
 			break;
 
-		if ( szLine[0] == _TEXT('\0') )
+		if ( IS_NUL_CHAR( szLine[0] ) )
 			continue;
 
 		// look for argument match
@@ -321,8 +321,8 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 				continue;
 
 			// got a partial match -- does it match a full pathname?
-			if (( stricmp( szPath+1, _TEXT(":\\")) != 0 ) && ( stricmp( szPath+1, _TEXT(":/")) != 0 )) {
-				if (( szDir[i] != _TEXT('\0')) && ( szDir[i] != _TEXT('\\')) && ( szDir[i] != _TEXT('/') ))
+			if ( !IS_DRIVE_ROOT( szPath ) ) {
+				if (( !IS_NUL_CHAR( szDir[i] )) && ( szDir[i] != _TEXT('\\')) && ( szDir[i] != _TEXT('/') ))
 					continue;
 			}
 
