@@ -2782,7 +2782,12 @@ GetFirstLine:
 			if ( ulTemp >= 86400L )
 				return ERROR_INVALID_PARAMETER;
 
-			sprintf( pszVar, _TEXT("%02lu%c%02lu%c%02lu"), ( ulTemp / 3600 ), gaCountryInfo.szTimeSeparator[0], ((ulTemp % 3600 ) / 60 ), gaCountryInfo.szTimeSeparator[0], (ulTemp % 60 ) );
+			szCountryDateTimeFormat[4] = gaCountryInfo.szTimeSeparator[0];
+			szCountryDateTimeFormat[9] = gaCountryInfo.szTimeSeparator[0];
+			sprintf( pszVar, szCountryDateTimeFormat,
+				(unsigned)( ulTemp / 3600L ),
+				(unsigned)(( ulTemp % 3600L ) / 60L ),
+				(unsigned)( ulTemp % 60L ) );
 			break;
 
 		case FUNC_MAX:
