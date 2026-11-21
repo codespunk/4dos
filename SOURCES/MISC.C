@@ -391,7 +391,7 @@ int _fastcall iswhite( TCHAR c )
 // test for delimiter (" \t,")
 int _fastcall isdelim( TCHAR c )
 {
-	return (( c == _TEXT('\0') ) || ( iswhite( c )) || ( c == _TEXT(',') ));
+	return ( IS_NUL_CHAR( c ) || IS_SPACE_TAB( c ) || ( c == ',' ));
 }
 
 
