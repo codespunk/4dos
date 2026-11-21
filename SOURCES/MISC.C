@@ -1721,7 +1721,7 @@ LPTSTR _fastcall path_part( LPTSTR pszName )
 		// accept either forward or backslashes as path delimiters
 		if (( *pszName == _TEXT('\\') ) || ( *pszName == _TEXT('/') ) || ( *pszName == _TEXT(':') )) {
 			// take care of arguments like "d:.." & "..\.."
-			if ( _stricmp( pszName+1, _TEXT("..") ) != 0 )
+			if ( !IS_PARENT_DIR( pszName + 1 ) )
 				pszName[1] = _TEXT('\0');
 			return szBuffer;
 		}
