@@ -1916,7 +1916,7 @@ int _fastcall mkdirname( LPTSTR pszDirectoryName, LPTSTR pszFileName )
 
 	if ( *pszDirectoryName ) {
 
-		if (( strchr( _TEXT("/\\:"), pszDirectoryName[nLength-1] ) == NULL ) && ( *pszFileName != _TEXT('\\') ) && ( *pszFileName != _TEXT('/') )) {
+		if (( !IS_DIR_OR_DRIVE_SEPARATOR( pszDirectoryName[nLength-1] ) ) && ( *pszFileName != _TEXT('\\') ) && ( *pszFileName != _TEXT('/') )) {
 			strcat( pszDirectoryName, _TEXT("\\") );
 			nLength++;
 		}
