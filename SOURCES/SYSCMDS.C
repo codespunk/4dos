@@ -590,7 +590,7 @@ ChangeDirectory:
 	strip_trailing( dir + 1, SLASHES );
 
 	// if CD * , display current drive only
-	if (( stricmp( dir, _TEXT("*") ) == 0 ) && (( fFlags & CD_CHANGEDRIVE ) == 0 )) {
+	if (( STR_IS_CHAR( dir, '*' ) ) && (( fFlags & CD_CHANGEDRIVE ) == 0 )) {
 
 		if ((( pszPtr = gcdir( NULL, 1 )) != NULL ) && ( pszPtr[1] == _TEXT(':') ))
 			sprintf( szDrive, _TEXT("%.2s"), pszPtr );
