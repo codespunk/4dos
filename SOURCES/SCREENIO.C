@@ -402,7 +402,7 @@ egots_cr_key:
 			break;
 
 		case 11:	// ^K save line to history & clear input
-			if ( strlen( pszEgetsBase ) > 0 ) {
+			if ( *pszEgetsBase != _TEXT('\0') ) {
 				glpHptr = 0L;
 				addhist( pszEgetsBase );
 			}
