@@ -1286,8 +1286,11 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 	if (HAS_UNC_PREFIX( pszFileName ) || HAS_QUOTED_UNC_PREFIX( pszFileName ) ) {
 		strcpy( szDrive, pszFileName );
 		StripQuotes( szDrive );
-	} else
-		sprintf( szDrive, FMT_DISK, ((( IS_NUL_CHAR( pszFileName[0] ) ) || (( !IS_NUL_CHAR( pszFileName[1] ) ) && ( pszFileName[1] != _TEXT(':') ))) ? gcdisk( NULL ) + 64 : *pszFileName ));
+	} else {
+		szDrive[0] = (TCHAR)((( IS_NUL_CHAR( pszFileName[0] ) ) || (( !IS_NUL_CHAR( pszFileName[1] ) ) && ( pszFileName[1] != _TEXT(':') ))) ? gcdisk( NULL ) + 64 : *pszFileName );
+		szDrive[1] = _TEXT(':');
+		szDrive[2] = _TEXT('\0');
+	}
 
 	for ( nOffset = 0, pszVar = szBuffer; ( FUNC_ARRAY[nOffset] != NULL ); nOffset++ ) {
 
