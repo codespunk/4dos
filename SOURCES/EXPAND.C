@@ -65,6 +65,7 @@ extern int __dst_adjust;
 extern struct tm *_gmtime( const time_t *, struct tm * );
 
 static int nExecStrRet = 0;
+static TCHAR szVersionFormat[] = _TEXT("%u.%02u");
 
 void _fastcall SeekToEnd( int );
 static int _near _fastcall UserFunctions( LPTSTR, LPTSTR );
@@ -3592,7 +3593,8 @@ static LPTSTR _near _fastcall var_internal( LPTSTR lpszVar )
 		case VAR_VERSION:
 
 			// Version of 4DOS
-			sprintf( lpszVar, _TEXT("%u%c%02u"), VER_MAJOR, nOffset == VAR_4VER ? gaCountryInfo.szDecimal[0] : _TEXT('.'), VER_MINOR );
+			szVersionFormat[2] = nOffset == VAR_4VER ? gaCountryInfo.szDecimal[0] : _TEXT('.');
+			sprintf( lpszVar, szVersionFormat, VER_MAJOR, VER_MINOR );
 			break;
 
 		case VAR_ALIAS:
