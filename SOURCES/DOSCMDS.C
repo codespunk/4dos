@@ -876,7 +876,6 @@ int _near Option_Cmd( char *pszCmdLine )
 	FreeMem( pIniData );
 
 	QueryCountryInfo();
-	SetOSVersion();
 
 	return rval;
 }
