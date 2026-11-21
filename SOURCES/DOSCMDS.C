@@ -722,7 +722,9 @@ int _near Lock_Cmd( char *pszCmdLine )
 
 		// if no arguments, lock everything
 		for ( nDisk = 1; ( nDisk <= 26 ); nDisk++ ) {
-			sprintf( szDisk, "%c:", nDisk+64 );
+			szDisk[0] = nDisk + 64;
+			szDisk[1] = _TEXT(':');
+			szDisk[2] = _TEXT('\0');
 			if (( QueryDriveExists( nDisk ) == 0 ) || ( QueryDriveRemote( nDisk ) == 1 ) || ( QueryIsCDROM( nDisk ) == 1 ))
 				continue;
 			if (( argc = _lock( nDisk )) != 0 )
@@ -1393,7 +1395,9 @@ int _near Unlock_Cmd( char *pszCmdLine )
 
 		// if no arguments, unlock everything
 		for ( nDisk = 1; ( nDisk <= 26 ); nDisk++ ) {
-			sprintf( szDisk, "%c:", nDisk+64 );
+			szDisk[0] = nDisk + 64;
+			szDisk[1] = _TEXT(':');
+			szDisk[2] = _TEXT('\0');
 			if (( QueryDriveExists( nDisk ) == 0 ) || ( QueryDriveRemote( nDisk ) == 1) || (QueryIsCDROM( nDisk ) == 1))
 				continue;
 			if (( argc = _unlock( nDisk )) != 0 )
