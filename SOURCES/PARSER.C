@@ -471,7 +471,7 @@ _asm {
 static int _fastcall CheckForNoEcho( register LPTSTR pszStartLine )
 {
 	// check for leading '@' (no echo)
-	if (( *pszStartLine == _TEXT('@') ) || ( strnicmp( pszStartLine, _TEXT("*@"), 2 ) == 0 )) {
+	if (HAS_NO_ECHO_PREFIX( pszStartLine ) || HAS_NO_ALIAS_NO_ECHO_PREFIX( pszStartLine )) {
 
 		if ( *pszStartLine == _TEXT('*') )
 			strcpy( pszStartLine+1, skipspace( pszStartLine+2 ));
