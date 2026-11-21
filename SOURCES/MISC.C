@@ -1876,8 +1876,12 @@ void _fastcall AddCommas( register LPTSTR pszNumber )
 // avoid "No closing quote" if an LFN has embedded backquote(s): replace with ?
 void _fastcall BackQuotes( TCHAR _far * pszFileName )
 {
-	while ( (pszFileName = _fstrchr( pszFileName, _TEXT('`') )) != NULL )
-		*pszFileName = _TEXT('?');
+	while ( !IS_NUL_CHAR( *pszFileName ) ) {
+		if ( *pszFileName == _TEXT('`') )
+			*pszFileName = _TEXT('?');
+
+		pszFileName++;
+	}
 }
 
 
