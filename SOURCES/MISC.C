@@ -2121,16 +2121,16 @@ int _fastcall is_dir( LPTSTR pszFileName )
 	if ( strpbrk( pszArg, _TEXT("*?") ) != NULL )
 		return 0;
 
-	if ((( pszArg = scan( pszArg, _TEXT(";"), _TEXT("\"") )) != BADQUOTES ) && ( *pszArg == _TEXT('\0') )) {
+	if ((( pszArg = scan( pszArg, _TEXT(";"), _TEXT("\"") )) != BADQUOTES ) && ( IS_NUL_CHAR( *pszArg ) )) {
 
 		// build a fully-qualified path name (& fixup Netware stuff)
 		copy_filename( szDirName, pszFileName );
-		if (( mkfname( szDirName, MKFNAME_NOERROR ) == NULL ) || ( szDirName[0] == _TEXT('\0') ))
+		if (( mkfname( szDirName, MKFNAME_NOERROR ) == NULL ) || ( IS_NUL_CHAR( szDirName[0] ) ))
 			return 0;
 
 		// "d:", "d:\" and "d:/" are assumed valid directories
 		// Novell names like "SYS:" are also assumed valid directories
-		if (( _stricmp( szDirName+1, _TEXT(":") ) == 0 ) || ( _stricmp( szDirName+1, _TEXT(":\\") ) == 0 ) || ( _stricmp( szDirName+1, _TEXT(":/") ) == 0 ))
+		if ( IS_DRIVE_OR_ROOT( szDirName ) )
 			return 1;
 
 		// don't treat something like "@con:" as a directory!
@@ -2138,7 +2138,7 @@ int _fastcall is_dir( LPTSTR pszFileName )
 			return 0;
 
 		if ((( pszArg = strchr( szDirName+2, _TEXT(':') )) != NULL ) &&
-			( pszArg[1] == _TEXT('\0') ) && ((unsigned int)( pszArg - szDirName ) < 6 ) &&
+			( IS_NUL_CHAR( pszArg[1] ) ) && ((unsigned int)( pszArg - szDirName ) < 6 ) &&
 			( strpbrk( szDirName, _TEXT(" ,\t=") ) == NULL ) &&
 			( QueryIsDevice( szDirName ) == 0 ))
 			return 1;
