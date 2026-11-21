@@ -2519,7 +2519,7 @@ Eval:
 			sscanf( pszVar+i, szNumeric, pszVar+i );
 
 			// kludge for +/- 0
-			if (( i > 0 ) && ( stricmp( pszVar+i, _TEXT("0") ) == 0 ))
+			if (( i > 0 ) && ( STR_IS_CHAR( pszVar + i, '0' ) ))
 				strcpy( pszVar, pszVar+i );
 			break;
 
