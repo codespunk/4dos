@@ -1536,8 +1536,10 @@ void _fastcall collapse_whitespace( register LPTSTR pszArg, LPTSTR pszToken )
 // strip the specified leading characters
 void _fastcall strip_leading( LPTSTR pszArg, LPTSTR pszDelimiters )
 {
-	while (( *pszArg != _TEXT('\0') ) && ( strchr( pszDelimiters, *pszArg ) != NULL ))
-		strcpy( pszArg, pszArg+1 );
+	unsigned int n = strspn( pszArg, pszDelimiters );
+
+	if ( n != 0 )
+		memmove( pszArg, pszArg + n, strlen( pszArg + n ) + 1 );
 }
 
 
