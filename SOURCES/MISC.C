@@ -2844,7 +2844,7 @@ ULONG _fastcall GetRandom( void )
 // Return a 0 if the arg == "OFF", 1 if == "ON", -1 otherwise
 int _fastcall OffOn( LPTSTR pszToken )
 {
-	while ( strchr( _TEXT(" \t=,"), *pszToken ) != NULL )
+	while ( IS_OFFON_DELIM( *pszToken ) )
 		pszToken++;
 
 	if ( _stricmp( pszToken, OFF ) == 0 )
