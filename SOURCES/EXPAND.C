@@ -4767,7 +4767,7 @@ void _fastcall addhist( LPTSTR pszCommand )
 	uLength = strlen( pszCommand );
 
 	// check for history not modified, or command too short or too long
-	if (( glpHptr != 0L ) || ( *pszCommand == _TEXT('@') ) || ( strnicmp( pszCommand, _TEXT("*@"), 2 ) == 0 ) || ( *pszCommand == _TEXT('\0') ) || ( uLength < gpIniptr->HistMin ) || (( uLength + 2 ) > gpIniptr->HistorySize ))
+	if (( glpHptr != 0L ) || HAS_NO_ECHO_PREFIX( pszCommand ) || HAS_NO_ALIAS_NO_ECHO_PREFIX( pszCommand ) || IS_NUL_CHAR( *pszCommand ) || ( uLength < gpIniptr->HistMin ) || (( uLength + 2 ) > gpIniptr->HistorySize ))
 		return;
 
 	// disable task switches under Windows and DESQview
@@ -4776,7 +4776,7 @@ void _fastcall addhist( LPTSTR pszCommand )
 	if ( gpIniptr->HistoryDups ) {
 
 		// remove duplicates from the history
-		for ( lpszHistory = glpHistoryList; ( *lpszHistory != _TEXT('\0') ); lpszHistory = next_env( lpszHistory )) {
+		for ( lpszHistory = glpHistoryList; ( !IS_NUL_CHAR( *lpszHistory ) ); lpszHistory = next_env( lpszHistory )) {
 
 			if ( _fstricmp( pszCommand, lpszHistory ) == 0 ) {
 
