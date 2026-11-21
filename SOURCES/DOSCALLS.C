@@ -1427,9 +1427,12 @@ cntryOK:
 
 void SetOSVersion( void )
 {
+	static TCHAR szLocalizedVersionFormat[] = _TEXT("%u.%02u");
+
 	// set gszOsVersion, gszMyVersion, PROGRAM
-	sprintf( gszOsVersion, "%u%c%02u", _osmajor, gaCountryInfo.szDecimal[0],_osminor );
-	sprintf( gszMyVersion, "%u%c%02u", VER_MAJOR, gaCountryInfo.szDecimal[0], VER_MINOR );
+	szLocalizedVersionFormat[2] = gaCountryInfo.szDecimal[0];
+	sprintf( gszOsVersion, szLocalizedVersionFormat, _osmajor, _osminor );
+	sprintf( gszMyVersion, szLocalizedVersionFormat, VER_MAJOR, VER_MINOR );
 	sprintf( PROGRAM, SET_PROGRAM, VER_MAJOR, gaCountryInfo.szDecimal[0], VER_MINOR );
 }
 
