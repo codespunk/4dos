@@ -581,7 +581,7 @@ int _fastcall evaluate( register char *expr )
 		// check for a leading '-' and strip leading 0's
 		sscanf( x.integer, "%*19[0]%s", expr );
 
-		if (( x.sign == '-' ) && ( _stricmp( expr, "0" ) != 0 ))
+		if (( x.sign == '-' ) && ( !STR_IS_CHAR( expr, '0' ) ))
 			strins( expr, "-" );
 		if ( fHexOut ) {
 			unsigned long ulHex;
