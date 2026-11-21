@@ -501,9 +501,9 @@ int _fastcall __cd( LPTSTR dir, int fFlags )
 	// save to cd / cdd popup window stack?
 	if ( fFlags & CD_SAVELASTDIR ) {
 
-		if ( _stricmp( dir, _TEXT("-") ) == 0 ) {
+		if ( STR_IS_CHAR( dir, '-' ) ) {
 			dir = szLastDirectory;
-			if ( *dir == _TEXT('\0') )
+			if ( IS_NUL_CHAR( *dir ) )
 				return 0;
 		}
 
@@ -562,7 +562,7 @@ ChangeDirectory:
 			pszCDPATH += nLength;
 
 			// if the CD fails, check to see if we can try (more) CDPATH
-			if (( dir[1] == _TEXT(':') ) || ( *dir == _TEXT('\\') ) || ( *dir == _TEXT('/') ) || ( *pszCDPATH == _TEXT('\0') )) {
+			if (( dir[1] == _TEXT(':') ) || ( *dir == _TEXT('\\') ) || ( *dir == _TEXT('/') ) || ( IS_NUL_CHAR( *pszCDPATH ) )) {
 				if ( gpIniptr->FuzzyCD != 0 )
 					break;
 				return (( fFlags & CD_NOERROR ) ? ERROR_EXIT : error( _doserrno, dir ));
