@@ -379,7 +379,7 @@ int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 	for ( i = 0; (( pszArg = ntharg( pszCmdLine, i )) != NULL ); i++ ) {
 
 
-		if ( _stricmp( pszArg, _TEXT("*") ) == 0 ) {
+		if ( STR_IS_CHAR( pszArg, '*' ) ) {
 
 			// wildcard kill - null the environment or alias list
 			pchList[0] = _TEXT('\0');
