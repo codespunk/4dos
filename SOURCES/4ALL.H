@@ -47,6 +47,103 @@ typedef struct {
 
 #define wcmemset memset
 
+// Character and short-string predicates used for code-size optimizations.
+// Arguments in some macros may be evaluated more than once. Do not pass
+// expressions with side effects. String pointers must point to valid strings.
+
+// Match the NUL character (end of a string).
+// Example: IS_NUL_CHAR(*s) matches the terminator in "" or the end of "abc".
+#define IS_NUL_CHAR(c) \
+    ((c) == '\0')
+
+// Match space or horizontal tab.
+// Example: IS_SPACE_TAB(' ') is true; IS_SPACE_TAB('\n') is false.
+#define IS_SPACE_TAB(c) \
+    (((c) == ' ') || ((c) == '\t'))
+
+// Match a directory separator or a drive/volume separator.
+// Example: IS_DIR_OR_DRIVE_SEPARATOR(':') matches the end of "C:" or "SYS:".
+#define IS_DIR_OR_DRIVE_SEPARATOR(c) \
+    (((c) == '/') || ((c) == '\\') || ((c) == ':'))
+
+// Match a delimiter permitted before ON or OFF.
+// Example: IS_OFFON_DELIM('=') is true for an input starting "=ON".
+#define IS_OFFON_DELIM(c) \
+    (((c) == ' ') || ((c) == '\t') || ((c) == '=') || ((c) == ','))
+
+// Match space, tab, or the NUL terminator, as strchr(" \t", c) would.
+// Example: IS_SPACE_TAB_OR_NUL('\0') is true.
+#define IS_SPACE_TAB_OR_NUL(c) \
+    (((c) == '\0') || ((c) == ' ') || ((c) == '\t'))
+
+// Match an entire string containing exactly the specified character.
+// Example: STR_IS_CHAR(s, '*') matches "*" but not "**".
+#define STR_IS_CHAR(s, c) \
+    (((s)[0] == (c)) && ((s)[1] == '\0'))
+
+// Match the complete current-directory name ".".
+// Example: IS_CURRENT_DIR(".") is true; IS_CURRENT_DIR("./") is false.
+#define IS_CURRENT_DIR(s) \
+    (((s)[0] == '.') && ((s)[1] == '\0'))
+
+// Match the complete parent-directory name "..".
+// Example: IS_PARENT_DIR("..") is true; IS_PARENT_DIR("../") is false.
+#define IS_PARENT_DIR(s) \
+    (((s)[0] == '.') && ((s)[1] == '.') && ((s)[2] == '\0'))
+
+// Match exactly "." or ".." (not a longer relative path).
+// Example: IS_CURRENT_OR_PARENT_DIR("..") is true; "..." is false.
+#define IS_CURRENT_OR_PARENT_DIR(s) \
+    (((s)[0] == '.') && (((s)[1] == '\0') || \
+     (((s)[1] == '.') && ((s)[2] == '\0'))))
+
+// Match a Unix-style parent-directory prefix, not necessarily the whole name.
+// Example: HAS_UNIX_PARENT_DIR_PREFIX("../docs") is true.
+#define HAS_UNIX_PARENT_DIR_PREFIX(s) \
+    (((s)[0] == '.') && ((s)[1] == '.') && ((s)[2] == '/'))
+
+// Match an unquoted UNC prefix (two leading backslashes).
+// Example: HAS_UNC_PREFIX("\\\\server\\share") is true.
+#define HAS_UNC_PREFIX(s) \
+    (((s)[0] == '\\') && ((s)[1] == '\\'))
+
+// Match a quoted UNC prefix (quote followed by two backslashes).
+// Example: HAS_QUOTED_UNC_PREFIX("\"\\\\server\\share\"") is true.
+#define HAS_QUOTED_UNC_PREFIX(s) \
+    (((s)[0] == '"') && ((s)[1] == '\\') && ((s)[2] == '\\'))
+
+// Test the drive-root form in an existing drive-name buffer.
+// Example: IS_DRIVE_ROOT("C:\\") is true; IS_DRIVE_ROOT("C:") is false.
+#define IS_DRIVE_ROOT(s) \
+    (((s)[1] == ':') && (((s)[2] == '\\') || ((s)[2] == '/')) && \
+     ((s)[3] == '\0'))
+
+// Match a one-character drive specification (not an arbitrary volume name).
+// Example: IS_DRIVE_OR_ROOT("C:") and IS_DRIVE_OR_ROOT("C:\\") are true.
+#define IS_DRIVE_OR_ROOT(s) \
+    (((s)[1] == ':') && (((s)[2] == '\0') || \
+     ((((s)[2] == '\\') || ((s)[2] == '/')) && ((s)[3] == '\0'))))
+
+// Match one leading no-echo marker; not the combined "*@" marker.
+// Example: HAS_NO_ECHO_PREFIX("@echo hello") is true.
+#define HAS_NO_ECHO_PREFIX(s) \
+    ((s)[0] == '@')
+
+// Match the combined no-alias/no-echo prefix "*@".
+// Example: HAS_NO_ALIAS_NO_ECHO_PREFIX("*@echo hello") is true.
+#define HAS_NO_ALIAS_NO_ECHO_PREFIX(s) \
+    (((s)[0] == '*') && ((s)[1] == '@'))
+
+// Match the 4DOS %? variable name (external-program exit code).
+// Example: IS_VAR_EXIT_CODE("?") is true; "??" is false.
+#define IS_VAR_EXIT_CODE(s) \
+    (((s)[0] == '?') && ((s)[1] == '\0'))
+
+// Match the 4DOS %?? variable name (external-program exit type).
+// Example: IS_VAR_EXIT_TYPE("??") is true; "?" is false.
+#define IS_VAR_EXIT_TYPE(s) \
+    (((s)[0] == '?') && ((s)[1] == '?') && ((s)[2] == '\0'))
+
 #define STDIN 0			// standard input, output, error, aux, & prn
 #define STDOUT 1
 #define STDERR 2
