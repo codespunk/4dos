@@ -134,7 +134,9 @@ int _near Cdd_Cmd( LPTSTR pszCmdLine )
 			for ( n = 3; ( n <= 26 ); n++ ) {
 
 				if ( QueryDriveReady( n )) {
-					sprintf( szDrives, _TEXT("%c:"), n + 64 );
+					szDrives[0] = n + 64;
+					szDrives[1] = _TEXT(':');
+					szDrives[2] = _TEXT('\0');
 					if (( pszPtr = gcdir( szDrives, 1 )) != NULL )
 						printf( FMT_STR_CRLF, pszPtr );
 				}
