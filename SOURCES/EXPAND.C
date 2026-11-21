@@ -1274,18 +1274,18 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 
 	// check for user function first
 	n = UserFunctions( lpszFunction, szBuffer );
-	if ( *lpszFunction == _TEXT('\0') )
+	if ( IS_NUL_CHAR( *lpszFunction ) )
 		return n;
 
 	n = 0;
 
 	// set drive arg (so both "a" and "a:" will work)
 	// Check for quoted UNC and remove quotes
-	if (( _strnicmp( pszFileName, _TEXT("\\\\"), 2 ) == 0 ) || ( _strnicmp( pszFileName, _TEXT("\"\\\\"), 3 )) == 0 ) {
+	if (HAS_UNC_PREFIX( pszFileName ) || HAS_QUOTED_UNC_PREFIX( pszFileName ) ) {
 		strcpy( szDrive, pszFileName );
 		StripQuotes( szDrive );
 	} else
-		sprintf( szDrive, FMT_DISK, ((( pszFileName[0] == _TEXT('\0') ) || (( pszFileName[1] != _TEXT('\0') ) && ( pszFileName[1] != _TEXT(':') ))) ? gcdisk( NULL ) + 64 : *pszFileName ));
+		sprintf( szDrive, FMT_DISK, ((( IS_NUL_CHAR( pszFileName[0] ) ) || (( !IS_NUL_CHAR( pszFileName[1] ) ) && ( pszFileName[1] != _TEXT(':') ))) ? gcdisk( NULL ) + 64 : *pszFileName ));
 
 	for ( nOffset = 0, pszVar = szBuffer; ( FUNC_ARRAY[nOffset] != NULL ); nOffset++ ) {
 
@@ -1298,7 +1298,7 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 			// return the absolute value
 			for ( pszVar = skipspace( pszVar );  (( *pszVar ) && ( isdigit( *pszVar ) == 0 )); pszVar++ )
 				;
-			for ( pszArg = pszVar; ( *pszArg != _TEXT('\0') ) && ( isdigit( *pszArg ) || ( *pszArg == gaCountryInfo.szThousandsSeparator[0] ) || ( *pszArg == gaCountryInfo.szDecimal[0] )); pszArg++ )
+			for ( pszArg = pszVar; ( !IS_NUL_CHAR( *pszArg ) ) && ( isdigit( *pszArg ) || ( *pszArg == gaCountryInfo.szThousandsSeparator[0] ) || ( *pszArg == gaCountryInfo.szDecimal[0] )); pszArg++ )
 				;
 			*pszArg = _TEXT('\0');
 			break;
