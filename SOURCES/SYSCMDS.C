@@ -89,7 +89,7 @@ int _near Cd_Cmd( LPTSTR pszCmdLine )
 	if ( pszCmdLine )
 		StripQuotes( pszCmdLine );
 
-	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') ) || (( _stricmp( pszCmdLine + 1, _TEXT(":") ) == 0 ) && (( fCD & 1 ) == 0 ))) {
+	if (( pszCmdLine == NULL ) || ( IS_NUL_CHAR( *pszCmdLine ) ) || (( STR_IS_CHAR( pszCmdLine + 1, ':' ) ) && (( fCD & 1 ) == 0 ))) {
 
 		if (( pszArg = gcdir( pszCmdLine, 0 )) == NULL )
 			return ERROR_EXIT;	// invalid drive
