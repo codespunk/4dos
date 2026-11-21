@@ -635,7 +635,7 @@ ChangeDirectory:
 	//  Read list array looking for match.  If we have more than
 	//   one match, call wPopSelect
 
-	fWildAll = ( stricmp( dir, _TEXT("*") ) == 0 );
+	fWildAll = ( STR_IS_CHAR( dir, '*' ) );
 
 	pszPath = path_part( dir );
 
@@ -675,7 +675,7 @@ ChangeDirectory:
 
 		while ( getline( nFH, szDirectory, MAXPATH, nEditFlags ) > 0 ) {
 
-			if ( szDirectory[0] == _TEXT('\0') )
+			if ( IS_NUL_CHAR( szDirectory[0] ) )
 				continue;
 
 			// check for "d:*" syntax
