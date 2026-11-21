@@ -66,7 +66,7 @@ extern struct tm *_gmtime( const time_t *, struct tm * );
 
 static int nExecStrRet = 0;
 static TCHAR szVersionFormat[] = _TEXT("%u.%02u");
-static TCHAR szUtcTimeFormat[] = _TEXT("%02u:%02u:%02u");
+extern TCHAR szCountryDateTimeFormat[];
 
 void _fastcall SeekToEnd( int );
 static int _near _fastcall UserFunctions( LPTSTR, LPTSTR );
@@ -4120,9 +4120,9 @@ DPMI_version:
 			else if ( nOffset == VAR_UTCSECOND )
 				IntToAscii( t.tm_sec, lpszVar );
 			else {	// VAR_UTCTIME
-				szUtcTimeFormat[4] = gaCountryInfo.szTimeSeparator[0];
-				szUtcTimeFormat[9] = gaCountryInfo.szTimeSeparator[0];
-				sprintf( lpszVar, szUtcTimeFormat, t.tm_hour, t.tm_min, t.tm_sec );
+				szCountryDateTimeFormat[4] = gaCountryInfo.szTimeSeparator[0];
+				szCountryDateTimeFormat[9] = gaCountryInfo.szTimeSeparator[0];
+				sprintf( lpszVar, szCountryDateTimeFormat, t.tm_hour, t.tm_min, t.tm_sec );
 			}
 			break;
 

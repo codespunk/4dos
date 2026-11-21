@@ -63,6 +63,7 @@ static int _near similar_char( char *, int, char *, int );
 
 
 int fNoComma = 0;
+TCHAR szCountryDateTimeFormat[] = _TEXT("%02u-%02u-%02u");
 static TCHAR szNthArgBuffer[ MAXARGSIZ+1 ];
 
 
@@ -2499,7 +2500,6 @@ int _fastcall ExcludeFiles( LPTSTR pszFiles, LPTSTR pszFilename )
 LPTSTR FormatDate( int nMonth, int nDay, int nYear, int nFormat )
 {
 	static TCHAR szDate[24];
-	static TCHAR szJapaneseDateFormat[] = _TEXT("%02u-%02u-%02u");
 	int i, n;
 
 	if ( nFormat & 0x100 ) {
@@ -2552,9 +2552,9 @@ LPTSTR FormatDate( int nMonth, int nDay, int nYear, int nFormat )
 
 		// Japan = yy-mm-dd
 		// we need a leading 0 for the year 00!
-		szJapaneseDateFormat[4] = gaCountryInfo.szDateSeparator[0];
-		szJapaneseDateFormat[9] = gaCountryInfo.szDateSeparator[0];
-		sprintf( szDate, szJapaneseDateFormat, nYear, nMonth, nDay );
+		szCountryDateTimeFormat[4] = gaCountryInfo.szDateSeparator[0];
+		szCountryDateTimeFormat[9] = gaCountryInfo.szDateSeparator[0];
+		sprintf( szDate, szCountryDateTimeFormat, nYear, nMonth, nDay );
 		return szDate;
 	}
 
