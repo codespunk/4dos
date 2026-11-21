@@ -594,15 +594,20 @@ ChangeDirectory:
 	// if CD * , display current drive only
 	if (( STR_IS_CHAR( dir, '*' ) ) && (( fFlags & CD_CHANGEDRIVE ) == 0 )) {
 
-		if ((( pszPtr = gcdir( NULL, 1 )) != NULL ) && ( pszPtr[1] == _TEXT(':') ))
-			sprintf( szDrive, _TEXT("%.2s"), pszPtr );
+		if ((( pszPtr = gcdir( NULL, 1 )) != NULL ) && ( pszPtr[1] == _TEXT(':') )) {
+			szDrive[0] = pszPtr[0];
+			szDrive[1] = pszPtr[1];
+			szDrive[2] = _TEXT('\0');
+		}
 
 		// if "d:*", only display dirs for that drive
 	} else if (( pszPtr = path_part( dir )) != NULL ) {
 
 		// save & remove drive spec
 		if ( pszPtr[1] == _TEXT(':') ) {
-			sprintf( szDrive, _TEXT("%.2s"), pszPtr );
+			szDrive[0] = pszPtr[0];
+			szDrive[1] = pszPtr[1];
+			szDrive[2] = _TEXT('\0');
 			strcpy( pszPtr, pszPtr + 2 );
 			strcpy( dir, dir + 2 );
 		}
