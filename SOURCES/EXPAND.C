@@ -2036,9 +2036,11 @@ Eval:
 					else if ( n == 2 )
 						FileTimeToDOSTime( &(dir.ftCreationTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
 
-					if ( _ctoupper( *pszArg ) == 'S' )
-						sprintf( pszVar, "%02u%c%02u%c%02u", dir.ft.file_time.hours, gaCountryInfo.szTimeSeparator[0], dir.ft.file_time.minutes, gaCountryInfo.szTimeSeparator[0], ( dir.ft.file_time.seconds * 2 ) % 60 );
-					else
+					if ( _ctoupper( *pszArg ) == 'S' ) {
+						szCountryDateTimeFormat[4] = gaCountryInfo.szTimeSeparator[0];
+						szCountryDateTimeFormat[9] = gaCountryInfo.szTimeSeparator[0];
+						sprintf( pszVar, szCountryDateTimeFormat, dir.ft.file_time.hours, dir.ft.file_time.minutes, ( dir.ft.file_time.seconds * 2 ) % 60 );
+					} else
 						sprintf( pszVar, "%02u%c%02u", dir.ft.file_time.hours, gaCountryInfo.szTimeSeparator[0], dir.ft.file_time.minutes );
 
 				}
