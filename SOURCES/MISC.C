@@ -1939,7 +1939,7 @@ LPTSTR _fastcall mkfname( LPTSTR pszFileName, int fFlags )
 	if ( pszFileName != NULL )
 		StripQuotes( pszFileName );
 
-	if (( pszFileName == NULL ) || ( *pszFileName == _TEXT('\0') )) {
+	if (( pszFileName == NULL ) || ( IS_NUL_CHAR( *pszFileName ) )) {
 		if (( fFlags & MKFNAME_NOERROR ) == 0 )
 			error( ERROR_FILE_NOT_FOUND, NULLSTR );
 
@@ -2018,7 +2018,7 @@ LPTSTR _fastcall mkfname( LPTSTR pszFileName, int fFlags )
 			// check end
 			for ( ptr2 = pszArg; ( *ptr2 == _TEXT('.') ); ptr2++ )
 				;
-			if (( *ptr2 != _TEXT('\0') ) && ( *ptr2 != _TEXT('\\') ) && ( *ptr2 != _TEXT('/') ))
+			if (( !IS_NUL_CHAR( *ptr2 ) ) && ( *ptr2 != _TEXT('\\') ) && ( *ptr2 != _TEXT('/') ))
 				break;
 		}
 
@@ -2037,20 +2037,20 @@ Mkfname_Error:
 
 		// don't strip trailing \ in directory name
 		if (( pszArg = strpbrk( pszName, _TEXT("/\\") )) != NULL ) {
-			if (( pszArg[1] != _TEXT('\0') ) || ( pszArg[-1] == _TEXT('.') ))
+			if (( !IS_NUL_CHAR( pszArg[1] ) ) || ( pszArg[-1] == _TEXT('.') ))
 				*pszArg = _TEXT('\0');
 			pszArg++;
 		}
 
 		// handle references to parent directory ("..")
-		if ( _stricmp( pszName, _TEXT("..") ) == 0 ) {
+		if ( IS_PARENT_DIR( pszName ) ) {
 
 			// don't delete root directory!
 			if ((( pszName = strrchr( pszCurrentDir, _TEXT('\\') )) == NULL ) && (( pszName = strrchr( pszCurrentDir, _TEXT('/') )) == NULL ))
 				pszName = pszCurrentDir;
 			*pszName = _TEXT('\0');
 
-		} else if ( _stricmp( pszName, _TEXT(".") ) != 0 ) {
+		} else if ( !IS_CURRENT_DIR( pszName ) ) {
 			// append the directory or filename to the temp buffer
 			if ( mkdirname( szTemp, pszName ))
 				goto Mkfname_Error;
