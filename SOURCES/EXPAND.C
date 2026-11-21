@@ -3567,12 +3567,12 @@ static LPTSTR _near _fastcall var_internal( LPTSTR lpszVar )
 	t_int64 lla, llb;
 	struct tm t;
 
-	if (( _stricmp( lpszVar, _TEXT("?") ) == 0 ) || ( _stricmp( lpszVar, _TEXT("ERRORLEVEL") ) == 0 )) {
+	if (( IS_VAR_EXIT_CODE( lpszVar ) ) || ( _stricmp( lpszVar, _TEXT("ERRORLEVEL") ) == 0 )) {
 		// exit code of last external program?
 		IntToAscii( gnErrorLevel, lpszVar );
 		return lpszVar;
 
-	} else if ( _stricmp( lpszVar, _TEXT("??") ) == 0 ) {
+	} else if ( IS_VAR_EXIT_TYPE( lpszVar ) ) {
 		// high byte of exit code of last external program?
 		IntToAscii( gnHighErrorLevel, lpszVar );
 		return lpszVar;
