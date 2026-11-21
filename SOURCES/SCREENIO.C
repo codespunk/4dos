@@ -954,7 +954,7 @@ RedoFileName:
 
 						if (( szInvalidChars[2] != '"' ) && ( pszStart[-1] == '"' )) {
 
-							if (( --pszStart > pszCmdBase ) && ( strchr( _TEXT(" \t"), pszStart[-1] ) == NULL )) {
+							if (( --pszStart > pszCmdBase ) && ( !IS_SPACE_TAB_OR_NUL( pszStart[-1] ) )) {
 								while ((--pszStart > pszCmdBase ) && (*pszStart != _TEXT('"') ))
 									;
 							}
