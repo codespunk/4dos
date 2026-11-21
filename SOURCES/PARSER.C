@@ -858,7 +858,7 @@ int _near ProcessCommands( register LPTSTR pszStartLine, LPTSTR pszNextLine, int
 	register LPTSTR pszCmdName;
 	int i, nReturn = 0;
 
-	if ( *pszStartLine != _TEXT('\0') ) {
+	if ( !IS_NUL_CHAR( *pszStartLine ) ) {
 
 	    // save the line continuation (if any) onto the stack
 	    pszNextLine = strcpy( (LPTSTR)_alloca( ( strlen( pszNextLine ) + 1 ) * sizeof(TCHAR) ), pszNextLine );
@@ -887,7 +887,7 @@ int _near ProcessCommands( register LPTSTR pszStartLine, LPTSTR pszNextLine, int
 
 			// Have to break on first '/' (annoying UNIX users) because
 			//   too many people do things like "program/a"
-			if (( gpIniptr->UnixPaths ) || ( strnicmp( pszStartLine, _TEXT("../"), 3 ) == 0 ))
+			if (( gpIniptr->UnixPaths ) || ( HAS_UNIX_PARENT_DIR_PREFIX( pszStartLine ) ))
 				pszCmdName = ntharg( pszStartLine, 0x800 );
 			else
 				pszCmdName = first_arg( pszStartLine );
