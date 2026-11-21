@@ -2066,7 +2066,7 @@ int _fastcall TestCondition( LPTSTR pszLine, int fIf )
 
 					if ( szBuf[0] == _TEXT('-') )
 						nCondition = -1;
-					else if ( stricmp( szBuf, _TEXT("0") ) != 0 )
+					else if ( !STR_IS_CHAR( szBuf, '0' ) )
 						nCondition = 1;
 
 				} else
