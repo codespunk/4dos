@@ -759,7 +759,9 @@ int _fastcall var_expand( LPTSTR pszStartLine, int fRecurse )
 
 			// kludge for COMMAND.COM/CMD.EXE compatibility
 			//   FOR variables use two %%'s!
-			sprintf( szFunction, _TEXT("\001%c"), pszVariable[1] );
+			szFunction[0] = _TEXT('\001');
+			szFunction[1] = pszVariable[1];
+			szFunction[2] = _TEXT('\0');
 
 			if ( get_variable( szFunction ) != 0L )
 				strcpy( pszVariable, pszVariable + 1 );		// strip extra %
@@ -873,7 +875,9 @@ var_too_long:
 			// kludge for COMMAND.COM/CMD.EXE compatibility:
 			//   FOR variables may have a max length of 1!
 			//   Have to check FOR vars _before_ batch vars
-			sprintf( szFunction, _TEXT("\001%c"), *pszVariable );
+			szFunction[0] = _TEXT('\001');
+			szFunction[1] = *pszVariable;
+			szFunction[2] = _TEXT('\0');
 
 			if (( lpszVarValue = get_variable( szFunction )) != 0L ) {
 
