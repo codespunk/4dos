@@ -1011,7 +1011,7 @@ RedoFileName:
 					} else {
 
 						// replace "." and ".." w/expanded name
-						if ((( pszArg = fname_part( szSource )) != NULL ) && (( stricmp( pszArg, _TEXT(".") ) == 0 ) || ( stricmp( pszArg, _TEXT("..") ) == 0 ))) {
+						if ((( pszArg = fname_part( szSource )) != NULL ) && IS_CURRENT_OR_PARENT_DIR( pszArg )) {
 							mkfname( szSource, 0 );
 
 							mkdirname( szSource, ((( ifs_type( szSource ) != 0 ) && ( fWin95 )) ? "*" : WILD_FILE ));
