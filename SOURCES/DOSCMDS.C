@@ -651,7 +651,8 @@ int _near Loadhigh_Cmd( char *pszCmdLine )
 					regmin = 0;
 					regnum = -1;
 
-					if (( strchr( ";0123456789", *arg ) == NULL) || (sscanf(arg,"%*[;]%u%n,%lu%n;%n",&regnum,&rval,&regmin,&rval,&rval) < 1))
+					if ((( *arg != ';' ) && (( *arg < '0' ) || ( *arg > '9' ))) ||
+					    (sscanf(arg,"%*[;]%u%n,%lu%n;%n",&regnum,&rval,&regmin,&rval,&rval) < 1))
 						return ( error( ERROR_4DOS_REGION_SYNTAX, first_arg( arg ) ));
 
 					if (( regnum < 0 ) || ( regnum > URCount ))
