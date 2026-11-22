@@ -2487,6 +2487,24 @@ typedef struct
 
 static int _touch( TOUCH_STRUCT *, DATETIME * );
 
+// Consume an optional W/A/C field selector, leaving unknown text intact.
+static LPTSTR _near ParseTouchField( LPTSTR pszArg, int *pnField )
+{
+	switch ( _ctoupper( *pszArg )) {
+	case 'W':
+		*pnField = 0;
+		break;
+	case 'A':
+		*pnField = 1;
+		break;
+	case 'C':
+		*pnField = 2;
+		break;
+	default:
+		return pszArg;
+	}
+	return pszArg + 1;
+}
 
 // change a file's date & time
 int _near Touch_Cmd( LPTSTR pszCmdLine )
@@ -2560,20 +2578,9 @@ int _near Touch_Cmd( LPTSTR pszCmdLine )
 			    // duplicate this file's date & time
 			    Touch.fFlags |= TOUCH_DUP;
 
-			    // check for optional write/access/create field
-			    if ( *pszArg == _TEXT(':') ) {
-					pszArg++;
-			        if (( *pszArg == _TEXT('W') ) || ( *pszArg == _TEXT('w') )) {
-						Touch.nField = 0;
-						pszArg++;
-			        } else if (( *pszArg == _TEXT('A') ) || ( *pszArg == _TEXT('a') )) {
-						Touch.nField = 1;
-						pszArg++;
-			        } else if (( *pszArg == _TEXT('C') ) || ( *pszArg == _TEXT('c') )) {
-						Touch.nField = 2;
-						pszArg++;
-			        }
-			    }
+			    // /R only consumes a field selector following ':'.
+			    if ( *pszArg == _TEXT(':') )
+					pszArg = ParseTouchField( pszArg + 1, &Touch.nField );
 
 			    if (( *pszArg == _TEXT('\0') ) && (( pszArg = ntharg( pszCmdLine, ++nArgc | 0x800 )) == NULL ))
 					return ( Usage( TOUCH_USAGE ));
@@ -2604,16 +2611,7 @@ int _near Touch_Cmd( LPTSTR pszCmdLine )
 
 			    if ( *pszArg == _TEXT(':') )
 					pszArg++;
-			    if (( *pszArg == _TEXT('W') ) || ( *pszArg == _TEXT('w') )) {
-					Touch.nField = 0;
-					pszArg++;
-			    } else if (( *pszArg == _TEXT('A') ) || ( *pszArg == _TEXT('a') )) {
-					Touch.nField = 1;
-					pszArg++;
-			    } else if (( *pszArg == _TEXT('C') ) || ( *pszArg == _TEXT('c') )) {
-					Touch.nField = 2;
-					pszArg++;
-			    }
+			    pszArg = ParseTouchField( pszArg, &Touch.nField );
 
 			    if ( rc == _TEXT('D') ) {
 
