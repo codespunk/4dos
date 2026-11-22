@@ -1201,6 +1201,21 @@ static LONG _fastcall MoveViewPtr( LONG lFilePtr, LONG *ptrRow )
 }
 
 
+// SearchFile polls the BIOS keyboard without consuming redirected STDIN.
+static int _near CheckListSearchAbort( int nLoopCounter )
+{
+	if (( nLoopCounter % 1024 ) == 0 ) {
+		// abort search if ESC key is hit
+		CheckForBreak();
+		
+		// kbhit() in DOS tries to read from STDIN, which
+		//   screws up a LIST /S pipe
+		if ( bios_kbhit() && ( GetKeystroke( EDIT_NO_ECHO | EDIT_BIOS_KEY ) == ESC ))
+			return 1;
+	}
+	return 0;
+}
+
 // SearchFile - Search the file for the value in szSearchStr.
 //   If found, the file pointer is modified to the location in the file.
 static BOOL _near _fastcall SearchFile( long fFlags )
@@ -1269,17 +1284,9 @@ static BOOL _near _fastcall SearchFile( long fFlags )
 			} else if (( c = GetPrevChar()) == EOF )
 				break;
 
-			// abort search if ESC key is hit
-			if (( nLoopCounter % 1024 ) == 0 ) {
-
-				CheckForBreak();
-
-				// kbhit() in DOS tries to read from STDIN, which
-				//   screws up a LIST /S pipe
-				if ( bios_kbhit() && ( GetKeystroke( EDIT_NO_ECHO | EDIT_BIOS_KEY ) == ESC ))
-					break;
-
-			}
+			// Preserve polling frequency and never read from redirected STDIN.
+			if ( CheckListSearchAbort( nLoopCounter ) )
+				break;
 			nLoopCounter++;
 
 			if ( fIgnoreCase )
@@ -1328,19 +1335,8 @@ RestartWildcardSearch:
 					break;
 				}
 
-				if (( nLoopCounter % 1024 ) == 0 ) {
-
-					CheckForBreak();
-
-					// abort search if ESC key is hit
-
-					// kbhit() in DOS tries to read from STDIN, which
-					//   screws up a LIST /S pipe
-					if ( bios_kbhit() && ( GetKeystroke( EDIT_NO_ECHO | EDIT_BIOS_KEY ) == ESC ))
-						break;
-
-				}
-
+				if ( CheckListSearchAbort( nLoopCounter ) )
+					break;
 				nLoopCounter++;
 
 				nOffset++;
