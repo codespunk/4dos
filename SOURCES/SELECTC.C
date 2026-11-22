@@ -431,17 +431,18 @@ StartLoop:
 
 					if ( i == ( sel->uEntries - 1 )) {
 						if ( j == 0 ) {
-							// try again from the beginning
+							// Wrap once to the first file entry.
 							j = 1;
 							i = 0;
 							goto StartLoop;
-						} else if ( j == 1 ) {
-							if ( nSearch == 1 ) {
+						}
+						if ( j == 1 ) {
+							if ( nSearch != 1 ) {
 								nSearch = 0;
-								break;
+								goto ResetSearch;
 							}
 							nSearch = 0;
-							goto ResetSearch;
+							break;
 						}
 					}
 				}
