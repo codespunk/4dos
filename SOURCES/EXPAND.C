@@ -2454,38 +2454,12 @@ Eval:
 			return 0;
 
 		case FUNC_INIREAD:
-			{
-				LPTSTR pszKey, pszSection;
-
-				// read an entry from an .INI file
-				// @iniread[inifilename, section, key]
-				pszFileName = pszVar;
-				pszSection = scan( pszVar, _TEXT(","), QUOTES );
-				if (( pszSection == BADQUOTES ) || (*pszSection != _TEXT(',') ) || ( pszSection[1] == _TEXT('\0') ))
-					return ERROR_INVALID_PARAMETER;
-				*pszSection++ = _TEXT('\0');
-
-				pszKey = scan( pszSection, _TEXT(","), QUOTES );
-				if (( pszKey == BADQUOTES ) || (*pszKey != _TEXT(',') ) || ( pszKey[1] == _TEXT('\0') ))
-					return ERROR_INVALID_PARAMETER;
-				*pszKey++ = _TEXT('\0');
-
-				StripQuotes( pszFileName );
-				StripQuotes( pszSection );
-
-				if ( IniReadWrite( 0, pszFileName, pszSection, pszKey, szDrive ) == NULL )
-					szDrive[0] = _TEXT('\0');
-
-				pszVar = szDrive;
-				break;
-			}
-
 		case FUNC_INIWRITE:
 			{
 				LPTSTR pszKey, pszValue, pszSection;
+				int fWrite = ( nOffset == FUNC_INIWRITE );
 
-				// write an entry to an .INI file
-				// @iniwrite[inifilename, section, key, value]
+				// Common filename, section, and key parsing for INI functions.
 				pszFileName = pszVar;
 				pszSection = scan( pszVar, _TEXT(","), QUOTES );
 				if (( pszSection == BADQUOTES ) || (*pszSection != _TEXT(',') ) || ( pszSection[1] == _TEXT('\0') ))
@@ -2497,20 +2471,25 @@ Eval:
 					return ERROR_INVALID_PARAMETER;
 				*pszKey++ = _TEXT('\0');
 
-				pszValue = scan( pszKey, _TEXT(","), QUOTES );
-				if (( pszValue == BADQUOTES ) || (*pszValue != _TEXT(',') ))
-					return ERROR_INVALID_PARAMETER;
-				*pszValue++ = _TEXT('\0');
+				if ( fWrite ) {
+					pszValue = scan( pszKey, _TEXT(","), QUOTES );
+					if (( pszValue == BADQUOTES ) || (*pszValue != _TEXT(',') ))
+						return ERROR_INVALID_PARAMETER;
+					*pszValue++ = _TEXT('\0');
+				}
 
 				StripQuotes( pszFileName );
 				StripQuotes( pszSection );
-				StripQuotes( pszKey );
 
-				if ( IniReadWrite( 1, pszFileName, pszSection, pszKey, pszValue ) != NULL )
-					pszVar = "0";
-				else
-					pszVar = "1";
-
+				if ( fWrite ) {
+					// INIWRITE strips key quotes; INIREAD historically does not.
+					StripQuotes( pszKey );
+					pszVar = ( IniReadWrite( 1, pszFileName, pszSection, pszKey, pszValue ) != NULL ) ? "0" : "1";
+				} else {
+					if ( IniReadWrite( 0, pszFileName, pszSection, pszKey, szDrive ) == NULL )
+						szDrive[0] = _TEXT('\0');
+					pszVar = szDrive;
+				}
 				break;
 			}
 
