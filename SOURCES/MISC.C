@@ -2583,8 +2583,19 @@ void honk( void )
 
 
 void _fastcall PopupEnvironment( int );
+static void _near AppendPopupEntry( TCHAR _far * _far **, unsigned int *, unsigned int *, TCHAR _far * );
 
 #pragma alloc_text( SCREENIO_TEXT, PopupEnvironment )
+#pragma alloc_text( SCREENIO_TEXT, AppendPopupEntry )
+
+static void _near AppendPopupEntry( TCHAR _far * _far **ppList, unsigned int *puSize, unsigned int *pi, TCHAR _far *pszEntry )
+{
+	if (( *pi % 32 ) == 0 ) {
+		*puSize += 128;
+		*ppList = (TCHAR _far * _far *)ReallocMem( *ppList, *puSize );
+	}
+	(*ppList)[ (*pi)++ ] = pszEntry;
+}
 
 void _fastcall PopupEnvironment( int fAlias )
 {
@@ -2595,29 +2606,16 @@ void _fastcall PopupEnvironment( int fAlias )
 	// get the environment or alias list into an array
 	lpszPtr = (( fAlias ) ? glpAliasList : glpEnvironment );
 	for ( i = 0; ( *lpszPtr ); lpszPtr = next_env( lpszPtr )) {
-
-		// allocate memory for 32 entries at a time
-		if (( i % 32 ) == 0 ) {
-			uSize += 128;
-			lppList = (TCHAR _far * _far *)ReallocMem( lppList, uSize );
-		}
-
-		lppList[ i++ ] = lpszPtr;
+		AppendPopupEntry( &lppList, &uSize, &i, lpszPtr );
 	}
 
 	// get batch variables into the list
 	if (( fAlias == 0 ) && ( cv.bn >= 0 )) {
 
 		for ( n = bframe[cv.bn].Argv_Offset; ( bframe[ cv.bn ].Argv[ n ] != NULL ); n++ ) {
-
-			if (( i % 32 ) == 0 ) {
-				uSize += 128;
-				lppList = (TCHAR _far * _far *)ReallocMem( lppList, uSize );
-			}
-
 			lpszPtr = (TCHAR _far *)_alloca( ( strlen( bframe[ cv.bn ].Argv[ n ] ) + 6 ) * sizeof(TCHAR) );
 			sprintf_far( lpszPtr, _TEXT("%%%d=%s"), n - bframe[cv.bn].Argv_Offset, bframe[ cv.bn ].Argv[ n ] );
-			lppList[ i++ ] = lpszPtr;
+			AppendPopupEntry( &lppList, &uSize, &i, lpszPtr );
 		}
 	}
 
