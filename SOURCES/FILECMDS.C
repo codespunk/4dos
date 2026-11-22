@@ -887,6 +887,29 @@ int _near Mv_Cmd( LPTSTR pszCmdLine )
 
 #pragma alloc_text( MISC_TEXT, _mv )
 
+// MOVE /W and DEL /W use the same zero-fill and close sequence.
+static void _near WipeFile( int fh, unsigned long lSize );
+#pragma alloc_text( MISC_TEXT, WipeFile )
+
+static void _near WipeFile( int fh, unsigned long lSize )
+{
+    char *lpZero;
+
+    lpZero = (char *)malloc( 512 );
+    memset( lpZero, 0, 512 );
+
+    while ( lSize != 0L ) {
+        _write( fh, lpZero, (( lSize > 512L ) ? 512 : (int)lSize ));
+        if ( lSize > 512 )
+            lSize -= 512;
+        else
+            lSize = 0L;
+    }
+
+    free( lpZero );
+    _close( fh );
+}
+
 
 static int _mv(register MOVE_STRUCT *Move)
 {
@@ -1083,8 +1106,6 @@ static int _mv(register MOVE_STRUCT *Move)
 
 				if ( Move->fFlags & MOVE_WIPE ) {
 
-					char *lpZero;
-
 					unsigned long lSize;
 
 					if (( lSize = QueryFileSize( Move->szSourceName, 0 )) > 0L ) {
@@ -1092,19 +1113,7 @@ static int _mv(register MOVE_STRUCT *Move)
 						if (( i = _sopen( Move->szSourceName, (_O_WRONLY | _O_BINARY), _SH_DENYRW )) < 0 )
 							goto Move_Status;			
 
-					    lpZero = (char *)malloc( 512 );					
-						memset( lpZero, 0, 512 );
-
-					    while ( lSize != 0L ) {
-							_write( i, lpZero, (( lSize > 512L ) ? 512 : (int)lSize ));
-							if ( lSize > 512 )
-								lSize -= 512;
-							else
-								lSize = 0L;
-					    }
-
-					    free( lpZero );
-					    _close( i );
+						WipeFile( i, lSize );
 					}
 				}
 
@@ -2015,8 +2024,6 @@ _del_abort:
 			// overwrite a file with 0's before erasing it
 			if ( Del->fFlags & DEL_WIPE ) {
 
-				char *lpZero;
-
 				unsigned long lSize;
 
 				if (( lSize = QueryFileSize( Del->szTarget, 0 )) > 0L ) {
@@ -2030,19 +2037,7 @@ _del_abort:
 						goto Del_Next;
 					}
 
-				    lpZero = (char *)malloc( 512 );					
-				    memset( lpZero, 0, 512 );
-
-				    while ( lSize != 0L ) {
-						_write( i, lpZero, (( lSize > 512L ) ? 512 : (int)lSize ));
-						if ( lSize > 512 )
-							lSize -= 512;
-						else
-							lSize = 0L;
-				    }
-
-				    free( lpZero );
-				    _close( i );
+					WipeFile( i, lSize );
 				}
 			}
 
