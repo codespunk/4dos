@@ -585,6 +585,18 @@ int _near Delay_Cmd( LPTSTR pszCmdLine )
 #define DOTYPE_UNTIL 8
 #define DOTYPE_WHILE 0x10
 
+// Common file/clipboard input preparation for DO and FOR.
+static int _fastcall OpenLoopInputFile( LPTSTR pszName )
+{
+	if ( _stricmp( pszName, CLIP ) == 0 ) {
+		RedirToClip( pszName, 0 );
+		CopyFromClipboard( pszName );
+	} else
+		mkfname( pszName, 0 );
+
+	return _sopen( pszName, (_O_RDONLY | _O_BINARY), _SH_DENYWR );
+}
+
 // DO loop
 int _near Do_Cmd( LPTSTR pszCmdLine )
 {
@@ -772,13 +784,7 @@ do_usage:
 
 				else if ( hFH < 0 ) {
 
-					if ( _stricmp( gszCmdline, CLIP ) == 0 ) {
-						RedirToClip( gszCmdline, 0 );
-						CopyFromClipboard( gszCmdline );
-					} else
-						mkfname( gszCmdline, 0 );
-
-					if (( hFH = _sopen( gszCmdline, (_O_RDONLY | _O_BINARY), _SH_DENYWR )) < 0 ) {
+					if (( hFH = OpenLoopInputFile( gszCmdline )) < 0 ) {
 						nReturn = error( _doserrno, gszCmdline );
 						cv.f.flag._do_leave++;
 					}
@@ -1422,13 +1428,7 @@ GetFileTokens:
 						hFH = STDIN;
 					else {
 
-						if ( _stricmp( gszCmdline, CLIP ) == 0 ) {
-							RedirToClip( gszCmdline, 0 );
-							CopyFromClipboard( gszCmdline );
-						} else
-							mkfname( gszCmdline, 0 );
-
-						if (( hFH = _sopen( gszCmdline, (_O_RDONLY | _O_BINARY), _SH_DENYWR )) < 0 ) {
+						if (( hFH = OpenLoopInputFile( gszCmdline )) < 0 ) {
 							nReturn = error( _doserrno, gszCmdline );
 							goto for_bye;
 						}
