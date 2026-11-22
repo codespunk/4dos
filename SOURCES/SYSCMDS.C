@@ -53,8 +53,10 @@ static void _fastcall GetFuzzyDir( LPTSTR );
 void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
 static int _global( unsigned long, long, LPTSTR, LPTSTR );
 static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
+static void _near WriteFuzzyTreeEntry( int, LPTSTR, LPTSTR, LPTSTR );
 
 #pragma alloc_text( MISC_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
+#pragma alloc_text( MISC_TEXT, WriteFuzzyTreeEntry )
 #pragma alloc_text( MISC_TEXT, MakeDirectory, DestroyDirectory, SaveDirectory )
 #pragma alloc_text( MISC_TEXT, gtime, gdate, _timer, _log_entry, getlabel )
 #pragma alloc_text( MISC_TEXT, GetLogName )
@@ -261,6 +263,26 @@ static void ReadAndWriteFiles( int nInput, int nOutput, TCHAR *pszLine, int nLen
 	}
 }
 
+// Append one formatted long/short path pair to JPSTREE.IDX.
+static void _near WriteFuzzyTreeEntry( int nFH, LPTSTR szPath, LPTSTR szDir, LPTSTR szLine )
+{
+	// remove trailing '/' or '\'
+	strip_trailing( szPath+3, SLASHES );
+	
+	qprintf( nFH, FMT_STR, szPath );
+	
+	// if the SFN is different, insert it here too!
+	strcpy( szDir, szPath );
+	GetShortName( szDir );
+	
+	szLine[0] = _TEXT('\0');
+	if ( _stricmp( szDir, szPath ) != 0 )
+		sprintf( szLine, _TEXT("\004\004%.2048s"), szDir );
+	strcat( szLine, gszCRLF );
+	
+	qprintf( nFH, FMT_STR, szLine );
+}
+
 
 // update JPSTREE.IDX (on _mkdir() & _rmdir() )
 //   fDelete = 0 to insert, 1 to delete
@@ -388,21 +410,8 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 				strcpy( szPath, pszDirectory );
 //				mkfname( szPath, MKFNAME_NOERROR );
 
-				// remove trailing '/' or '\'
-				strip_trailing( szPath+3, SLASHES );
-
-				qprintf( nFH, FMT_STR, szPath );
-
-				// if the SFN is different, insert it here too!
-				strcpy( szDir, szPath );
-				GetShortName( szDir );
-
-				szLine[0] = _TEXT('\0');
-				if ( _stricmp( szDir, szPath ) != 0 )
-					sprintf( szLine, _TEXT("\004\004%.2048s"), szDir );
-				strcat( szLine, gszCRLF );
-
-				qprintf( nFH, FMT_STR, szLine );
+				// Write the same JPSTREE entry format at both insertion sites.
+				WriteFuzzyTreeEntry( nFH, szPath, szDir, szLine );
 			}
 
 			lWriteOffset = (LONG)_lseek( nFH, 0L, SEEK_CUR );
@@ -443,21 +452,8 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 			strcpy( szPath, pszDirectory );
 			mkfname( szPath, MKFNAME_NOERROR );
 
-			// remove trailing '/' or '\'
-			strip_trailing( szPath+3, SLASHES );
-
-			qprintf( nFH, FMT_STR, szPath );
-
-			// if the SFN is different, insert it here too!
-			strcpy( szDir, szPath );
-			GetShortName( szDir );
-
-			szLine[0] = _TEXT('\0');
-			if ( _stricmp( szDir, szPath ) != 0 )
-				sprintf( szLine, _TEXT("\004\004%.2048s"), szDir );
-			strcat( szLine, gszCRLF );
-
-			qprintf( nFH, FMT_STR, szLine );
+			// The end-of-file append uses the same index entry writer.
+			WriteFuzzyTreeEntry( nFH, szPath, szDir, szLine );
 		}
 	}
 
