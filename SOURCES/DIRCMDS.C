@@ -1996,7 +1996,10 @@ static void _near heapSort( DIR_ENTRY _huge *lpBase, unsigned int uEntries )
 	register unsigned int i;
 	char szTmp[ sizeof(DIR_ENTRY) ];
 
-	for ( i = uEntries >> 1 - 1; i < UINT_MAX; i-- )
+	if ( uEntries < 2 )
+		return;
+
+	for ( i = ( uEntries - 1 ) >> 1; i < UINT_MAX; i-- )
 		downHeap( lpBase, i, uEntries - 1 );
 	for ( i = uEntries - 1; i != 0; i-- ) {
 		_fmemmove( szTmp, &lpBase[i], sizeof( DIR_ENTRY) );
