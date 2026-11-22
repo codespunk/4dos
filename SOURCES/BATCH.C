@@ -2818,11 +2818,25 @@ static int _fastcall _setlocal( void )
 }
 
 
+// Return nonzero if an ENDLOCAL export list names this variable.
+static int _fastcall IsEndlocalExport( LPTSTR pszCmdLine, LPTSTR pszVariable )
+{
+	int i;
+	LPTSTR pszArg;
+
+	if (( pszCmdLine ) && ( *pszCmdLine )) {
+		for ( i = 0; (( pszArg = ntharg( pszCmdLine, i )) != NULL ); i++ ) {
+			if ( stricmp( pszArg, pszVariable ) == 0 )
+				return 1;
+		}
+	}
+	return 0;
+}
+
 static int _fastcall _endlocal( LPTSTR pszCmdLine )
 {
-	int i, nReturn = 0, fExport, nOffset;
+	int nReturn = 0, nOffset;
 	TCHAR _far *lpszVar;
-	TCHAR *pszArg;
 	TCHAR szVariable[CMDBUFSIZ];
 
 	if ( bframe[ cv.bn ].nSetLocalOffset == 0 )
@@ -2846,19 +2860,8 @@ static int _fastcall _endlocal( LPTSTR pszCmdLine )
 		
 		sscanf_far( lpszVar, _TEXT("%255[^=]"), szVariable );
 
-		// export list?
-		fExport = 0;
-		if (( pszCmdLine ) && ( *pszCmdLine )) {
-
-			for ( i = 0; (( fExport == 0 ) && (( pszArg = ntharg( pszCmdLine, i )) != NULL )); i++ ) {
-				// save this variable?
-				if ( stricmp( pszArg, szVariable ) == 0 )
-					fExport = 1;
-			}
-		}
-
 		// remove the existing environment variables unless they're exported
-		if ( fExport == 0 ) {
+		if ( IsEndlocalExport( pszCmdLine, szVariable ) == 0 ) {
 			add_list( szVariable, glpEnvironment );
 			lpszVar = glpEnvironment;
 		} else
@@ -2874,18 +2877,7 @@ static int _fastcall _endlocal( LPTSTR pszCmdLine )
 
 		sscanf_far( lpszVar, _TEXT("%255[^=]"), szVariable );
 
-		// export list?
-		fExport = 0;
-		if (( pszCmdLine ) && ( *pszCmdLine )) {
-
-			for ( i = 0; (( fExport == 0 ) && (( pszArg = ntharg( pszCmdLine, i )) != NULL )); i++ ) {
-				// don't overwrite this variable?
-				if ( stricmp( pszArg, szVariable ) == 0 )
-					fExport = 1;
-			}
-		}
-
-		if ( fExport == 0 ) {
+		if ( IsEndlocalExport( pszCmdLine, szVariable ) == 0 ) {
 			sprintf( szVariable, FMT_FAR_PREC_STR, CMDBUFSIZ-1, lpszVar );
 			add_list( szVariable, glpEnvironment );
 		}
