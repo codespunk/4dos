@@ -648,14 +648,6 @@ StartLoop:
 							}
 							nSearch = 0;
 							goto ResetSearch;
-#ifdef VER2
-							// alternate incremental search code replaces everything
-							// below "} else if ( j == 1 ) {" line above
-							// discard non-matching character and beep
-							nSearch--;
-							szSearch[ nSearch ] = _TEXT('\0');
-							break;
-#endif
 						}
 					}
 				}
