@@ -2007,42 +2007,29 @@ Eval:
 				while (( *pszArg ) && ( *pszArg++ != _TEXT(',')))
 					;
 
+				// Keep DATE's error check before changing the timestamp fields.
+				if (( nOffset == FUNC_FILEDATE ) && (( i = atoi( pszArg )) > 5 ))
+					return ERROR_INVALID_PARAMETER;
+
+				// All three functions select the same access/creation time.
+				if ( n == 1 )
+					FileTimeToDOSTime( &(dir.ftLastAccessTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
+				else if ( n == 2 )
+					FileTimeToDOSTime( &(dir.ftCreationTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
+
 				if ( nOffset == FUNC_FILEAGE ) {
-
-					if ( n == 1 )
-						FileTimeToDOSTime( &(dir.ftLastAccessTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-					else if ( n == 2 )
-						FileTimeToDOSTime( &(dir.ftCreationTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-
 					ulTemp = dir.fd.wr_date;
 					ulTemp = (ulTemp << 16) + dir.ft.wr_time;
 
 					sprintf( pszVar, FMT_ULONG, ulTemp );
 
 				} else if ( nOffset == FUNC_FILEDATE ) {
-
-					// optional date format
-					if (( i = atoi( pszArg )) > 5 )
-						return ERROR_INVALID_PARAMETER;
-
 					// replace leading space with a 0
-
-					if ( n == 1 )
-						FileTimeToDOSTime( &(dir.ftLastAccessTime), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-					else if ( n == 2 )
-						FileTimeToDOSTime( &(dir.ftCreationTime), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-
 					if (*( pszVar = FormatDate( dir.fd.file_date.months, dir.fd.file_date.days, dir.fd.file_date.years+80, i )) == ' ' )
 						*pszVar = '0';
 
 				} else {
 					// file time
-
-					if ( n == 1 )
-						FileTimeToDOSTime( &(dir.ftLastAccessTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-					else if ( n == 2 )
-						FileTimeToDOSTime( &(dir.ftCreationTime ), &(dir.ft.wr_time ), &(dir.fd.wr_date ) );
-
 					if ( _ctoupper( *pszArg ) == 'S' ) {
 						szCountryDateTimeFormat[4] = gaCountryInfo.szTimeSeparator[0];
 						szCountryDateTimeFormat[9] = gaCountryInfo.szTimeSeparator[0];
