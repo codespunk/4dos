@@ -1751,7 +1751,7 @@ void ColorizeDirectory( DIR_ENTRY _huge *files, unsigned int uEntries, int fDefa
 							if ( _fstricmp( cdir[n].szColorName, colorize_atts[j].pszType ) == 0 ) {
 								if ( files[i].uAttribute & colorize_atts[j].uAttribute )
 									goto got_dcolor;
-								if (( j == 6 ) && ( files[i].uAttribute == 0 ))
+								if (( j == TOTAL_ATTRIBUTES - 1 ) && ( files[i].uAttribute == 0 ))
 									goto got_dcolor;
 							}
 						}
