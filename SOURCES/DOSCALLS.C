@@ -866,45 +866,6 @@ int SetDateTime( DATETIME *sysDateTime )
 }
 
 
-#ifdef VER2
-
-// get the file's date & time
-int QueryHandleDateTime( int fd, DATETIME *sysDateTime )
-{
-	int rval;
-	union {
-		unsigned int wr_time;
-		struct {
-			unsigned seconds : 5;
-			unsigned minutes : 6;
-			unsigned hours : 5;
-		} fTime;
-	} Time;
-	union {
-		unsigned int wr_date;
-		struct {
-			unsigned days : 5;
-			unsigned months : 4;
-			unsigned years : 7;
-		} fDate;
-	} Date;
-
-	if (( rval = _dos_getftime( fd, &(Date.wr_date), &(Time.wr_time) )) == 0 ) {
-
-		sysDateTime->day = Date.fDate.days;
-		sysDateTime->month = Date.fDate.months;
-		sysDateTime->year = Date.fDate.years + 1980;
-		sysDateTime->seconds = Time.fTime.seconds;
-		sysDateTime->minutes = Time.fTime.minutes;
-		sysDateTime->hours = Time.fTime.hours;
-	}
-
-	return rval;
-}
-
-#endif
-
-
 // set the file's date & time
 int _fastcall SetFileDateTime( char *pszFilename, int fd, DATETIME *sysDateTime, int fField )
 {

@@ -468,9 +468,6 @@ char _far * GetDMIstring( BYTE, int );
 int ifs_type( LPTSTR );
 void  QueryDateTime( DATETIME * );
 int  SetDateTime( DATETIME * );
-#ifdef VER2
-int QueryHandleDateTime( int, DATETIME * );
-#endif
 int  _fastcall SetFileDateTime( LPTSTR, int, DATETIME *, int );
 long QueryFileSize( LPTSTR, int );
 int QueryFileSize64( LPTSTR, int, t_int64 * );
