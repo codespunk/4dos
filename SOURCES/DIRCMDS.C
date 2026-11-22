@@ -1751,7 +1751,7 @@ void ColorizeDirectory( DIR_ENTRY _huge *files, unsigned int uEntries, int fDefa
 							if ( _fstricmp( cdir[n].szColorName, colorize_atts[j].pszType ) == 0 ) {
 								if ( files[i].uAttribute & colorize_atts[j].uAttribute )
 									goto got_dcolor;
-								if (( j == 6 ) && ( files[i].uAttribute == 0 ))
+								if (( j == TOTAL_ATTRIBUTES - 1 ) && ( files[i].uAttribute == 0 ))
 									goto got_dcolor;
 							}
 						}
@@ -1996,7 +1996,10 @@ static void _near heapSort( DIR_ENTRY _huge *lpBase, unsigned int uEntries )
 	register unsigned int i;
 	char szTmp[ sizeof(DIR_ENTRY) ];
 
-	for ( i = uEntries >> 1 - 1; i < UINT_MAX; i-- )
+	if ( uEntries < 2 )
+		return;
+
+	for ( i = ( uEntries - 1 ) >> 1; i < UINT_MAX; i-- )
 		downHeap( lpBase, i, uEntries - 1 );
 	for ( i = uEntries - 1; i != 0; i-- ) {
 		_fmemmove( szTmp, &lpBase[i], sizeof( DIR_ENTRY) );
