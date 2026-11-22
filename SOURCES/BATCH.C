@@ -62,6 +62,7 @@ static int _fastcall __quit( LPTSTR, BOOL );
 static int _fastcall __scrput( LPTSTR, int );
 static int _fastcall _setlocal( void );
 static int _fastcall _endlocal( LPTSTR );
+extern int _near _fastcall ContinueLine( LPTSTR );
 
 static unsigned int GetNibble( void );
 static char DecompressChar( void );
@@ -2951,6 +2952,20 @@ int _near Shift_Cmd( LPTSTR pszCmdLine )
 }
 
 
+// Fetch and normalize one SWITCH/CASE control line.
+static int _near ReadSwitchLine( void )
+{
+	if ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) <= 0 )
+		return 0;
+
+	bframe[cv.bn].uBatchLine++;
+	if ( ContinueLine( gszCmdline ) != 0 )
+		return 0;
+
+	trim( gszCmdline, WHITESPACE );
+	return 1;
+}
+
 // Switch Case Statement
 int _near Switch_Cmd( LPTSTR pszCmdLine )
 {
@@ -2968,14 +2983,7 @@ int _near Switch_Cmd( LPTSTR pszCmdLine )
 	pszTest = strcpy( (LPTSTR)_alloca( ( strlen( pszCmdLine ) + 1) * sizeof(TCHAR) ), pszCmdLine );
 
 	// scan for a matching Case, Default, or the EndSwitch line
-	while ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
-
-		bframe[cv.bn].uBatchLine++;
-
-		if ( ContinueLine( gszCmdline ) != 0 )
-			break;
-
-		trim( gszCmdline, WHITESPACE );
+	while ( ReadSwitchLine() ) {
 
 		// check for (illegal syntax) "*case ..."
 		if ( gszCmdline[0] == _TEXT('*'))
@@ -3031,14 +3039,7 @@ int _near Case_Cmd( LPTSTR pszCmdLine )
 		return BATCH_RETURN;
 
 	// scan for the EndSwitch line
-	while ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
-
-		bframe[cv.bn].uBatchLine++;
-
-		if ( ContinueLine( gszCmdline ) != 0 )
-			break;
-
-		trim( gszCmdline, WHITESPACE );
+	while ( ReadSwitchLine() ) {
 
 		// ignore nested SWITCH calls
 		if ( strnicmp( gszCmdline, _TEXT("switch "), 7 ) == 0 )
