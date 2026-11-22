@@ -499,9 +499,7 @@ static int _fastcall __ffindit( register FFIND_STRUCT *Find )
 
 					// DOS puts pipes into temp files; so we can
 					//   get the size via a seek to the end
-					if ( _isatty( STDIN ))
-						LFile.lpEOF = LFile.lpCurrent;
-					else
+					if ( !_isatty( STDIN ))
 						LFile.lSize = QuerySeekSize( STDIN );
 
 				} else {
