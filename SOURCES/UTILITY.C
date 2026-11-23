@@ -6,6 +6,11 @@
 #include <dos.h>
 #include "4all.h"
 
+// BREAK [ON | OFF]
+// Display or change extended Ctrl+C / Ctrl+Break checking.
+// With no argument, display the current setting.
+// Examples: BREAK; BREAK ON; BREAK OFF.
+
 int _far UtilityBreak_Cmd( char *pszCmdLine )
 {
 	int argc;
