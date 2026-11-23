@@ -5,6 +5,16 @@
 #include <stdio.h>
 #include <dos.h>
 #include <io.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <conio.h>
+#include <fcntl.h>
+#include <malloc.h>
+#include <share.h>
+#include <string.h>
+#include <direct.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "4all.h"
 
 // BREAK [ON | OFF]
