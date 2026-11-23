@@ -241,6 +241,9 @@ $(OBJ)\doscmds.obj : doscmds.c $(headers) version.h build.h idle.h
 $(OBJ)\utility.obj : utility.c $(headers)
         $(COMP) /NTUTILITY_TEXT utility.c
 
+$(OBJ)\fileutil.obj : fileutil.c $(headers)
+        $(COMP) /NTFILE_TEXT fileutil.c
+
 $(OBJ)\iofmt.obj : iofmt.c $(headers)
         $(COMP) /NTMISC_TEXT iofmt.c
 
@@ -351,6 +354,7 @@ $(LINKTARG) : \
               $(OBJ)\gmtime.obj $(OBJ)\leapyear.obj $(OBJ)\locmktim.obj \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
               $(OBJ)\utility.obj \
+              $(OBJ)\fileutil.obj \
 #       other
               4dostart.lib startupm.lib 4dos.mak $(LNKNAME) build.txt \
               setup.mak dolink.mak

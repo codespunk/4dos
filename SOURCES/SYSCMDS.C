@@ -1021,6 +1021,7 @@ int _near Rd_Cmd( LPTSTR pszCmdLine )
 
 
 // attach descriptive labels to filenames
+// Near DESCRIBE dispatcher; forward to the FILE_TEXT implementation.
 int _near Describe_Cmd( LPTSTR pszCmdLine )
 {
 	register int nFind;

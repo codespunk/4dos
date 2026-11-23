@@ -131,6 +131,7 @@ static int fClip;
 
 
 // copy or append file(s)
+// Near COPY dispatcher; forward to the FILE_TEXT implementation.
 int _near Copy_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -706,6 +707,7 @@ static int _mv( MOVE_STRUCT *);
 
 
 // move files by renaming across directories or copying/deleting
+// Near MOVE dispatcher; forward to the FILE_TEXT implementation.
 int _near Mv_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -1640,6 +1642,7 @@ static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTem
 #define REN_TOTALS 0x40
 
 // rename files (including to different directories) or directories
+// Near REN dispatcher; forward to the FILE_TEXT implementation.
 int _near Ren_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -1851,6 +1854,7 @@ static int _del( DEL_STRUCT * );
 
 
 // Delete file(s)
+// Near DEL dispatcher; forward to the FILE_TEXT implementation.
 int _near Del_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -2163,6 +2167,7 @@ static int _attrib( ATTRIB_STRUCT * );
 
 
 // change file attributes (HIDDEN, SYSTEM, READ-ONLY, and ARCHIVE)
+// Near ATTRIB dispatcher; forward to the FILE_TEXT implementation.
 int _near Attrib_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -2494,6 +2499,7 @@ static int _touch( TOUCH_STRUCT *, DATETIME * );
 
 
 // change a file's date & time
+// Near TOUCH dispatcher; forward to the FILE_TEXT implementation.
 int _near Touch_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg, pszTemp;
@@ -2845,6 +2851,7 @@ static int _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
 #define FO_FOLLOW 0x100
 
 // display file head to stdout
+// Near HEAD dispatcher; forward to the FILE_TEXT implementation.
 int _near Head_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
@@ -2857,6 +2864,7 @@ int _near Head_Cmd( LPTSTR pszCmdLine )
 
 
 // display file(s) to stdout
+// Near TAIL dispatcher; forward to the FILE_TEXT implementation.
 int _near Tail_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
@@ -2873,6 +2881,7 @@ int _near Tail_Cmd( LPTSTR pszCmdLine )
 #define TYPE_FNAME 8
 
 // display file(s) to stdout
+// Near TYPE dispatcher; forward to the FILE_TEXT implementation.
 int _near Type_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
@@ -3243,6 +3252,7 @@ CloseHandles:
 
 // y reads the standard input and writes to standard output, then invokes TYPE
 //   to put one or more files to standard output
+// Near Y dispatcher; forward to the FILE_TEXT implementation.
 int _near Y_Cmd( LPTSTR pszCmdLine )
 {
 
@@ -3279,6 +3289,7 @@ int _near Y_Cmd( LPTSTR pszCmdLine )
 
 
 // tee copies standard input to output & puts a copy in the specified file(s)
+// Near TEE dispatcher; forward to the FILE_TEXT implementation.
 int _near Tee_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
