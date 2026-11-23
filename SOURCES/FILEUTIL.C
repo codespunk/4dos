@@ -7,6 +7,9 @@
 #include <ctype.h>
 #include <direct.h>
 #include <dos.h>
+#ifndef __WATCOMC__
+#include <msdos.h>
+#endif
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -189,4 +192,44 @@ HaveDescription:
 	}
 
 	return nReturn;
+}
+
+
+// Y [filename ...]
+// Copy standard input to standard output, then TYPE any named files.
+// The original near TYPE command is reached through a far bridge.
+extern int _far FileYTypeBridge( LPTSTR );
+
+int _far FileY_Cmd( LPTSTR pszCmdLine )
+{
+#ifdef __WATCOMC__
+    extern unsigned *__io_mode;
+#else
+    extern char _osfile[];
+#endif
+    int nBytesRead, fEof;
+    TCHAR *pszTemp, szYBuf[514];
+
+    for ( fEof = 0; (( fEof == 0 ) && ( getline( STDIN, szYBuf, 512, EDIT_DATA ) > 0 )); ) {
+        // Look for ^Z.
+        if (( pszTemp = strchr( szYBuf, EoF )) != NULL ) {
+            if ( pszTemp == szYBuf )
+                break;
+            *pszTemp = _TEXT('\0');
+            fEof = 1;
+        } else
+            strcat( szYBuf, gszCRLF );
+
+        nBytesRead = strlen( szYBuf );
+        wwrite( STDOUT, szYBuf, nBytesRead );
+    }
+
+    // Clear the EOF flag.
+#ifdef __WATCOMC__
+    __io_mode[STDIN] &= ~( _EOF | _BINARY );
+#else
+    _osfile[STDIN] &= ~( FEOFLAG | FCRLF );
+#endif
+
+    return ((( pszCmdLine ) && ( *pszCmdLine )) ? FileYTypeBridge( pszCmdLine ) : 0 );
 }

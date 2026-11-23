@@ -3250,41 +3250,20 @@ CloseHandles:
 }
 
 
-// y reads the standard input and writes to standard output, then invokes TYPE
-//   to put one or more files to standard output
+// Y [filename ...]
+// Copy standard input to standard output, then TYPE any named files.
+// Keep the near dispatch entry in its original segment.
+extern int _far FileY_Cmd( LPTSTR );
 // Near Y dispatcher; forward to the FILE_TEXT implementation.
 int _near Y_Cmd( LPTSTR pszCmdLine )
 {
+	return FileY_Cmd( pszCmdLine );
+}
 
-	extern char _osfile[];
-
-	int nBytesRead, fEof;
-	TCHAR *pszTemp, szYBuf[514];
-
-	for ( fEof = 0; (( fEof == 0 ) && ( getline( STDIN, szYBuf, 512, EDIT_DATA ) > 0 )); ) {
-
-		// look for ^Z
-		if (( pszTemp = strchr( szYBuf, EoF )) != NULL ) {
-			if ( pszTemp == szYBuf )
-				break;
-			*pszTemp = _TEXT('\0');
-			fEof = 1;
-		} else
-			strcat( szYBuf, gszCRLF );
-
-		nBytesRead = strlen( szYBuf );
-
-		wwrite( STDOUT, szYBuf, nBytesRead );
-	}
-
-	// clear EOF flag
-#ifdef __WATCOMC__
-	__io_mode[STDIN] &= ~( _EOF | _BINARY );
-#else
-	_osfile[STDIN] &= ~( FEOFLAG | FCRLF );
-#endif
-
-	return ((( pszCmdLine ) && ( *pszCmdLine )) ? Type_Cmd( pszCmdLine ) : 0 );
+// Far bridge to the near TYPE dispatcher for Y.
+int _far FileYTypeBridge( LPTSTR pszCmdLine )
+{
+	return Type_Cmd( pszCmdLine );
 }
 
 
