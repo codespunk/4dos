@@ -56,7 +56,7 @@ goto parse
 :     Do the build; if it fails, make noise and quit
 :
 :buildit
-nmake /nologo /s %_basename _LANGUAGE=%_language _FAMILY=%_family %@if[%_beta == Y,_BETA=Y, ] 
+nmake /nologo /s /f %_basename.mak _LANGUAGE=%_language _FAMILY=%_family %@if[%_beta == Y,_BETA=Y, ]
 set _saveerr=%?
 
 iff exist %_objdir\savedate.dat then
