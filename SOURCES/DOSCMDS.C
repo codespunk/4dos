@@ -53,7 +53,6 @@ extern int _far UtilityCls_Cmd( char * );
 #include <string.h>
 
 #include "4all.h"
-#include "idle.h"
 
 // Keep the near ShowOS call in _TEXT; UTILITY_TEXT calls this far entry.
 void _far UtilityShowOS( void )
@@ -275,28 +274,12 @@ _asm {
 }
 
 
-// enable/disable dynamic idle detection (DR DOS only)
-// see "Implementing Power Management (BatteryMAX) in DR-DOS" for details
+// IDLE [ON | OFF]
+// Keep the near command entry in _TEXT; call the far UTILITY_TEXT implementation.
+extern int _far UtilityIdle_Cmd( char * );
 int _near Idle_Cmd( LPTSTR pszCmdLine )
 {
-	struct _idle_state _far *idle = GetIdlePtr();
-
-	// don't be surprised: all DR DOS boolean names are reversed!
-	if ( idle->flags & IDLE_ENABLE )
-		return error( ERROR_4DOS_IDLE_DISABLED, NULL );
-	if ( pszCmdLine == NULL || *pszCmdLine == '\0' )
-    		printf( IDLE_IS, idle->flags & IDLE_ON ? OFF : ON );
-	else switch ( OffOn( pszCmdLine )) {
-		case 1:
-			idle->flags &= ~IDLE_ON;
-			break;
-		case 0:
-			idle->flags |= IDLE_ON;
-			break;
-		default:
-			return Usage( IDLE_USAGE );
-	}
-	return 0;
+	return UtilityIdle_Cmd( pszCmdLine );
 }
 
 

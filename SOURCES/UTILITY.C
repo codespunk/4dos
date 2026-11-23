@@ -161,3 +161,44 @@ int _far UtilityVer_Cmd( char *pszCmdLine )
 
 	return 0;
 }
+
+// IDLE [ON | OFF]
+// Display or change DR DOS dynamic idle detection (BatteryMAX).
+// With no argument, display the current setting.
+// Examples: IDLE; IDLE ON; IDLE OFF.
+//
+// Match the 16-bit DR DOS idle-state layout without the PORTAB.H dependency.
+// The original IDLE.H uses WORD fields and a VOID FAR * pointer.
+#define UTILITY_IDLE_ON 0x4000
+#define UTILITY_IDLE_ENABLE 0x8000
+struct utility_idle_state {
+    unsigned short count;
+    unsigned short max;
+    unsigned short flags;
+    void _far *vec;
+    unsigned short delay;
+    unsigned short reload;
+    unsigned short indos;
+};
+
+int _far UtilityIdle_Cmd( char *pszCmdLine )
+{
+    struct utility_idle_state _far *idle = GetIdlePtr();
+
+    // DR DOS boolean flags are reversed.
+    if ( idle->flags & UTILITY_IDLE_ENABLE )
+        return error( ERROR_4DOS_IDLE_DISABLED, NULL );
+    if ( pszCmdLine == NULL || *pszCmdLine == '\0' )
+        printf( IDLE_IS, idle->flags & UTILITY_IDLE_ON ? OFF : ON );
+    else switch ( OffOn( pszCmdLine )) {
+        case 1:
+            idle->flags &= ~UTILITY_IDLE_ON;
+            break;
+        case 0:
+            idle->flags |= UTILITY_IDLE_ON;
+            break;
+        default:
+            return Usage( IDLE_USAGE );
+    }
+    return 0;
+}
