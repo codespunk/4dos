@@ -114,3 +114,44 @@ int _far UtilityTruename_Cmd( char *pszCmdLine )
 
 	return 0;
 }
+
+extern void _far UtilityShowOS( void );
+
+// VER [/R]
+// Display the DOS version; /R adds the 4DOS build, DOS revision,
+// and DOS kernel location information where available.
+// Examples: VER; VER /R.
+
+int _far UtilityVer_Cmd( char *pszCmdLine )
+{
+	extern int fWin98;
+	extern int fWinME;
+	long lVerFlags;
+
+	if (( lVerFlags = switch_arg( pszCmdLine, "R" )) < 0 )
+		return ( Usage( VER_USAGE ));
+
+	UtilityShowOS();
+
+	// display version info (Rev level, & whether in HMA or ROM)
+	if ( lVerFlags == 1 ) {
+
+		printf( FOURDOS_REV, VER_BUILD, __DATE__ );
+
+		// DR-DOS doesn't have an internal revision number
+		if (( gnOSFlags & DOS_IS_DR ) == 0 ) {
+
+			if ( gnOSFlags & DOS_IS_OS2 )
+				printf( OS2_REVISION, ( gnOSFlags & 0x7FF ));
+			else
+				printf( DOS_REVISION, ( gnOSFlags & 0x7 ) + 'A' );
+
+			printf( DOS_LOCATION, (( gnOSFlags & DOS_IN_HMA ) ? DOS_HMA : (( gnOSFlags & DOS_IN_ROM ) ? DOS_ROM : DOS_LOW )));
+		}
+
+		crlf();
+
+	}
+
+	return 0;
+}

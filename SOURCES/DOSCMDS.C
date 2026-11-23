@@ -1,3 +1,11 @@
+// Keep the near ShowOS call in _TEXT; UTILITY_TEXT calls this far entry.
+void _far UtilityShowOS( void )
+{
+	ShowOS();
+}
+
+extern int _far UtilityVer_Cmd( char * );
+
 extern int _far UtilityTruename_Cmd( char * );
 
 extern int _far UtilityCls_Cmd( char * );
@@ -1341,35 +1349,6 @@ int _near Unlock_Cmd( char *pszCmdLine )
 // print version numbers of 4DOS & DOS
 int _near Ver_Cmd( char *pszCmdLine )
 {
-	extern int fWin98;
-	extern int fWinME;
-	long lVerFlags;
-
-	if (( lVerFlags = switch_arg( pszCmdLine, "R" )) < 0 )
-		return ( Usage( VER_USAGE ));
-
-	ShowOS();
-
-	// display version info (Rev level, & whether in HMA or ROM)
-	if ( lVerFlags == 1 ) {
-
-		printf( FOURDOS_REV, VER_BUILD, __DATE__ );
-
-		// DR-DOS doesn't have an internal revision number
-		if (( gnOSFlags & DOS_IS_DR ) == 0 ) {
-
-			if ( gnOSFlags & DOS_IS_OS2 )
-				printf( OS2_REVISION, ( gnOSFlags & 0x7FF ));
-			else
-				printf( DOS_REVISION, ( gnOSFlags & 0x7 ) + 'A' );
-
-			printf( DOS_LOCATION, (( gnOSFlags & DOS_IN_HMA ) ? DOS_HMA : (( gnOSFlags & DOS_IN_ROM ) ? DOS_ROM : DOS_LOW )));
-		}
-
-		crlf();
-
-	}
-
-	return 0;
+	return UtilityVer_Cmd( pszCmdLine );
 }
 
