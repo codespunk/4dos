@@ -95,3 +95,22 @@ int _far UtilityCls_Cmd( char *pszCmdLine )
 
 	return 0;
 }
+
+// TRUENAME filename
+// Display the true DOS pathname, resolving substituted drives where supported.
+// Examples: TRUENAME C:\AUTOEXEC.BAT; TRUENAME C:\DOS\..\CONFIG.SYS.
+
+int _far UtilityTruename_Cmd( char *pszCmdLine )
+{
+	char name[MAXFILENAME];
+
+	if (( pszCmdLine == NULL ) || ( *pszCmdLine == '\0' ))
+		return ( Usage( TRUENAME_USAGE ));
+
+	if ( true_name( pszCmdLine, name ) == NULL )
+		return ERROR_EXIT;
+
+	printf( FMT_STR_CRLF, name );
+
+	return 0;
+}

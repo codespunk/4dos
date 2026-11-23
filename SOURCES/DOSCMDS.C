@@ -1,3 +1,5 @@
+extern int _far UtilityTruename_Cmd( char * );
+
 extern int _far UtilityCls_Cmd( char * );
 
 
@@ -1285,17 +1287,7 @@ int _near Swap_Cmd( char *pszCmdLine )
 // display the true path name for the specified file
 int _near Truename_Cmd( char *pszCmdLine )
 {
-	char name[MAXFILENAME];
-
-	if (( pszCmdLine == NULL ) || ( *pszCmdLine == '\0' ))
-		return ( Usage( TRUENAME_USAGE ));
-
-	if ( true_name( pszCmdLine, name ) == NULL )
-		return ERROR_EXIT;
-
-	printf( FMT_STR_CRLF, name );
-
-	return 0;
+	return UtilityTruename_Cmd( pszCmdLine );
 }
 
 
