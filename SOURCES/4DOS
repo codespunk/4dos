@@ -238,6 +238,9 @@ $(OBJ)\lines.obj : lines.c $(headers)
 $(OBJ)\doscmds.obj : doscmds.c $(headers) version.h build.h idle.h
         $(COMP) /I. /NT_TEXT doscmds.c
 
+$(OBJ)\utility.obj : utility.c $(headers)
+        $(COMP) /NTUTILITY_TEXT utility.c
+
 $(OBJ)\iofmt.obj : iofmt.c $(headers)
         $(COMP) /NTMISC_TEXT iofmt.c
 
@@ -347,6 +350,7 @@ $(LINKTARG) : \
               $(OBJ)\md5c.obj $(OBJ)\sha1.obj $(OBJ)\cputype.obj \
               $(OBJ)\gmtime.obj $(OBJ)\leapyear.obj $(OBJ)\locmktim.obj \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
+              $(OBJ)\utility.obj \
 #       other
               4dostart.lib startupm.lib 4dos $(LNKNAME) build.txt \
               setup.mak dolink.mak

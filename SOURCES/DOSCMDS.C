@@ -187,34 +187,13 @@ char szAppendBlock[130] = "";
 
 
 // enable/disable ^C trapping
+// The command dispatcher stores near function pointers.  Keep this
+// entry point near and call the utility implementation in its own segment.
+extern int _far UtilityBreak_Cmd( char * );
+
 int _near Break_Cmd( register char *pszCmdLine )
 {
-	int argc;
-
-	if (( pszCmdLine == NULL ) || ( *pszCmdLine == '\0' )) {
-
-		// inquiring about break status
-
-_asm {
-		mov	ax,03300h
-		int	21h
-		xor	dh,dh
-		mov	argc,dx
-}
-		printf( BREAK_IS, (( argc ) ? ON : OFF ));
-
-	} else {		// setting new break status
-
-		if (( argc = OffOn( pszCmdLine )) == -1 )
-			return ( Usage( BREAK_USAGE ));
-_asm {
-		mov	ax,03301h
-		mov	dx,argc
-		int	21h
-}
-	}
-
-	return 0;
+	return UtilityBreak_Cmd( pszCmdLine );
 }
 
 
