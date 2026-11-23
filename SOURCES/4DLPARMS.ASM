@@ -112,7 +112,7 @@ MAXLR     equ       5                   ;maximum number of low memory blocks
                                         ;  we can reserve (master env, global
                                         ;  aliases, global functions, global cmd 
 					;  history, global dir history)
-RELOCMAX  equ       6900                ;maximum relocation table bytes
+RELOCMAX  equ       10240                ;maximum relocation table bytes
 INISMAX   equ       1536                ;maximum length of INI file strings
 INIKMAX   equ       64                  ;maximum INI file key substitutions
 ERRMAX    equ       80                  ;maximum error message length
