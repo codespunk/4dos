@@ -352,7 +352,7 @@ $(LINKTARG) : \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
               $(OBJ)\utility.obj \
 #       other
-              4dostart.lib startupm.lib 4dos $(LNKNAME) build.txt \
+              4dostart.lib startupm.lib 4dos.mak $(LNKNAME) build.txt \
               setup.mak dolink.mak
 !INCLUDE DOLINK.MAK        
 

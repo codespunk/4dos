@@ -9,7 +9,7 @@ ALL : apprel.exe
 apprel.obj : apprel.c 
 	CL $(CFLAGS) apprel.c
 
-apprel.exe : apprel.obj apprel
+apprel.exe : apprel.obj apprel.mak
         link /M apprel,apprel,apprel/map;
 #        link /CO /M apprel,apprel,apprel/map;
 #        e:\peri\ts apprel /e
