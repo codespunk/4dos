@@ -27,6 +27,6 @@ $(OBJ)\kstack.obj : kstack.asm
         $(ASM) $**
 
 # Set up link dependencies and do the link
-$(LINKTARG) : $(OBJ)\kstack.obj kstack
+$(LINKTARG) : $(OBJ)\kstack.obj kstack.mak
 !INCLUDE DOLINK.MAK
 

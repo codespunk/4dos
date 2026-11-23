@@ -348,7 +348,7 @@ $(LINKTARG) : \
               $(OBJ)\gmtime.obj $(OBJ)\leapyear.obj $(OBJ)\locmktim.obj \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
 #       other
-              4dostart.lib startupm.lib 4dos $(LNKNAME) build.txt \
+              4dostart.lib startupm.lib 4dos.mak $(LNKNAME) build.txt \
               setup.mak dolink.mak
 !INCLUDE DOLINK.MAK        
 
