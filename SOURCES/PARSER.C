@@ -1516,13 +1516,6 @@ void ShowPrompt( void )
 	if (( gnCurrentDisk = _getdrive()) < 0 )
 		gnCurrentDisk = 0;
 
-#ifdef SHAREWARE_VERSION
-	// Decrement command counter for restricted usage (actually increment,
-	// since it is negative)
-	if ( glExpDate < 0L )
-		glExpDate += SW_RESTRICT_CMDMUL;
-#endif
-
 	// get prompt from environment, or use default if none
 	if (( lpszPrompt = get_variable( PROMPT_NAME )) != 0L ) {
 		// expand any environment variables in the PROMPT string
