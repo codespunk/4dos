@@ -1,9 +1,3 @@
-// Keep the near ShowOS call in _TEXT; UTILITY_TEXT calls this far entry.
-void _far UtilityShowOS( void )
-{
-	ShowOS();
-}
-
 extern int _far UtilityVer_Cmd( char * );
 
 extern int _far UtilityTruename_Cmd( char * );
@@ -60,6 +54,13 @@ extern int _far UtilityCls_Cmd( char * );
 
 #include "4all.h"
 #include "idle.h"
+
+// Keep the near ShowOS call in _TEXT; UTILITY_TEXT calls this far entry.
+void _far UtilityShowOS( void )
+{
+	ShowOS();
+}
+
 
 static int _near _lock( int );
 static int _near _unlock( int );

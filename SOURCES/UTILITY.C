@@ -41,10 +41,6 @@ _asm {
 
 	return 0;
 }
-}
-
-	return 0;
-}
 
 // CLS [[BRIght] [BLInk] foreground ON background] [BORder color]
 // Clear the screen, move the cursor home, and optionally set colors.
