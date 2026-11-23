@@ -363,14 +363,6 @@ int _near Exit_Cmd( char *pszCmdLine )
 		if ( fExit++ == 0 )
 			find_4files( AUTOEXIT, 0 );
 
-#ifdef SHAREWARE_VERSION
-		// ensure shareware data is written
-		if ( gfShareware && gfSharewareDataRead ) {
-			AccessSharewareData( &SharewareData, 1 );
-			AccessSharewareDup( &SharewareData, 1 );
-		}
-#endif
-
 		ServCtrl( SERV_QUIT, nRet );
 	}
 
@@ -1423,10 +1415,6 @@ int _near Ver_Cmd( char *pszCmdLine )
 
 		crlf();
 
-#ifdef SHAREWARE_VERSION
-		// display serial number (brand) info
-		TestBrand( 0 );
-#endif
 	}
 
 	return 0;
