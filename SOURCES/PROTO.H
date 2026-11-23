@@ -352,7 +352,6 @@ LPTSTR _fastcall ParseColors( LPTSTR, int *, int *);
 int _fastcall color_shade( LPTSTR );
 int PASCAL process_descriptions( LPTSTR, LPTSTR, int );
 int _fastcall FindInstalledFile( LPTSTR, LPTSTR);
-void _fastcall TestBrand( int );
 
 
 // MAIN.C
@@ -488,11 +487,6 @@ int UniqueFileName( LPTSTR );
 LPTSTR PASCAL find_file( int, LPTSTR, unsigned long, FILESEARCH *, LPTSTR);
 int PASCAL FileTimeToDOSTime( PFILETIME, USHORT *, USHORT * );
 void SetWin95Flags(void);
-#if _DOS
-#ifdef SHAREWARE_VERSION
-void AccessSharewareData( SHAREWARE_DATA *, int );
-#endif
-#endif
 LPTSTR IniReadWrite( int, LPTSTR, LPTSTR, LPTSTR, LPTSTR );
 int MouseReset( void );
 
