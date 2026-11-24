@@ -65,10 +65,11 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, get_alias, add_list, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, add_list, next_env, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
+#pragma alloc_text( ENV_TEXT, get_alias )
 
 
 
@@ -526,7 +527,8 @@ TCHAR _far * _fastcall get_variable( LPTSTR pszVariable )
 }
 
 
-// get alias (a near pointer in the current data segment)
+// Look up pszAlias in the alias list, including abbreviated alias names.
+// Return a far pointer to the stored value, or NULL if not found.
 TCHAR _far * _fastcall get_alias( LPTSTR pszAlias )
 {
 	return ( get_list( pszAlias, glpAliasList ));
