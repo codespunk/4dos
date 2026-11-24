@@ -201,3 +201,45 @@ int _near Gosub_Cmd( LPTSTR pszCmdLine )
 {
 	return BatchGosub_Cmd( pszCmdLine );
 }
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchFor_Cmd( LPTSTR );
+int _near For_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchFor_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchDo_Cmd( LPTSTR );
+int _near Do_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchDo_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchIf_Cmd( LPTSTR );
+int _near If_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchIf_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchIff_Cmd( LPTSTR );
+int _near Iff_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchIff_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchSwitch_Cmd( LPTSTR );
+int _near Switch_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchSwitch_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchCase_Cmd( LPTSTR );
+int _near Case_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchCase_Cmd( pszCmdLine );
+}

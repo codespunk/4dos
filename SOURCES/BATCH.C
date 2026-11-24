@@ -437,6 +437,9 @@ int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
 // CALL a nested batch file (or any executable file )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
 extern int _far BatchCommand( LPTSTR, int );
+extern int _far BatchRunCLI( void );
+extern int _far BatchGlobalCommand( LPTSTR );
+extern int _far BatchContinueLine( LPTSTR );
 extern int _far BatchCall_Cmd( LPTSTR );
 #pragma alloc_text( BATCH_TEXT, BatchCall_Cmd )
 
@@ -466,7 +469,13 @@ int _far BatchCall_Cmd( LPTSTR pszCmdLine )
 #define DOTYPE_WHILE 0x10
 
 // DO loop
-int _near Do_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchDo_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchDo_Cmd )
+
+// DO [count | WHILE condition | UNTIL condition | variable = range] ... ENDDO.
+// Example: DO 3 (with a following body and ENDDO).
+// Execute the active batch loop; return interpreter status.
+int _far BatchDo_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	LONG lRepetitor = -1L;
@@ -742,7 +751,7 @@ NextINName:
 			}
 		}
 
-		if ((( nReturn = BatchCLI()) == CTRLC ) || ( cv.fException ) || ( bframe[cv.bn].lOffset == -1L )) {
+		if ((( nReturn = BatchRunCLI()) == CTRLC ) || ( cv.fException ) || ( bframe[cv.bn].lOffset == -1L )) {
 			bframe[cv.bn].lOffset = -1L;
 			break;
 		}
@@ -774,7 +783,7 @@ NextINName:
 			bframe[cv.bn].uBatchLine = uSavedLine;
 
 			// dummy call just to skip to ENDDO
-			BatchCLI();
+			BatchRunCLI();
 		    }
 		}
 	}
@@ -793,6 +802,9 @@ NextINName:
 
 
 // evaluate WHILE or UNTIL expression
+#pragma alloc_text( BATCH_TEXT, WhileTest )
+
+// Evaluate a mutable copy of the loop expression; return truth or usage error.
 static int _fastcall WhileTest( LPTSTR pszExpression )
 {
 	register int nCondition;
@@ -809,10 +821,11 @@ static int _fastcall WhileTest( LPTSTR pszExpression )
 }
 
 
-#pragma alloc_text( MISC_TEXT, do_parsing )
+#pragma alloc_text( BATCH_TEXT, do_parsing )
 
 // check for DO processing
-int _fastcall do_parsing( register LPTSTR pszCmdName )
+// Inspect the command token and update DO nesting/skip flags; return parser status.
+int _far _fastcall do_parsing( register LPTSTR pszCmdName )
 {
 	// if not processing a DO just return
 	if ( cv.f.flag._do == 0 )
@@ -863,7 +876,13 @@ int _fastcall do_parsing( register LPTSTR pszCmdName )
 #define FOR_GLOBAL_PASS2 0x40
 
 // FOR - allows iterative execution of DOS commands
-int _near For_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchFor_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchFor_Cmd )
+
+// FOR variable IN (set) DO command; iterate over values or files.
+// Example: FOR %f IN (*.TXT) DO ECHO %f
+// pszCmdLine is the mutable argument string; return command/loop status.
+int _far BatchFor_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszArg, *pszLine;
 	TCHAR *pszForVar, *pszArgumentSet, *pszCurrentDirectory = NULL, *pszRanges = NULLSTR;
@@ -1004,7 +1023,7 @@ for_usage_error:
 		if ( *pszRanges )
 			strins( pszCmdLine, pszRanges );
 		strins( pszCmdLine, _TEXT("/iq for ") );
-		nReturn = Global_Cmd( pszCmdLine );
+		nReturn = BatchGlobalCommand( pszCmdLine );
 
 		// restore original directory
 		if ( pszCurrentDirectory != NULL )
@@ -1098,7 +1117,7 @@ for_usage_error:
 		    *szSource = _TEXT('\0');
 		UniqueFileName( szSource );
 		sprintf( strend(pszArgumentSet), _TEXT(" >! %s"), szSource );
-		command( pszArgumentSet, 0 );
+		BatchCommand( pszArgumentSet, 0 );
 		strcpy( pszArgumentSet, szSource );
 		fDelete = 1;
 	}
@@ -1342,7 +1361,7 @@ GetRemainder:
 			}
 
 			// execute the command
-			nReturn = command( pszLine, 2 );
+			nReturn = BatchCommand( pszLine, 2 );
 		}
 
 		// delete temporary FILESET file ('command')
@@ -1582,20 +1601,36 @@ static int _far _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 
 
 // conditional IF command
-int _near If_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchIf_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchIf_Cmd )
+
+// IF condition command; execute the command when true.
+// Example: IF EXIST FILE.TXT ECHO Found
+// Return conditional or command status.
+int _far BatchIf_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 0 ));
 }
 
 
 // conditional IFF command
-int _near Iff_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchIff_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchIff_Cmd )
+
+// IFF condition THEN ... ELSE ... ENDIFF; manage structured conditional execution.
+// Example: IFF EXIST FILE.TXT THEN
+// Return conditional or command status.
+int _far BatchIff_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 1 ));
 }
 
 
 // conditional IF command (including ELSE/ELSEIFF)
+#pragma alloc_text( BATCH_TEXT, __if )
+
+// Shared IF/IFF implementation; fIff selects structured mode.
+// Consume the condition and execute the selected command.
 static int _fastcall __if( LPTSTR pszCmdLine, int fIff )
 {
 	LPTSTR pszLine, pszArg;
@@ -1649,16 +1684,17 @@ if_usage:
 
 	// if condition is true, execute the specified command
 	if ( nCondition )
-		return ( command( pszLine, 2 ));
+		return ( BatchCommand( pszLine, 2 ));
 
 	// return non-zero for conditional tests (&& / ||)
 	return (( fIff ) ? 0x666 : ERROR_EXIT );
 }
 
 
-#pragma alloc_text( MISC_TEXT, ExpandArgument )
+#pragma alloc_text( BATCH_TEXT, ExpandArgument )
 
 // expand the argument
+// Expand one argument into the parser buffer; return its pointer or NULL.
 static LPTSTR _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 {
 	TCHAR szBuffer[CMDBUFSIZ];
@@ -1686,10 +1722,12 @@ static LPTSTR _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 }
 
 
-#pragma alloc_text( MISC_TEXT, TestCondition )
+#pragma alloc_text( BATCH_TEXT, TestCondition )
 
 // DO / IF / IFF testing
-int _fastcall TestCondition( LPTSTR pszLine, int fIf )
+// Evaluate the mutable condition string; fIf selects parsing mode.
+// Return truth or negative usage error; may consume condition text.
+int _far _fastcall TestCondition( LPTSTR pszLine, int fIf )
 {
 	register int nCondition;
 	register LPTSTR pszArg;
@@ -1972,11 +2010,13 @@ Conditionals:
 }
 
 
-#pragma alloc_text( MISC_TEXT, iff_parsing )
+#pragma alloc_text( BATCH_TEXT, iff_parsing )
 
 // check for IFF THEN / ELSE / ENDIFF condition
 //   (if waiting for ENDIFF or ELSE, ignore the command)
-int _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
+// Inspect command token and mutable line; update IFF nesting and skip state.
+// Return nonzero when the parser should skip the command.
+int _far _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 {
 	// extract the command name (first argument)
 	// do it first so we don't have to duplicate it in do_parsing()
@@ -2447,7 +2487,13 @@ int _far BatchShift_Cmd( LPTSTR pszCmdLine )
 
 
 // Switch Case Statement
-int _near Switch_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchSwitch_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchSwitch_Cmd )
+
+// SWITCH value; scan the batch file for a matching CASE or DEFAULT.
+// Example: SWITCH %choice
+// Return success, batch return, or usage error.
+int _far BatchSwitch_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszToken, *pszTest, *pszLine;
 	int nNestingLevel = 0;
@@ -2467,7 +2513,7 @@ int _near Switch_Cmd( LPTSTR pszCmdLine )
 
 		bframe[cv.bn].uBatchLine++;
 
-		if ( ContinueLine( gszCmdline ) != 0 )
+		if ( BatchContinueLine( gszCmdline ) != 0 )
 			break;
 
 		trim( gszCmdline, WHITESPACE );
@@ -2515,10 +2561,13 @@ int _near Switch_Cmd( LPTSTR pszCmdLine )
 
 
 // found a trailing CASE or DEFAULT - skip everything until EndSwitch
-int _near Case_Cmd( LPTSTR pszCmdLine )
-{
-	extern int _near _fastcall ContinueLine( LPTSTR  );
+extern int _far BatchCase_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchCase_Cmd )
 
+// CASE value / DEFAULT after a selected branch; skip to ENDSWITCH.
+// Return interpreter status; advances the active batch file.
+int _far BatchCase_Cmd( LPTSTR pszCmdLine )
+{
 	int nNestingLevel = 0;
 
 	// make sure the batch file is still open
@@ -2530,7 +2579,7 @@ int _near Case_Cmd( LPTSTR pszCmdLine )
 
 		bframe[cv.bn].uBatchLine++;
 
-		if ( ContinueLine( gszCmdline ) != 0 )
+		if ( BatchContinueLine( gszCmdline ) != 0 )
 			break;
 
 		trim( gszCmdline, WHITESPACE );

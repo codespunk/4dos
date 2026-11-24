@@ -176,9 +176,9 @@ int _near Y_Cmd( LPTSTR );
 
 // BATCH.C
 int _near ExitBatchFile( void );
-int  _fastcall do_parsing( LPTSTR );
-int  _fastcall iff_parsing( LPTSTR, LPTSTR );
-int _fastcall TestCondition( LPTSTR, int );
+int  _far _fastcall do_parsing( LPTSTR );
+int  _far _fastcall iff_parsing( LPTSTR, LPTSTR );
+int _far _fastcall TestCondition( LPTSTR, int );
 
 
 // CMDS.C

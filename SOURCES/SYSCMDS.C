@@ -1893,3 +1893,11 @@ ExecutableExtension:
 
 	return nResult;
 }
+
+// Far bridge to the near GLOBAL implementation; preserve direct invocation.
+extern int _far BatchGlobalCommand( LPTSTR );
+#pragma alloc_text( _TEXT, BatchGlobalCommand )
+int _far BatchGlobalCommand( LPTSTR pszCmdLine )
+{
+	return Global_Cmd( pszCmdLine );
+}

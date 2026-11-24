@@ -1775,3 +1775,9 @@ int _far BatchRunCLI( void )
 {
 	return BatchCLI();
 }
+
+// Far bridge to the near line continuation parser in _TEXT.
+int _far BatchContinueLine( LPTSTR pszLine )
+{
+	return ContinueLine( pszLine );
+}
