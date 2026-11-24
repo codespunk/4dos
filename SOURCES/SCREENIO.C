@@ -941,7 +941,7 @@ StayInLoop:
 			// F12 - append same filename
 			{
 
-				TCHAR pszFileName[MAXFILENAME], szVarName[129], *pszCmdBase, *pszStart;
+				TCHAR pszFileName[MAXFILENAME+4], szVarName[129], *pszCmdBase, *pszStart;
 				TCHAR _far * _far *lppList = 0L, _far *fpListStart = 0L, _far *lpszEnvPtr;
 				int nFind, nLength, nOffset, fIncludeList = 0, fEnvVar, fURL = 0;
 				unsigned int uListSize = 0xFFF0;
