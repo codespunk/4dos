@@ -50,14 +50,14 @@
 
 
 static int _fastcall __if( LPTSTR, int );
-static int _far LoadBTM( void );
+static int _near LoadBTM( void );
 static int _fastcall WhileTest( LPTSTR );
-static void _far UndoGosubVariables( void );
-static int _far _fastcall goto_label( LPTSTR, int );
+static void _near UndoGosubVariables( void );
+static int _near _fastcall goto_label( LPTSTR, int );
 static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
-static int _far _fastcall __quit( LPTSTR, BOOL );
-static int _far _fastcall _setlocal( void );
-static int _far _fastcall _endlocal( LPTSTR );
+static int _near _fastcall __quit( LPTSTR, BOOL );
+static int _near _fastcall _setlocal( void );
+static int _near _fastcall _endlocal( LPTSTR );
 
 extern void _far BatchDecompile( CompHead _far *, LPBYTE, unsigned int );
 extern void _far _fastcall TripleKey( char * );
@@ -160,8 +160,8 @@ int _far Batch( int argc, TCHAR **argv )
 
 // Load the active batch file into memory, decompressing if necessary.
 // No arguments; updates the active batch frame and returns zero or an error.
-// Far entry is required while Batch() remains in _TEXT.
-static int _far LoadBTM( void )
+// Private near entry: all callers now reside in BATCH_TEXT.
+static int _near LoadBTM( void )
 {
 	UINT uSize, uUnCompSize = 0, uBufferSize;
 	LONG lOSize;
@@ -1480,7 +1480,7 @@ int _far BatchGoto_Cmd( LPTSTR pszCmdLine )
 // remove the Gosub local variables
 
 // Remove the active GOSUB argument variables from the environment.
-static void _far UndoGosubVariables( void )
+static void _near UndoGosubVariables( void )
 {
 	register int i;
 	register LPTSTR pszArg;
@@ -1501,7 +1501,7 @@ static void _far UndoGosubVariables( void )
 // position the file pointer following the label line
 // Search the active batch file for a label; flags control errors and GOSUB arguments.
 // Return zero on success or the existing error status.
-static int _far _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
+static int _near _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 {
 	static TCHAR GOTO_DELIMS[] = _TEXT("+=:[/");
 	register TCHAR *pszArg, *pszArguments = NULL;
@@ -2214,7 +2214,7 @@ int _far BatchQuit_Cmd( register LPTSTR pszCmdLine )
 
 
 // Terminate the current or all nested batch frames; optionally set ERRORLEVEL.
-static int _far _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
+static int _near _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 {
 	register int nBatch;
 
@@ -2285,7 +2285,7 @@ int _far BatchEndlocal_Cmd( LPTSTR pszCmdLine )
 
 
 
-static int _far _fastcall _setlocal( void )
+static int _near _fastcall _setlocal( void )
 {
 	register LPTSTR pszCurrentDirectory;
 	int nOffset;
@@ -2329,7 +2329,7 @@ static int _far _fastcall _setlocal( void )
 
 
 
-static int _far _fastcall _endlocal( LPTSTR pszCmdLine )
+static int _near _fastcall _endlocal( LPTSTR pszCmdLine )
 {
 	int i, nReturn = 0, fExport, nOffset;
 	TCHAR _far *lpszVar;
