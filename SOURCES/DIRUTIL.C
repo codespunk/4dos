@@ -155,3 +155,45 @@ int _far DirRd_Cmd( LPTSTR pszCmdLine )
 
 	return nReturn;
 }
+
+// CD [/N] [directory]
+// Display the current directory (or that of a specified drive), or change it.
+// /N disables fuzzy matching; successful changes save the previous directory.
+// Examples: CD; CD C:; CD ..; CD /N TEMP; CD -.
+int _far DirCd_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg;
+	int fFlags = CD_SAVELASTDIR;
+	long fCD = 0;
+
+	if (( pszCmdLine ) && ( *pszCmdLine )) {
+
+		while (( pszArg = first_arg( pszCmdLine )) != NULL ) {
+			if ( stricmp( pszArg, _TEXT("/N") ) == 0 ) {
+				fCD |= 2;
+				pszCmdLine = skipspace( pszCmdLine + 2 );
+			} else
+				break;
+		}
+	}
+
+	// disable fuzzy searching
+	if ( fCD & 2 )
+		fFlags |= CD_NOFUZZY;
+
+	// if no args or arg == disk spec, print current working directory
+	if ( pszCmdLine )
+		StripQuotes( pszCmdLine );
+
+	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') ) || (( _stricmp( pszCmdLine + 1, _TEXT(":") ) == 0 ) && (( fCD & 1 ) == 0 ))) {
+
+		if (( pszArg = gcdir( pszCmdLine, 0 )) == NULL )
+			return ERROR_EXIT;	// invalid drive
+
+		printf( FMT_STR_CRLF, pszArg );
+		return 0;
+	}
+
+
+	return ( __cd( pszCmdLine, fFlags ));
+}
