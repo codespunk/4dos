@@ -59,6 +59,8 @@ static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
 // UpdateFuzzyTree inserts or deletes directory entries in the fuzzy index.
 // Fuzzy directory index location, file processing, and maintenance.
 #pragma alloc_text( DIR_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
+// Shared directory change implementation belongs in DIR_TEXT.
+#pragma alloc_text( DIR_TEXT, __cd )
 #pragma alloc_text( MISC_TEXT, gtime, gdate, _timer, _log_entry, getlabel )
 #pragma alloc_text( MISC_TEXT, GetLogName )
 
@@ -326,6 +328,9 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 }
 
 
+// Change to dir, trying CDPATH and the fuzzy index when applicable.
+// fFlags controls drive changes, history, fuzzy lookup and error reporting.
+// Return the command status; update the current directory and saved history.
 int _fastcall __cd( LPTSTR dir, int fFlags )
 {
 	register LPTSTR pszPtr = NULL;
@@ -475,7 +480,7 @@ ChangeDirectory:
 
 	// build JPSTREE.IDX if it doesn't exist
 	if ( is_file( dirname ) == 0 ) {
-		if ( command( _TEXT("cdd /s"), 0 ) == CTRLC )
+		if ( DirExecuteCommand( _TEXT("cdd /s"), 0 ) == CTRLC )
 			return CTRLC;
 	}
 
