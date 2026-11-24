@@ -182,6 +182,7 @@ main(int argc, char **argv)
 
    unsigned int *rtptr;
    unsigned int ign_seg, rcnt, scnt;
+   unsigned int chunk_entries, chunk_bytes;
    int ign_flag;
 
    // sign on and parse command line
@@ -231,19 +232,25 @@ main(int argc, char **argv)
    } else
       printf("\n%u relocation entries found\n", header.reloc_cnt);
 
-   // check for relocation table too large
-   reloc_len = header.reloc_cnt * RELOC_SIZE;            // calc tbl length
-   if (reloc_len > BUF_SIZE)
-      error(ERR_RELOC_SIZE);
-
-   // read old relocation table
+   // Seek to the original relocation table.
+   // Use long arithmetic to avoid 16-bit multiplication overflow.
+   reloc_len = (long)header.reloc_cnt * RELOC_SIZE;
    if (lseek(in, (unsigned long)(header.reloc_start), SEEK_SET) == -1L)
       error(ERR_SEEK);
-   if (read(in, buffer, (int)reloc_len) != (int)reloc_len)
-      error(ERR_READ);
 
-   // split relocation info by segment
-   for (rcnt = header.reloc_cnt, rtptr = (unsigned int *)(&buffer); rcnt > 0; rcnt--) {
+   // Read complete relocation entries in buffer-sized chunks.
+   // Preserve the original entry order and segment grouping.
+   chunk_entries = 0;
+   for (rcnt = header.reloc_cnt; rcnt > 0; rcnt--) {
+      if (chunk_entries == 0) {
+         chunk_entries = (rcnt > BUF_SIZE / RELOC_SIZE)
+            ? BUF_SIZE / RELOC_SIZE : rcnt;
+         chunk_bytes = chunk_entries * RELOC_SIZE;
+         if (read(in, buffer, (int)chunk_bytes) != (int)chunk_bytes)
+            error(ERR_READ);
+         rtptr = (unsigned int *)(&buffer);
+      }
+      chunk_entries--;
 
 // printf("Entry %.04X:%.04X -- ", rtptr[1], rtptr[0]);
       // see if this entry is in the ignore list
