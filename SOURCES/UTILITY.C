@@ -292,3 +292,41 @@ void _far _fastcall TripleKey( char *pKey )
 	for (i = 0; i < 4; i++)
 		pKey[nIndexes[i] + 7] = pKey[nIndexes[i] + 3] = pKey[nIndexes[i] - 1];
 }
+
+// BEEP [frequency duration] [frequency duration ...]
+// Generate tones using configured defaults when arguments are omitted.
+// Examples: BEEP; BEEP 440 2.
+// pszCmdLine supplies tone pairs; returns zero or Usage() status.
+// SysBeep handles timing; consume a pending key on Ctrl+C as before.
+int _far UtilityBeep_Cmd( LPTSTR pszCmdLine )
+{
+	unsigned int uFrequency, uDuration, uLength;
+
+	uFrequency = gpIniptr->BeepFreq;
+	uDuration = gpIniptr->BeepDur;
+
+	if ( pszCmdLine == NULL )
+		pszCmdLine = NULLSTR;
+
+	do {
+		if ( *pszCmdLine ) {
+			// skip non-numeric args
+			sscanf( pszCmdLine, _TEXT("%*[^0123456789] %u %n"), &uFrequency, &uLength );
+			pszCmdLine += uLength;
+			if ( *pszCmdLine ) {
+				sscanf( pszCmdLine, _TEXT("%d %n"), &uDuration, &uLength );
+				pszCmdLine += uLength;
+			}
+
+			if ( uLength == 0 )
+				return ( Usage( BEEP_USAGE ));
+		}
+
+		// kludge to abort on a ^C
+		if ( SysBeep( uFrequency, uDuration ) == CTRLC )
+			_getch();
+
+	} while ( *pszCmdLine );
+
+	return 0;
+}

@@ -430,39 +430,13 @@ int _near Battext_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// make a beeping noise (optionally specifying tone & length)
+// Near dispatcher retained for the existing command table.
+extern int _far UtilityBeep_Cmd( LPTSTR );
 int _near Beep_Cmd( LPTSTR pszCmdLine )
 {
-	unsigned int uFrequency, uDuration, uLength;
-
-	uFrequency = gpIniptr->BeepFreq;
-	uDuration = gpIniptr->BeepDur;
-
-	if ( pszCmdLine == NULL )
-		pszCmdLine = NULLSTR;
-
-	do {
-		if ( *pszCmdLine ) {
-			// skip non-numeric args
-			sscanf( pszCmdLine, _TEXT("%*[^0123456789] %u %n"), &uFrequency, &uLength );
-			pszCmdLine += uLength;
-			if ( *pszCmdLine ) {
-				sscanf( pszCmdLine, _TEXT("%d %n"), &uDuration, &uLength );
-				pszCmdLine += uLength;
-			}
-
-			if ( uLength == 0 )
-				return ( Usage( BEEP_USAGE ));
-		}
-
-		// kludge to abort on a ^C
-		if ( SysBeep( uFrequency, uDuration ) == CTRLC )
-			_getch();
-
-	} while ( *pszCmdLine );
-
-	return 0;
+	return UtilityBeep_Cmd( pszCmdLine );
 }
+
 
 
 // CALL a nested batch file (or any executable file )
