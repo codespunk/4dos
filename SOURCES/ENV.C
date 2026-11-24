@@ -65,9 +65,10 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, __Unset, get_alias, add_list, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, get_alias, add_list, next_env, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
+#pragma alloc_text( ENV_TEXT, __Unset )
 
 
 
@@ -364,7 +365,9 @@ int _near Unset_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// remove environment variable(s) or aliases
+// Remove named or wildcard-matched entries from the selected list.
+// pszCmdLine contains names and /M, /Q, or /R switches; pchList selects the list.
+// Remove successful arguments from the command line; return the operation status.
 int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 {
 	register LPTSTR pszArg;
