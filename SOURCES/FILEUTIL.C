@@ -19,6 +19,9 @@
 #include <string.h>
 #include "4all.h"
 
+// Shared date/time/size range filters are defined in FILECMDS.C.
+extern RANGES aRanges;
+
 
 // TEE [/A] filename [filename ...]
 // Copy standard input to standard output and one or more files.
@@ -642,6 +645,374 @@ CloseHandles:
 				remove( szSource );
 				break;
 			}
+		}
+	}
+
+	return nReturn;
+}
+
+// TOUCH implementation and recursive helper in FILE_TEXT.
+typedef struct
+{
+	TCHAR szSource[MAXFILENAME];
+	TCHAR szTarget[MAXFILENAME];
+	LPTSTR pszFilename;
+	long fFlags;
+	long lMode;
+	int nField;
+} TOUCH_STRUCT;
+
+#define TOUCH_CREATE 1
+#define TOUCH_FORCE 2
+#define TOUCH_QUIET 4
+#define TOUCH_DUP 8
+#define TOUCH_SUBDIRS 0x10
+#define TOUCH_NOTHING 0x20
+#define TOUCH_PRESERVE_DATE 0x40
+#define TOUCH_PRESERVE_TIME 0x80
+
+static int _touch( TOUCH_STRUCT *, DATETIME * );
+
+
+// TOUCH [options] filename [filename ...]
+// Change file timestamps; optionally create files or duplicate timestamps.
+// Example: TOUCH /C LOG.TXT.
+int _far FileTouch_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg, pszTemp;
+	int nArgc, nReturn = 0, rc;
+	unsigned int uHours, uMinutes, uSeconds;
+	unsigned int uMonth, uDay, uYear;
+	FILESEARCH dir;
+	DATETIME sysDateTime;
+	TOUCH_STRUCT Touch;
+
+	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') ))
+		return ( Usage( TOUCH_USAGE ));
+
+	Touch.nField = 0;
+	Touch.fFlags = 0;
+	Touch.lMode = 0x07;
+	Touch.szSource[0] = _TEXT('\0');
+
+	QueryDateTime( &sysDateTime );
+
+	// get date/time/size ranges
+	if ( GetRange( pszCmdLine, &aRanges, 0 ) != 0 )
+		return ERROR_EXIT;
+
+	gnInclusiveMode = gnExclusiveMode = gnOrMode = 0;
+
+	for ( nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc | 0x800 )) != NULL ); nArgc++ ) {
+
+		if ( *pszArg == gpIniptr->SwChr ) {
+
+		  for ( ; ; ) {
+
+			// kludge to allow (illegal) syntax like "touch /F/Q file"
+			if ( *pszArg == gpIniptr->SwChr )
+				pszArg++;
+			if ( *pszArg == _TEXT('\0') )
+				break;
+
+			rc = _ctoupper( *pszArg++ );
+			switch ( rc ) {
+			case 'A':       // retrieve based on specified attribs
+				pszArg = GetSearchAttributes( pszArg );
+				Touch.lMode |= 0x17;
+				break;
+
+			case 'E':
+				Touch.lMode |= 0x100;
+				break;
+
+			case 'C':
+			    // create the file if it doesn't exist
+			    Touch.fFlags |= TOUCH_CREATE;
+			    break;
+
+			case 'F':
+			    // ride roughshod over read-only files
+			    Touch.fFlags |= TOUCH_FORCE;
+			    break;
+
+			case 'N':
+				Touch.fFlags |= TOUCH_NOTHING;
+				break;
+
+			case 'Q':
+			    Touch.fFlags |= TOUCH_QUIET;
+			    break;
+
+			case 'R':
+			    // duplicate this file's date & time
+			    Touch.fFlags |= TOUCH_DUP;
+
+			    // check for optional write/access/create field
+			    if ( *pszArg == _TEXT(':') ) {
+					pszArg++;
+			        if (( *pszArg == _TEXT('W') ) || ( *pszArg == _TEXT('w') )) {
+						Touch.nField = 0;
+						pszArg++;
+			        } else if (( *pszArg == _TEXT('A') ) || ( *pszArg == _TEXT('a') )) {
+						Touch.nField = 1;
+						pszArg++;
+			        } else if (( *pszArg == _TEXT('C') ) || ( *pszArg == _TEXT('c') )) {
+						Touch.nField = 2;
+						pszArg++;
+			        }
+			    }
+
+			    if (( *pszArg == _TEXT('\0') ) && (( pszArg = ntharg( pszCmdLine, ++nArgc | 0x800 )) == NULL ))
+					return ( Usage( TOUCH_USAGE ));
+
+			    if ( find_file( FIND_FIRST, pszArg, Touch.lMode | FIND_CLOSE | FIND_NO_ERRORS, &dir, NULL ) != NULL ) {
+
+	                if ( Touch.nField == 1)
+                       FileTimeToDOSTime( &(dir.ftLastAccessTime), &(dir.ft.wr_time), &(dir.fd.wr_date) );
+	    else if ( Touch.nField == 2)
+	FileTimeToDOSTime( &(dir.ftCreationTime), &(dir.ft.wr_time), &(dir.fd.wr_date) );
+
+					sysDateTime.year = dir.fd.file_date.years;
+					if ( sysDateTime.year < 120 )
+						sysDateTime.year += 1980;
+					sysDateTime.month = dir.fd.file_date.months;
+					sysDateTime.day = dir.fd.file_date.days;
+					sysDateTime.hours = dir.ft.file_time.hours;
+					sysDateTime.minutes = dir.ft.file_time.minutes;
+					sysDateTime.seconds = dir.ft.file_time.seconds * 2;
+
+				}
+
+				pszArg = NULLSTR;
+			    break;
+
+			case 'D':
+			case 'T':
+
+			    if ( *pszArg == _TEXT(':') )
+					pszArg++;
+			    if (( *pszArg == _TEXT('W') ) || ( *pszArg == _TEXT('w') )) {
+					Touch.nField = 0;
+					pszArg++;
+			    } else if (( *pszArg == _TEXT('A') ) || ( *pszArg == _TEXT('a') )) {
+					Touch.nField = 1;
+					pszArg++;
+			    } else if (( *pszArg == _TEXT('C') ) || ( *pszArg == _TEXT('c') )) {
+					Touch.nField = 2;
+					pszArg++;
+			    }
+
+			    if ( rc == _TEXT('D') ) {
+
+			        // valid date entry?
+					if ( *pszArg == _TEXT('\0') ) {
+						// keep the existing date
+						Touch.fFlags |= TOUCH_PRESERVE_DATE;
+					    break;
+					}
+
+					if ( !GetStrDate( pszArg, &uMonth, &uDay, &uYear )) {
+
+						sysDateTime.year = uYear;
+						sysDateTime.month = (unsigned char)uMonth;
+						sysDateTime.day = (unsigned char)uDay;
+						pszArg = NULLSTR;
+						break;
+					}
+
+					return ( error( ERROR_4DOS_INVALID_DATE, pszArg ));
+
+			    } else {
+
+			        uSeconds = 0;
+
+					if ( *pszArg == _TEXT('\0') ) {
+						// keep existing time
+						Touch.fFlags |= TOUCH_PRESERVE_TIME;
+						break;
+					}
+
+			        if (( sscanf( pszArg, DATE_FMT, &uHours, &uMinutes, &uSeconds ) >= 2 ) && ( uHours < 24 ) && ( uMinutes < 60 ) && ( uSeconds < 60 )) {
+
+						// check for AM/PM syntax
+						if (( pszArg = strpbrk( pszArg, _TEXT("AP") )) != NULL ) {
+							if (( uHours == 12 ) && ( *pszArg == _TEXT('A') ))
+								uHours -= 12;
+							else if (( *pszArg == _TEXT('P') ) && ( uHours < 12 ))
+							    uHours += 12;
+						}
+
+				        sysDateTime.hours = (unsigned char)uHours;
+				        sysDateTime.minutes = (unsigned char)uMinutes;
+				        sysDateTime.seconds = (unsigned char)uSeconds;
+						sysDateTime.hundredths = 0;
+					    pszArg = NULLSTR;
+					    break;
+			        }
+
+			        return ( error( ERROR_4DOS_INVALID_TIME, pszArg ));
+			    }
+
+			case 'S':
+			    Touch.fFlags |= TOUCH_SUBDIRS;
+			    break;
+
+			default:
+			    return ( Usage( TOUCH_USAGE ));
+			}
+		  }
+
+		  continue;
+		}
+
+		mkfname( pszArg, 0 );
+		strcpy( Touch.szSource, pszArg );
+
+		// save the source filename part (for recursive calls and
+		//   include lists)
+		Touch.pszFilename = Touch.szSource + strlen( path_part( Touch.szSource));
+		pszTemp = (LPTSTR)_alloca( ( strlen( Touch.pszFilename ) + 1 ) * sizeof(TCHAR) );
+		Touch.pszFilename = strcpy( pszTemp, Touch.pszFilename );
+
+			nReturn = _touch( &Touch, &sysDateTime );
+
+		if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC ))
+			break;
+
+	}
+
+	return (( Touch.szSource[0] == _TEXT('\0') ) ? Usage( TOUCH_USAGE ) : nReturn );
+}
+
+
+// Apply the requested timestamps to matching files.
+// Touch holds the search and operation flags; sysDateTime supplies the timestamp.
+// Recurse into subdirectories when requested.
+static int _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
+{
+	int nReturn = 0, rc, nFind;
+	unsigned int uAttribute = 0;
+	FILESEARCH dir;
+	LPTSTR pszSourceName;
+
+	// copy date/time range info
+	memmove( &(dir.aRanges), &aRanges, sizeof(RANGES) );
+
+	dir.hdir = INVALID_HANDLE_VALUE;
+
+	// touch specified files
+	for ( nFind = FIND_FIRST; ( nFind != 0 ); nFind = FIND_NEXT ) {
+
+		if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+			FindClose( dir.hdir );
+			return CTRLC;
+		}
+
+		CheckForBreak();
+
+
+		if ( find_file( nFind, Touch->szSource, ( Touch->lMode | FIND_NO_ERRORS | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE | FIND_NO_DOTNAMES ), &dir, Touch->szTarget ) == NULL ) {
+
+			if ( nFind == FIND_FIRST ) {
+
+				// if empty file list, ignore it
+				if ( dir.pszFileList != NULL )
+					break;
+
+			    // if file doesn't exist, create it
+				if ( Touch->fFlags & TOUCH_NOTHING ) {
+					strcpy( Touch->szTarget, Touch->szSource );
+					nFind = 0;
+				} else if (( Touch->fFlags & TOUCH_CREATE ) && (( nFind = _sopen( Touch->szSource, _O_WRONLY | _O_BINARY | _O_CREAT | _O_TRUNC, _SH_DENYWR, _S_IWRITE | _S_IREAD )) >= 0 )) {
+					_close( nFind );
+					strcpy( Touch->szTarget, Touch->szSource );
+					nFind = 0;
+			    } else {
+					if (( Touch->lMode & 0x100 ) == 0 )
+						error( ERROR_FILE_NOT_FOUND, Touch->szSource );
+					nReturn = ERROR_EXIT;
+					break;
+				}
+
+			} else
+			    break;
+		}
+
+		if ( Touch->fFlags & ( TOUCH_PRESERVE_DATE | TOUCH_PRESERVE_TIME )) {
+
+			if ( Touch->nField == 1)
+				FileTimeToDOSTime( &(dir.ftLastAccessTime), &(dir.ft.wr_time), &(dir.fd.wr_date) );
+			else if ( Touch->nField == 2)
+				FileTimeToDOSTime( &(dir.ftCreationTime), &(dir.ft.wr_time), &(dir.fd.wr_date) );
+
+			if ( Touch->fFlags & TOUCH_PRESERVE_DATE ) {
+				sysDateTime->year = dir.fd.file_date.years;
+				if ( sysDateTime->year < 120 )
+					sysDateTime->year += 1980;
+				sysDateTime->month = dir.fd.file_date.months;
+				sysDateTime->day = dir.fd.file_date.days;
+			}
+
+			if ( Touch->fFlags & TOUCH_PRESERVE_TIME ) {
+				sysDateTime->hours = dir.ft.file_time.hours;
+				sysDateTime->minutes = dir.ft.file_time.minutes;
+				sysDateTime->seconds = dir.ft.file_time.seconds * 2;
+			}
+
+		}
+
+		if (( Touch->fFlags & TOUCH_FORCE ) && (( Touch->fFlags & TOUCH_NOTHING ) == 0 )) {
+			// set the target file attributes, less RDONLY
+			QueryFileMode( Touch->szTarget, &uAttribute );
+			SetFileMode( Touch->szTarget, uAttribute & 0x26 );
+		}
+
+		// display the time being set
+		if (( Touch->fFlags & TOUCH_QUIET ) == 0 )
+			printf( _TEXT("%s %02d:%02d:%02d  %s\r\n"), FormatDate( sysDateTime->month, sysDateTime->day, sysDateTime->year, 0x100 ), sysDateTime->hours, sysDateTime->minutes, sysDateTime->seconds, Touch->szTarget );
+
+		if (( Touch->fFlags & TOUCH_NOTHING ) == 0 ) {
+			if ((( rc =  SetFileDateTime( Touch->szTarget, 0, sysDateTime, Touch->nField )) != 0 ) && (( Touch->lMode & 0x100 ) == 0 ))
+				nReturn = error( rc, Touch->szTarget );
+		}
+
+		// restore original attributes
+		if (( Touch->fFlags & TOUCH_FORCE ) && (( Touch->fFlags & TOUCH_NOTHING ) == 0 ))
+			SetFileMode( Touch->szTarget, uAttribute );
+	}
+
+	if ( Touch->fFlags & TOUCH_SUBDIRS ) {
+
+		// modify matching subdirectory files
+
+		CheckFreeStack( 1024 );
+
+		// strip the filename & add wildcards for directory search
+		sprintf( Touch->szSource, FMT_DOUBLE_STR, path_part( Touch->szSource ), WILD_FILE );
+
+		// save the current subdirectory start
+		pszSourceName = strchr( Touch->szSource, _TEXT('*') );
+
+		// search for all subdirectories in this (sub)directory
+		//   tell find_file() not to display errors, & to only
+		//   return subdir names
+		for ( nFind = FIND_FIRST; ( find_file( nFind, Touch->szSource, ( Touch->lMode | 0x10 | FIND_NO_ERRORS | FIND_ONLY_DIRS | FIND_NO_FILELISTS | FIND_EXCLUDE ), &dir, NULL ) != NULL ); nFind = FIND_NEXT ) {
+
+			// make the new "source"
+			sprintf( pszSourceName, FMT_PATH_STR, dir.szFileName, Touch->pszFilename );
+
+			// process directory tree recursively
+			nReturn = _touch( Touch, sysDateTime );
+
+			if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC )) {
+				// reset the directory search handle
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			// restore the original name
+			strcpy( pszSourceName, WILD_FILE );
 		}
 	}
 
