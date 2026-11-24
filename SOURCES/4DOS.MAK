@@ -195,7 +195,7 @@ $(OBJ)\eval.obj : eval.c $(headers)
         $(COMP) /NTSCREENIO_TEXT eval.c
 
 $(OBJ)\dircmds.obj : dircmds.c $(headers) dblspace.h
-        $(COMP) /NTSCREENIO_TEXT dircmds.c
+        $(COMP) /NTDIR_TEXT dircmds.c
 
 $(OBJ)\filecmds.obj : filecmds.c $(headers)
         $(COMP) /NT_TEXT filecmds.c

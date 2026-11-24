@@ -99,8 +99,6 @@ static unsigned int uRecurse;		// current recursion level (for totals)
 int _far DirTree_Cmd( LPTSTR );
 int _far DirList_Cmd( LPTSTR );
 
-#pragma alloc_text( DIR_TEXT, DirTree_Cmd )
-#pragma alloc_text( DIR_TEXT, DirList_Cmd )
 
 static void _near MoveFiles( unsigned int, DIR_ENTRY _huge *, unsigned long );
 
