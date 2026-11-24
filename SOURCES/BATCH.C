@@ -49,12 +49,12 @@
 #include "strmenc.h"
 
 
-static int _fastcall __if( LPTSTR, int );
+static int _near _fastcall __if( LPTSTR, int );
 static int _near LoadBTM( void );
-static int _fastcall WhileTest( LPTSTR );
+static int _near _fastcall WhileTest( LPTSTR );
 static void _near UndoGosubVariables( void );
 static int _near _fastcall goto_label( LPTSTR, int );
-static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
+static LPTSTR _near _fastcall ExpandArgument( LPTSTR, int );
 static int _near _fastcall __quit( LPTSTR, BOOL );
 static int _near _fastcall _setlocal( void );
 static int _near _fastcall _endlocal( LPTSTR );
@@ -806,7 +806,7 @@ NextINName:
 // evaluate WHILE or UNTIL expression
 
 // Evaluate a mutable copy of the loop expression; return truth or usage error.
-static int _fastcall WhileTest( LPTSTR pszExpression )
+static int _near _fastcall WhileTest( LPTSTR pszExpression )
 {
 	register int nCondition;
 
@@ -1623,7 +1623,7 @@ int _far BatchIff_Cmd( LPTSTR pszCmdLine )
 
 // Shared IF/IFF implementation; fIff selects structured mode.
 // Consume the condition and execute the selected command.
-static int _fastcall __if( LPTSTR pszCmdLine, int fIff )
+static int _near _fastcall __if( LPTSTR pszCmdLine, int fIff )
 {
 	LPTSTR pszLine, pszArg;
 	int nCondition;
@@ -1686,7 +1686,7 @@ if_usage:
 
 // expand the argument
 // Expand one argument into the parser buffer; return its pointer or NULL.
-static LPTSTR _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
+static LPTSTR _near _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 {
 	TCHAR szBuffer[CMDBUFSIZ];
 
