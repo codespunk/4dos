@@ -159,3 +159,45 @@ int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
 {
 	return BatchLoadbtm_Cmd( pszCmdLine );
 }
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchCall_Cmd( LPTSTR );
+int _near Call_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchCall_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchRet_Cmd( LPTSTR );
+int _near Ret_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchRet_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchCancel_Cmd( LPTSTR );
+int _near Cancel_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchCancel_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchQuit_Cmd( LPTSTR );
+int _near Quit_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchQuit_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchGoto_Cmd( LPTSTR );
+int _near Goto_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchGoto_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchGosub_Cmd( LPTSTR );
+int _near Gosub_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchGosub_Cmd( pszCmdLine );
+}

@@ -1763,3 +1763,15 @@ DisplayDirectory:
 
 	*pszBuffer = _TEXT('\0');
 }
+
+// Far bridge to the near command interpreter in _TEXT.
+int _far BatchCommand( LPTSTR pszLine, int fOptions )
+{
+	return command( pszLine, fOptions );
+}
+
+// Far bridge to the near batch interpreter in _TEXT.
+int _far BatchRunCLI( void )
+{
+	return BatchCLI();
+}

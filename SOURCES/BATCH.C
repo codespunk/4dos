@@ -52,10 +52,10 @@
 static int _fastcall __if( LPTSTR, int );
 static int _far LoadBTM( void );
 static int _fastcall WhileTest( LPTSTR );
-static void _near UndoGosubVariables( void );
-static int _fastcall goto_label( LPTSTR, int );
+static void _far UndoGosubVariables( void );
+static int _far _fastcall goto_label( LPTSTR, int );
 static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
-static int _fastcall __quit( LPTSTR, BOOL );
+static int _far _fastcall __quit( LPTSTR, BOOL );
 static int _fastcall _setlocal( void );
 static int _fastcall _endlocal( LPTSTR );
 
@@ -436,7 +436,14 @@ int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
 
 // CALL a nested batch file (or any executable file )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
-int _near Call_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchCommand( LPTSTR, int );
+extern int _far BatchCall_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchCall_Cmd )
+
+// CALL command [arguments]
+// Execute a command with nested batch execution enabled; return its status.
+// Example: CALL CHILD.BTM arg1
+int _far BatchCall_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn;
 
@@ -445,7 +452,7 @@ int _near Call_Cmd( LPTSTR pszCmdLine )
 
 	cv.fCall = 1;
 
-	nReturn = command( pszCmdLine, 0 );
+	nReturn = BatchCommand( pszCmdLine, 0 );
 	cv.fCall = 0;
 
 	return nReturn;
@@ -1363,7 +1370,14 @@ for_bye:
 
 
 // Call subroutine (GOSUB labelname )
-int _near Gosub_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchRunCLI( void );
+extern int _far BatchGosub_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchGosub_Cmd )
+
+// GOSUB label [arguments]
+// Execute a nested batch subroutine, preserving the caller position and flags.
+// Example: GOSUB worker
+int _far BatchGosub_Cmd( LPTSTR pszCmdLine )
 {
 	LONG lSaveFlags;
 	unsigned int uSavedLine;
@@ -1390,7 +1404,7 @@ int _near Gosub_Cmd( LPTSTR pszCmdLine )
 		cv.f.lFlags = 0L;
 
 		bframe[cv.bn].nGosubOffset++;
-		if (( BatchCLI() == CTRLC ) || ( cv.fException ))
+		if (( BatchRunCLI() == CTRLC ) || ( cv.fException ))
 			bframe[ cv.bn ].lOffset = -1L;
 
 		else if ( bframe[ cv.bn ].lOffset >= 0L ) {
@@ -1421,7 +1435,12 @@ int _near Gosub_Cmd( LPTSTR pszCmdLine )
 
 
 // GOTO a label in the batch file
-int _near Goto_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchGoto_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchGoto_Cmd )
+
+// GOTO [/I] label
+// Seek to a batch label; /I preserves DO/IFF state. Example: GOTO done
+int _far BatchGoto_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = ABORT_LINE;
 	long fGoto;
@@ -1443,7 +1462,10 @@ int _near Goto_Cmd( LPTSTR pszCmdLine )
 
 
 // remove the Gosub local variables
-static void _near UndoGosubVariables( void )
+#pragma alloc_text( BATCH_TEXT, UndoGosubVariables )
+
+// Remove the active GOSUB argument variables from the environment.
+static void _far UndoGosubVariables( void )
 {
 	register int i;
 	register LPTSTR pszArg;
@@ -1460,10 +1482,12 @@ static void _near UndoGosubVariables( void )
 }
 
 
-#pragma alloc_text( MISC_TEXT, goto_label )
+#pragma alloc_text( BATCH_TEXT, goto_label )
 
 // position the file pointer following the label line
-static int _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
+// Search the active batch file for a label; flags control errors and GOSUB arguments.
+// Return zero on success or the existing error status.
+static int _far _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 {
 	static TCHAR GOTO_DELIMS[] = _TEXT("+=:[/");
 	register TCHAR *pszArg, *pszArguments = NULL;
@@ -2139,7 +2163,12 @@ int _far BatchOn_Cmd( LPTSTR pszCmdLine )
 
 
 // cancel nested batch files
-int _near Cancel_Cmd( register LPTSTR pszCmdLine )
+extern int _far BatchCancel_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchCancel_Cmd )
+
+// CANCEL [errorlevel]
+// Terminate all nested batch files; return ABORT_LINE. Example: CANCEL 1
+int _far BatchCancel_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 1 ));
 }
@@ -2148,13 +2177,21 @@ int _near Cancel_Cmd( register LPTSTR pszCmdLine )
 // exit batch file
 //   NOTE: you can also use this command to set the ERRORLEVEL (even from
 //   the command line!)
-int _near Quit_Cmd( register LPTSTR pszCmdLine )
+extern int _far BatchQuit_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchQuit_Cmd )
+
+// QUIT [errorlevel]
+// Terminate the current batch file; return ABORT_LINE. Example: QUIT 1
+int _far BatchQuit_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 0 ));
 }
 
 
-static int _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
+#pragma alloc_text( BATCH_TEXT, __quit )
+
+// Terminate the current or all nested batch frames; optionally set ERRORLEVEL.
+static int _far _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 {
 	register int nBatch;
 
@@ -2181,7 +2218,13 @@ static int _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 
 
 // RETURN from a GOSUB
-int _near Ret_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchRet_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchRet_Cmd )
+
+// RETURN [value]
+// Set the GOSUB return value and signal the nested batch interpreter.
+// Example: RETURN 5
+int _far BatchRet_Cmd( LPTSTR pszCmdLine )
 {
 	// check for a previous GOSUB
 	if ( bframe[cv.bn].nGosubOffset <= 0 )
