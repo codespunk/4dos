@@ -49,7 +49,6 @@
 #include "strmenc.h"
 
 
-static int _fastcall __echo( LPTSTR, int );
 static int _fastcall __echos( LPTSTR, int );
 static int _fastcall __if( LPTSTR, int );
 static int _fastcall __input( LPTSTR, int );
@@ -861,61 +860,23 @@ int _fastcall do_parsing( register LPTSTR pszCmdName )
 }
 
 
-// echo arguments to the screen (stdout)
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenEcho_Cmd( LPTSTR );
 int _near Echo_Cmd( LPTSTR pszCmdLine )
 {
-	return ( __echo( pszCmdLine, 0 ));
+	return ScreenEcho_Cmd( pszCmdLine );
 }
 
 
-// echo arguments to the screen (stderr)
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenEchoErr_Cmd( LPTSTR );
 int _near EchoErr_Cmd( LPTSTR pszCmdLine )
 {
-	if ( pszCmdLine == NULL )
-		pszCmdLine = NULLSTR;
-	return ( __echo( pszCmdLine, 1 ));
+	return ScreenEchoErr_Cmd( pszCmdLine );
 }
 
 
-// echo arguments to the screen (stdout or stderr)
-static int _fastcall __echo( LPTSTR pszCmdLine, int fErr )
-{
-	int fEcho;
 
-	// ECHOERR ?
-	if ( fErr )
-		goto EchoErr;
-
-	if ( pszCmdLine == NULL ) {
-
-		// just inquiring about ECHO state
-		printf( ECHO_IS, (( cv.bn >= 0 ) ? bframe[cv.bn].uEcho : cv.fVerbose ) ? ON : OFF );
-
-	} else if (( fEcho = OffOn( pszCmdLine )) == 0 ) {
-
-		// disable batch file or command line echoing
-		if ( cv.bn >= 0 ) {
-			// unless "persistent echo" is enabled
-			bframe[cv.bn].uEcho &= 2;
-		} else
-			cv.fVerbose = 0;
-
-	} else if ( fEcho == 1 ) {
-
-		// enable batch file or command line echoing
-		if ( cv.bn >= 0 ) {
-			// don't turn off "persistent echo" (uEcho==2)
-			bframe[cv.bn].uEcho |= 1;
-		} else
-			cv.fVerbose = 1;
-
-	} else {	// print the line verbatim
-EchoErr:
-		qprintf( (( fErr ) ? STDERR : STDOUT ), FMT_STR_CRLF, pszCmdLine+1 );
-	}
-
-	return 0;
-}
 
 
 // echo arguments to the screen (stdout) without a trailing CR/LF

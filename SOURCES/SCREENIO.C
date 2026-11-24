@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <dos.h>
+#include <conio.h>
+#include <io.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -1718,4 +1720,67 @@ void CutEgets( void )
 	strcpy( pszCurrentPos, pszCurrentPos + i );
 	efputs( pszCurrentPos );
 	PositionEGets( pszCurrentPos );
+}
+
+static int _fastcall __echo( LPTSTR, int );
+
+// ECHO [ON | OFF | text]
+// Query or change command echoing, or print text with a newline.
+// Examples: ECHO; ECHO OFF; ECHO Hello.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenEcho_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __echo( pszCmdLine, 0 ));
+}
+
+// ECHOERR [text]
+// Print text to standard error with a newline. Example: ECHOERR Error.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenEchoErr_Cmd( LPTSTR pszCmdLine )
+{
+	if ( pszCmdLine == NULL )
+		pszCmdLine = NULLSTR;
+	return ( __echo( pszCmdLine, 1 ));
+}
+
+// Shared ECHO implementation. pszCmdLine is the original command tail;
+// fErr selects stderr and bypasses echo-state changes. Returns zero.
+// May modify batch echo flags or interactive verbosity.
+static int _fastcall __echo( LPTSTR pszCmdLine, int fErr )
+{
+	int fEcho;
+
+	// ECHOERR ?
+	if ( fErr )
+		goto EchoErr;
+
+	if ( pszCmdLine == NULL ) {
+
+		// just inquiring about ECHO state
+		printf( ECHO_IS, (( cv.bn >= 0 ) ? bframe[cv.bn].uEcho : cv.fVerbose ) ? ON : OFF );
+
+	} else if (( fEcho = OffOn( pszCmdLine )) == 0 ) {
+
+		// disable batch file or command line echoing
+		if ( cv.bn >= 0 ) {
+			// unless "persistent echo" is enabled
+			bframe[cv.bn].uEcho &= 2;
+		} else
+			cv.fVerbose = 0;
+
+	} else if ( fEcho == 1 ) {
+
+		// enable batch file or command line echoing
+		if ( cv.bn >= 0 ) {
+			// don't turn off "persistent echo" (uEcho==2)
+			bframe[cv.bn].uEcho |= 1;
+		} else
+			cv.fVerbose = 1;
+
+	} else {	// print the line verbatim
+EchoErr:
+		qprintf( (( fErr ) ? STDERR : STDOUT ), FMT_STR_CRLF, pszCmdLine+1 );
+	}
+
+	return 0;
 }
