@@ -1820,3 +1820,251 @@ static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
 
 	return 0;
 }
+
+// Private INPUT and INKEY switch masks; match switch_arg() bit positions.
+#define INKEY_CLEAR 1
+#define INKEY_KEYMASK 2
+#define INKEY_PASSWORD 4
+#define INKEY_WAIT 8
+#define INPUT_EDIT 0x10
+#define INPUT_NO_CRLF 0x20
+#define INPUT_NO_COLOR 0x40
+#define INPUT_LENGTH 0x80
+#define INPUT_DIGITS 0x100
+#define INKEY_MOUSE 0x200
+
+static int _fastcall __input( LPTSTR, int );
+
+// INKEY [options] [prompt] %variable
+// Read one key into a variable. Example: INKEY Press a key: %%KEY (in a batch file).
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenInkey_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __input( pszCmdLine, 0 ));
+}
+
+// INPUT [options] [prompt] %variable
+// Read a line into a variable. Example: INPUT Name: %%NAME (in a batch file).
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenInput_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __input( pszCmdLine, 1 ));
+}
+
+// Shared INPUT/INKEY implementation. pszCmdLine is a writable command tail;
+// fInput selects line input rather than single-key input. Handles masks,
+// timeout, password, editing and other existing input switches.
+// Modifies the tail and gszCmdline; stores the result with add_variable().
+// Returns its status, Usage() status, ERROR_EXIT on key EOF, or zero on timeout.
+static int _fastcall __input( LPTSTR pszCmdLine, int fInput )
+{
+	register LPTSTR pszVariable;
+	TCHAR *pszArg, *pszFirstArg, szKeylist[MAXARGSIZ+1];
+	TCHAR _far *lpszValue;
+	LONG lDelay = -1L;
+	int i, c, nLength, nRow, nColumn, fPrompt, nEditFlag = EDIT_DATA | EDIT_SCROLL_CONSOLE;
+	int nMaxLength = MAXARGSIZ;
+	long lFlags;
+
+	// get the last argument & remove it from the command line
+	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') )) {
+Input_Bad:
+		return ( Usage((( fInput ) ? INPUT_USAGE : INKEY_USAGE )));
+	}
+
+	if ( last_arg( pszCmdLine, &i ) == NULL )
+		pszVariable = skipspace( pszCmdLine );
+	else
+		pszVariable = gpNthptr;
+
+	if (( pszVariable == NULL ) || ( *pszVariable != _TEXT('%') ))
+		goto Input_Bad;
+
+	// strip single trailing space
+	if ( pszVariable[-1] == _TEXT(' ') )
+		pszVariable[-1] = _TEXT('\0');
+
+	*pszVariable++ = _TEXT('\0');
+	pszVariable = strcpy( (LPTSTR)_alloca( ( strlen( pszVariable ) +1 ) * sizeof(TCHAR) ), pszVariable );
+
+	szKeylist[0] = _TEXT('\0');
+
+	// check for optional input mask & timeout (& max length for INPUT)
+	pszArg = pszCmdLine;
+	for ( c = 0; ; ) {
+
+		pszArg = skipspace( pszArg );
+		if (( pszArg == NULL ) || ( *pszArg != gpIniptr->SwChr ))
+			break;
+
+		while ( *pszArg == gpIniptr->SwChr ) {
+
+			pszFirstArg = first_arg( pszArg );
+			if (( lFlags = switch_arg( pszFirstArg, (( fInput ) ? _TEXT("C PWEXNLD") : _TEXT("CKPW X  DM")))) == 0 )
+				break;
+
+			if ( lFlags == -1L )
+				goto Input_Bad;
+
+			// flush the typeahead buffer?
+			if ( lFlags & INKEY_CLEAR ) {
+				while ( _kbhit() )
+					GetKeystroke( EDIT_NO_ECHO );
+			}
+
+			if ( lFlags & INKEY_MOUSE ) {
+				nEditFlag |= EDIT_MOUSE_BUTTON;
+
+				MouseReset();
+			}
+
+			if ( lFlags & INKEY_PASSWORD )
+				nEditFlag |= EDIT_PASSWORD;
+
+			if ( lFlags & INPUT_EDIT )
+				nEditFlag |= EDIT_ECHO;
+
+			// save the key mask set onto the stack
+			if ( lFlags & INKEY_KEYMASK )
+				sprintf( szKeylist, FMT_PREC_STR, MAXARGSIZ, pszFirstArg+2 );
+			else if ( lFlags & INPUT_LENGTH ) {	// INPUT length
+				sscanf( pszArg+2, FMT_UINT, &nMaxLength );
+
+				if ( gpIniptr->LineIn )
+					nMaxLength++;
+
+			} else if ( lFlags & INKEY_WAIT )	// timeout delay
+				sscanf( pszArg+2, FMT_ULONG, &lDelay );
+			else {
+				if ( lFlags & INPUT_NO_CRLF )
+					nEditFlag |= EDIT_NO_CRLF;
+				if ( lFlags & INPUT_NO_COLOR )
+					nEditFlag |= EDIT_NO_INPUTCOLOR;
+				if ( lFlags & INPUT_DIGITS )
+					nEditFlag |= EDIT_DIGITS;
+			}
+
+			// skip switch
+			strcpy( pszArg, skipspace( pszArg + strlen( pszFirstArg )));
+		}
+	}
+
+	// print the (optional) prompt string
+	if (( pszCmdLine != NULL ) && ( *pszCmdLine )) {
+		fPrompt = 1;
+		qputs( pszCmdLine );
+	} else
+		fPrompt = 0;
+
+	nLength = sprintf( gszCmdline, _TEXT("%.80s="), pszVariable );
+
+	// allow editing an existing value?
+	if (( fInput ) && ( nEditFlag & EDIT_ECHO )) {
+		if (( lpszValue = get_variable( pszVariable )) != 0L )
+			sprintf( gszCmdline + nLength, FMT_FAR_PREC_STR, MAXARGSIZ, lpszValue );
+		// save cursor position, display value, and restore cursor
+		GetCurPos( &nRow, &nColumn );
+		if (( i = gpIniptr->InputColor ) == 0 )
+			i = -1;
+		color_printf( i, FMT_STR, gszCmdline + nLength );
+		SetCurPos( nRow, nColumn );
+	}
+
+	// wait the (optionally) specified length of time
+	if ( lDelay >= 0L ) {
+
+		lDelay *= 18;
+
+		for ( ; ; lDelay-- ) {
+
+continue_wait:
+			// is a key waiting?
+			if ( _kbhit() )
+				break;
+
+			if ( lDelay <= 0L ) {
+				// if we displayed a prompt, print a CR/LF
+				if (( nEditFlag & EDIT_ECHO ) || ( fPrompt ))
+					crlf();
+				return 0;
+			}
+
+			SysBeep( 0, 1 );	// wait 1/18th second
+		}
+	}
+
+	// get the variable
+	if ( fInput )
+		getline( STDIN, gszCmdline + nLength, nMaxLength, nEditFlag );
+	else {
+
+		for ( ; ; ) {
+
+			// if EOF, we're redirecting & ran out of input
+			if (( c = GetKeystroke( nEditFlag | EDIT_NO_ECHO )) == EOF )
+				return ERROR_EXIT;
+
+			// mouse button?
+			if  ( c == LEFT_MOUSE_BUTTON ) {
+				c = 0xF0;
+				break;
+			} else if ( c == RIGHT_MOUSE_BUTTON ) {
+				c = 0x1F1;
+				break;
+			} else if ( c == MIDDLE_MOUSE_BUTTON ) {
+				c = 0x1F2;
+				break;
+			} else if ( c == WHEEL_UP || c == WHEEL_DOWN )
+				continue;
+
+			// if printable character, display it
+			if ((( nEditFlag & EDIT_PASSWORD ) == 0 ) && ( c >= 32 ) && ( c < FBIT ))
+				qputc( STDOUT, (TCHAR)c );
+
+			if ( nEditFlag & EDIT_DIGITS ) {
+				if ( isdigit( c ))
+					break;
+			} else if ( szKeylist[0] == _TEXT('\0') )
+				break;
+
+			// check the key against the optional mask
+			for ( pszArg = szKeylist+1; (( *pszArg != _TEXT('"') ) && ( *pszArg != _TEXT('\0') )); pszArg++ ) {
+
+				// check for extended keys
+				if ( *pszArg == _TEXT('[') ) {
+
+					// can't use sscanf() because of []'s
+					pszArg++;
+					i = (int)( scan( pszArg, _TEXT("]\""), QUOTES ) - pszArg );
+
+					if ( c == keyparse( pszArg, i ))
+						goto good_key;
+
+					pszArg += i;
+
+				} else if ( _ctoupper( c ) == _ctoupper( *pszArg ))
+					goto good_key;
+			}
+
+			// if printable character, back up over it
+			if ((( nEditFlag & EDIT_PASSWORD ) == 0 ) && ( c >= 32 ) && ( c < FBIT ))
+				qputc( STDOUT, BS );
+
+			honk();
+
+			if ( lDelay > 0L )
+				goto continue_wait;
+		}
+good_key:
+		// kludge for ENTER - set to @28
+		if ( c == 13 )
+			c = FBIT + 28;
+
+		sprintf( gszCmdline + nLength, (( c < FBIT ) ? FMT_CHAR : _TEXT("@%u")), ( c & ~FBIT ));
+
+		if (( nEditFlag & EDIT_NO_CRLF ) == 0 )
+			crlf();
+	}
+
+	return ( add_variable( gszCmdline ));
+}
