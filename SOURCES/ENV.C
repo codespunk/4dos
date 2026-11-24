@@ -66,6 +66,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
 static int _far EnvAlias_Cmd( LPTSTR );
+static int _far EnvFunction_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -77,6 +78,7 @@ static int _far EnvAlias_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, get_list )
 #pragma alloc_text( ENV_TEXT, add_variable )
 #pragma alloc_text( ENV_TEXT, EnvAlias_Cmd )
+#pragma alloc_text( ENV_TEXT, EnvFunction_Cmd )
 
 
 
@@ -176,8 +178,17 @@ static int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// create or display user functions
+// Near FUNCTION dispatcher; forward to the ENV_TEXT implementation.
 int _near Function_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvFunction_Cmd( pszCmdLine );
+}
+
+
+// FUNCTION [/P] [/R file] [name[=definition]]
+// Display or define user functions; /P pauses output and /R reads definitions.
+// Examples: FUNCTION; FUNCTION /P; FUNCTION twice=`%@eval[%1*2]`.
+static int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
