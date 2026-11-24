@@ -70,6 +70,7 @@ static int _far EnvFunction_Cmd( LPTSTR );
 static int _far EnvSet_Cmd( LPTSTR );
 static int _far EnvUnalias_Cmd( LPTSTR );
 static int _far EnvUnfunction_Cmd( LPTSTR );
+static int _far EnvUnset_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -85,6 +86,7 @@ static int _far EnvUnfunction_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, EnvSet_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvUnalias_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvUnfunction_Cmd )
+#pragma alloc_text( ENV_TEXT, EnvUnset_Cmd )
 
 
 
@@ -412,8 +414,18 @@ static int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// delete environment variables
+// Near UNSET dispatcher; forward to the ENV_TEXT implementation.
 int _near Unset_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvUnset_Cmd( pszCmdLine );
+}
+
+
+// UNSET [/M] [/Q] [/R file] name ...
+// Remove environment variables by name or wildcard; /M selects the master environment.
+// /Q suppresses missing-name diagnostics and /R reads names from files.
+// Examples: UNSET TEMP; UNSET /Q TEST*.
+static int _far EnvUnset_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
