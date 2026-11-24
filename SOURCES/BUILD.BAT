@@ -11,6 +11,11 @@ goto args
 :args
   if "%1"=="" goto call_build_btm
   if "%1"=="clean" goto clean
+  if "%1"=="apprel" goto target
+  if "%1"=="4dos" goto target
+  if "%1"=="batcomp" goto target
+  if "%1"=="kstack" goto target
+  if "%1"=="all" goto target
   if "%1"=="-h" goto help
   if "%1"=="--help" goto help
   echo Unknown argument: %1
@@ -23,6 +28,10 @@ goto args
 
 :clean
   4dos /c build.btm clean
+  goto end
+
+:target
+  4dos /c build.btm %1
   goto end
 
 :call_build_btm
