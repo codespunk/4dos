@@ -280,3 +280,15 @@ void _far BatchDecompile( CompHead _far *lpHeader, LPBYTE lpszOutputBuf, unsigne
 	while ( uCount-- )
 		*lpszOutputBuf++ = DecompressChar();
 }
+
+// Expand the first four bytes of pKey into three identical copies.
+// Requires twelve writable bytes; modifies pKey in place, returns nothing.
+// Retain the original deliberately obscure copy order.
+void _far _fastcall TripleKey( char *pKey )
+{
+	static int nIndexes[4] = {4, 2, 1, 3};
+	register int i;
+
+	for (i = 0; i < 4; i++)
+		pKey[nIndexes[i] + 7] = pKey[nIndexes[i] + 3] = pKey[nIndexes[i] - 1];
+}

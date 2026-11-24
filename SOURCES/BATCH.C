@@ -64,7 +64,7 @@ static int _fastcall _setlocal( void );
 static int _fastcall _endlocal( LPTSTR );
 
 extern void _far BatchDecompile( CompHead _far *, LPBYTE, unsigned int );
-static void _fastcall TripleKey( char * );
+extern void _far _fastcall TripleKey( char * );
 
 static TCHAR DELIMS[] = _TEXT("%9[^  .\"`\\+=:<>|%]");
 static unsigned char cEncryptSig[4] = ENCRYPT_SIG;
@@ -2988,18 +2988,4 @@ int _near Case_Cmd( LPTSTR pszCmdLine )
 	}
 
 	return USAGE_ERR;
-}
-
-
-#pragma alloc_text( MISC_TEXT, TripleKey )
-
-// triple up a 4-character key to make it 12 characters
-// method is slightly obscure to make hacking more confusing
-static void _fastcall TripleKey( char *pKey )
-{
-	static int nIndexes[4] = {4, 2, 1, 3};
-	register int i;
-
-	for (i = 0; i < 4; i++)
-		pKey[nIndexes[i] + 7] = pKey[nIndexes[i] + 3] = pKey[nIndexes[i] - 1];
 }
