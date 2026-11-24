@@ -57,15 +57,15 @@ static int LoadBTM( void );
 static int _near _fastcall WhileTest( LPTSTR );
 static void _near UndoGosubVariables( void );
 static int _fastcall goto_label( LPTSTR, int );
-static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
+static LPTSTR _near _fastcall ExpandArgument( LPTSTR, int );
 static int _near _fastcall __quit( LPTSTR, BOOL );
 static int _near _fastcall __scrput( LPTSTR, int );
 static int _near _fastcall _setlocal( void );
 static int _near _fastcall _endlocal( LPTSTR );
 
-static unsigned int GetNibble( void );
+static unsigned int _near GetNibble( void );
 static char DecompressChar( void );
-static void _fastcall TripleKey( char * );
+static void _near _fastcall TripleKey( char * );
 
 static TCHAR DELIMS[] = _TEXT("%9[^  .\"`\\+=:<>|%]");
 static unsigned char cEncryptSig[4] = ENCRYPT_SIG;
@@ -168,7 +168,7 @@ static LPBYTE pTransTab;	// pointer to translation table
 
 
 // Get the next nibble during decompression
-static unsigned int GetNibble( void )
+static unsigned int _near GetNibble( void )
 {
 	static unsigned char cThis = 0;
 	unsigned int uResult;
@@ -1850,7 +1850,7 @@ if_usage:
 #pragma alloc_text( MISC_TEXT, ExpandArgument )
 
 // expand the argument
-static LPTSTR _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
+static LPTSTR _near _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 {
 	TCHAR szBuffer[CMDBUFSIZ];
 
@@ -3067,7 +3067,7 @@ int _near Case_Cmd( LPTSTR pszCmdLine )
 
 // triple up a 4-character key to make it 12 characters
 // method is slightly obscure to make hacking more confusing
-static void _fastcall TripleKey( char *pKey )
+static void _near _fastcall TripleKey( char *pKey )
 {
 	static int nIndexes[4] = {4, 2, 1, 3};
 	register int i;

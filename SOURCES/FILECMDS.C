@@ -61,7 +61,7 @@ extern void UpdateFuzzyTree( LPTSTR , LPTSTR , int );
 
 static void wildname( LPTSTR , LPTSTR , LPTSTR );
 
-static int FileCopy( LPTSTR , LPTSTR , unsigned long, long *, FILESEARCH * );
+static int _near FileCopy( LPTSTR , LPTSTR , unsigned long, long *, FILESEARCH * );
 
 
 static int _near delete_fcb( unsigned int );
@@ -1227,7 +1227,7 @@ Move_Status:
 //   szInputName = source file name
 //   fFlags = create/append, device & ASCII/binary flags
 //   lAppendOffset = current end offset in append file
-static int FileCopy( LPTSTR szOutputName, LPTSTR szInputName, unsigned long fFlags, long *lAppendOffset, FILESEARCH *dir )
+static int _near FileCopy( LPTSTR szOutputName, LPTSTR szInputName, unsigned long fFlags, long *lAppendOffset, FILESEARCH *dir )
 
 {
 

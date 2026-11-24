@@ -154,6 +154,8 @@ int _fastcall qputs( LPTSTR string )
 
 
 // print a CR/LF pair to STDOUT
+#pragma alloc_text( SCREENIO_TEXT, crlf )
+
 void crlf( void )
 {
 	_write( STDOUT, gszCRLF, 2 );
@@ -161,6 +163,8 @@ void crlf( void )
 
 
 // write a character (no buffering) to the specified handle
+#pragma alloc_text( SCREENIO_TEXT, qputc )
+
 void _fastcall qputc( int handle, unsigned char c )
 {
 	_write( handle, &c, 1 );

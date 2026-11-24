@@ -732,7 +732,7 @@ ULONG _near GetMs( void )
 
 
 // get the current timestamp that is relevant for the running operating system
-static ULONG GetOSclock( void )
+static ULONG _near GetOSclock( void )
 {
 	ULONG ulVal;
 	if ( gnOSFlags & DOS_IS_OS2 ) {	// OS/2 system time accuracy is 31.25 ms

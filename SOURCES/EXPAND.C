@@ -1144,7 +1144,7 @@ int _fastcall GetClipboardLine( int nLine, LPTSTR pszLine, int nMaxLength )
 
 
 // strip leading & trailing whitespace, process escape chars, and resolve path components
-static int _fastcall ProcessFileName( LPTSTR pszFile, int fMakePath )
+static int _near _fastcall ProcessFileName( LPTSTR pszFile, int fMakePath )
 {
 	trim( pszFile, WHITESPACE );
 	EscapeLine( pszFile );
@@ -4650,6 +4650,8 @@ int _near History_Cmd( LPTSTR pszCmdLine )
 }
 
 
+#pragma alloc_text( SCREENIO_TEXT, __history )
+
 static int _fastcall __history( LPTSTR pszCmdLine, int fDirHistory )
 {
 	LPTSTR pszArg;
@@ -4757,6 +4759,8 @@ static int _fastcall __history( LPTSTR pszCmdLine, int fDirHistory )
 
 
 // add a command to the history list
+#pragma alloc_text( SCREENIO_TEXT, addhist )
+
 void _fastcall addhist( LPTSTR pszCommand )
 {
 	register unsigned int uLength;

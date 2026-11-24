@@ -52,7 +52,7 @@
 static void _fastcall GetFuzzyDir( LPTSTR );
 void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
 static int _near _global( unsigned long, long, LPTSTR, LPTSTR );
-static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
+static void _near ReadAndWriteFiles( int, int, TCHAR *, int, int );
 
 #pragma alloc_text( MISC_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
 #pragma alloc_text( MISC_TEXT, MakeDirectory, DestroyDirectory, SaveDirectory )
@@ -247,7 +247,7 @@ static void _fastcall GetFuzzyDir( LPTSTR pszDir )
 }
 
 
-static void ReadAndWriteFiles( int nInput, int nOutput, TCHAR *pszLine, int nLength, int nEditFlags )
+static void _near ReadAndWriteFiles( int nInput, int nOutput, TCHAR *pszLine, int nLength, int nEditFlags )
 {
 	while ( getline( nInput, pszLine, nLength, nEditFlags ) > 0 ) {
 
