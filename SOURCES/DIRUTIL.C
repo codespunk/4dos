@@ -412,3 +412,74 @@ FormatDriveNames:
 
 	return ((( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') )) ? Usage( CDD_USAGE ) : __cd( pszCmdLine, fFlags ));
 }
+
+
+// Append pszDirectory to the double-NUL-terminated lpszDirectoryStack.
+// Use DirHistorySize for directory history, DIRSTACKSIZE for the PUSHD stack.
+// Remove duplicate history entries and discard oldest entries to make room.
+void _fastcall SaveDirectory( TCHAR _far *lpszDirectoryStack, LPTSTR pszDirectory )
+{
+	register int nLength;
+	int uSize;
+	TCHAR _far *pszNewEntry, _far *pszDup;
+
+	if ( lpszDirectoryStack == glpDirHistory )
+		uSize = gpIniptr->DirHistorySize;
+	else
+		uSize = DIRSTACKSIZE;
+
+	nLength = ( strlen( pszDirectory ) + 1 );
+
+	// if CD / CDD history, remove duplicates
+	if (( pszDup = lpszDirectoryStack ) == glpDirHistory ) {
+
+		TCHAR _far *lpNext;
+
+		while ( *pszDup != _TEXT('\0') ) {
+
+			lpNext = next_env( pszDup );
+			if ( _fstricmp( pszDup, pszDirectory ) == 0 ) {
+				// remove duplicate
+				_fmemmove( pszDup, lpNext, (int)(( end_of_env( pszDup ) - lpNext ) + 1 ) * sizeof(TCHAR) );
+			} else
+				pszDup = lpNext;
+		}
+	}
+
+	// if directory queue overflow, remove the oldest entry
+	while (((( pszNewEntry = end_of_env( lpszDirectoryStack )) - lpszDirectoryStack ) + nLength ) >= ( uSize - 2 ))
+		_fmemmove( lpszDirectoryStack, next_env( lpszDirectoryStack ), (int)(( pszNewEntry - next_env( lpszDirectoryStack )) + 1 ) * sizeof(TCHAR) );
+
+	_fstrcpy( pszNewEntry, pszDirectory );
+	pszNewEntry[ nLength ] = _TEXT('\0');
+}
+
+
+// Create pszDirectory using _mkdir; return -1 on failure, 0 on success.
+// If fUpdateFuzzy is set, replace any existing entry in JPSTREE.IDX.
+int _fastcall MakeDirectory( LPTSTR pszDirectory, int fUpdateFuzzy )
+{
+	if ( _mkdir( pszDirectory ) == -1 )
+		return -1;
+
+	if ( fUpdateFuzzy ) {
+		// delete the subdirectory from JPSTREE.IDX (if it exists), then add it again
+		UpdateFuzzyTree( pszDirectory, NULL, 1 );
+		UpdateFuzzyTree( pszDirectory, NULL, 0 );
+	}
+
+	return 0;
+}
+
+
+// Remove pszDirectory using _rmdir; return -1 on failure, 0 on success.
+// Remove its fuzzy index entry only after the directory is removed.
+int _fastcall DestroyDirectory( LPTSTR pszDirectory )
+{
+	if ( _rmdir( pszDirectory ) == -1 )
+		return -1;
+
+	UpdateFuzzyTree( pszDirectory, NULL, 1 );
+
+	return 0;
+}

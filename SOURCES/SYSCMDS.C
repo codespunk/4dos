@@ -55,7 +55,6 @@ static int _global( unsigned long, long, LPTSTR, LPTSTR );
 static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
 
 #pragma alloc_text( MISC_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
-#pragma alloc_text( MISC_TEXT, MakeDirectory, DestroyDirectory, SaveDirectory )
 #pragma alloc_text( MISC_TEXT, gtime, gdate, _timer, _log_entry, getlabel )
 #pragma alloc_text( MISC_TEXT, GetLogName )
 
@@ -638,70 +637,6 @@ ExitCD:
 
 
 // save the directory in the specified dir stack
-void _fastcall SaveDirectory( TCHAR _far *lpszDirectoryStack, LPTSTR pszDirectory )
-{
-	register int nLength;
-	int uSize;
-	TCHAR _far *pszNewEntry, _far *pszDup;
-
-	if ( lpszDirectoryStack == glpDirHistory )
-		uSize = gpIniptr->DirHistorySize;
-	else
-		uSize = DIRSTACKSIZE;
-
-	nLength = ( strlen( pszDirectory ) + 1 );
-
-	// if CD / CDD history, remove duplicates
-	if (( pszDup = lpszDirectoryStack ) == glpDirHistory ) {
-
-		TCHAR _far *lpNext;
-
-		while ( *pszDup != _TEXT('\0') ) {
-
-			lpNext = next_env( pszDup );
-			if ( _fstricmp( pszDup, pszDirectory ) == 0 ) {
-				// remove duplicate
-				_fmemmove( pszDup, lpNext, (int)(( end_of_env( pszDup ) - lpNext ) + 1 ) * sizeof(TCHAR) );
-			} else
-				pszDup = lpNext;
-		}
-	}
-
-	// if directory queue overflow, remove the oldest entry
-	while (((( pszNewEntry = end_of_env( lpszDirectoryStack )) - lpszDirectoryStack ) + nLength ) >= ( uSize - 2 ))
-		_fmemmove( lpszDirectoryStack, next_env( lpszDirectoryStack ), (int)(( pszNewEntry - next_env( lpszDirectoryStack )) + 1 ) * sizeof(TCHAR) );
-
-	_fstrcpy( pszNewEntry, pszDirectory );
-	pszNewEntry[ nLength ] = _TEXT('\0');
-}
-
-
-int _fastcall MakeDirectory( LPTSTR pszDirectory, int fUpdateFuzzy )
-{
-	if ( _mkdir( pszDirectory ) == -1 )
-		return -1;
-
-	if ( fUpdateFuzzy ) {
-		// delete the subdirectory from JPSTREE.IDX (if it exists), then add it again
-		UpdateFuzzyTree( pszDirectory, NULL, 1 );
-		UpdateFuzzyTree( pszDirectory, NULL, 0 );
-	}
-
-	return 0;
-}
-
-
-int _fastcall DestroyDirectory( LPTSTR pszDirectory )
-{
-	if ( _rmdir( pszDirectory ) == -1 )
-		return -1;
-
-	UpdateFuzzyTree( pszDirectory, NULL, 1 );
-
-	return 0;
-}
-
-
 // create directory
 extern int _far DirMd_Cmd( LPTSTR );
 int _near Md_Cmd( LPTSTR pszCmdLine )
