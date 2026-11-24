@@ -1018,3 +1018,320 @@ static int _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
 
 	return nReturn;
 }
+
+// File attribute worker relocated to FILE_TEXT.
+// ATTRIB command parsing and show_atts() remain in their original segments.
+#define ATTRIB_DIRS 2
+#define ATTRIB_NOERRORS 4
+#define ATTRIB_NOTHING 8
+#define ATTRIB_PAUSE 0x10
+#define ATTRIB_QUIET 0x20
+#define ATTRIB_SUBDIRS 0x40
+
+typedef struct
+{
+	TCHAR szSource[MAXFILENAME];
+	TCHAR szTarget[MAXFILENAME];
+	LPTSTR szFilename;
+	long fFlags;
+	long lMode;
+
+	char cAnd;
+	char cOr;
+
+} ATTRIB_STRUCT;
+
+
+extern LPTSTR _far FileAttribShowBridge( int );
+
+// ATTRIB command parser in FILE_TEXT; preserve the original command behavior.
+int _far FileAttribWorker( ATTRIB_STRUCT * );
+
+// ATTRIB [options] [+attribute | -attribute] [filename ...]
+// Display or change file attributes, optionally including subdirectories.
+// Examples: ATTRIB *.TXT; ATTRIB +R REPORT.TXT.
+int _far FileAttrib_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg;
+	LPTSTR pszTrailing;
+	int nArgc, n, nReturn = 0;
+	union {
+		// file attribute structure
+
+		unsigned char attribute;
+
+		struct {
+			unsigned rdonly : 1;
+			unsigned hidden : 1;
+			unsigned system : 1;
+			unsigned reserved : 2;
+			unsigned archive : 1;
+
+		} bit;
+	} and_mask, or_mask;
+	ATTRIB_STRUCT Attrib;
+
+	Attrib.lMode = 0;
+
+	init_page_size();		// clear row & page length vars
+
+	// get date/time/size ranges
+	if ( GetRange( pszCmdLine, &aRanges, 0 ) != 0 )
+		return ERROR_EXIT;
+
+	// check for flags
+	if ( GetSwitches( pszCmdLine, _TEXT("*DENPQS"), &(Attrib.fFlags), 0 ) != 0 )
+		return (Usage( ATTRIB_USAGE ));
+
+	if ( Attrib.fFlags & ATTRIB_PAUSE )
+		gnPageLength = GetScrRows();
+
+	Attrib.lMode |= (( Attrib.fFlags & ATTRIB_DIRS ) ? 0x17 : 0x07 );
+	if ( gnInclusiveMode & _A_SUBDIR )
+		Attrib.lMode |= _A_SUBDIR;
+
+	// suppress error message from find_file
+	if ( Attrib.fFlags & ATTRIB_NOERRORS )
+		Attrib.lMode |= FIND_NO_ERRORS;
+
+	and_mask.attribute = 0x37;
+
+	or_mask.attribute = 0;
+
+	nArgc = 0;
+	strcpy( Attrib.szSource, WILD_FILE );	// default to *.*
+
+	do {
+
+	    if (( pszArg = ntharg( pszCmdLine, nArgc++ )) != NULL ) {
+
+		if ( *pszArg == _TEXT('-') ) {
+
+			// remove attribute (clear OR and AND bits)
+			while ( *(++pszArg )) {
+
+				switch ( _ctoupper( *pszArg )) {
+				case 'A':
+					or_mask.bit.archive = and_mask.bit.archive = 0;
+					break;
+				case 'H':
+					or_mask.bit.hidden = and_mask.bit.hidden = 0;
+					break;
+				case 'R':
+					or_mask.bit.rdonly = and_mask.bit.rdonly = 0;
+					break;
+				case 'S':
+					or_mask.bit.system = and_mask.bit.system = 0;
+					break;
+				case '-':
+					// kludge for RTPatch bug
+					break;
+				case '_':
+					// ignore for ___A_ syntax
+					break;
+				case 'D':
+					// ____D syntax
+					Attrib.fFlags |= ATTRIB_DIRS;
+					break;
+
+				default:
+					error( ERROR_INVALID_PARAMETER, pszArg );
+					return (Usage( ATTRIB_USAGE ));
+				}
+			}
+
+		} else if ( *pszArg == _TEXT('+') ) {
+
+			// add attribute (set OR bits)
+			while ( *(++pszArg )) {
+
+				switch ( _ctoupper( *pszArg )) {
+				case 'A':
+					or_mask.bit.archive = 1;
+					break;
+				case 'H':
+					or_mask.bit.hidden = 1;
+					break;
+				case 'R':
+					or_mask.bit.rdonly = 1;
+					break;
+				case 'S':
+					or_mask.bit.system = 1;
+					break;
+				case '+':
+					// kludge for RTPatch bug
+					break;
+				case '_':
+					// ignore for ___A_ syntax
+					break;
+				case 'D':
+					// ____D syntax
+					Attrib.fFlags |= ATTRIB_DIRS;
+					break;
+
+				default:
+					error( ERROR_INVALID_PARAMETER, pszArg );
+					return ( Usage( ATTRIB_USAGE ));
+				}
+			}
+
+		} else {
+
+		    // it must be a filename
+		    copy_filename( Attrib.szSource, pszArg );
+
+		    // check for trailing switches
+		    // KLUDGE for COMMAND.COM compatibility (ATTRIB *.c +h)
+		    for ( n = nArgc; (( pszTrailing = ntharg( pszCmdLine, n )) != NULL ); n++ ) {
+			// check for another file spec
+			if (( *pszTrailing != _TEXT('-') ) && ( *pszTrailing != _TEXT('+') ))
+				goto change_atts;
+		    }
+		}
+
+	    } else {
+
+change_atts:
+		if ( mkfname( Attrib.szSource, 0 ) == NULL )
+			return ERROR_EXIT;
+
+		// if source is a directory & no /D specified, add "\*.*"
+		if ( Attrib.fFlags & ATTRIB_DIRS )
+			strip_trailing( Attrib.szSource, _TEXT("\\/") );
+		else
+			AddWildcardIfDirectory( Attrib.szSource );
+
+		// save the source filename part (for recursive calls and
+		//   include lists)
+		Attrib.szFilename = Attrib.szSource + strlen( path_part( Attrib.szSource));
+		pszTrailing = (LPTSTR)_alloca( ( strlen( Attrib.szFilename ) + 1 ) * sizeof(TCHAR) );
+		Attrib.szFilename = strcpy( pszTrailing, Attrib.szFilename );
+
+		// change attributes
+		Attrib.cAnd = and_mask.attribute;
+		Attrib.cOr = or_mask.attribute;
+
+		nReturn = FileAttribWorker( &Attrib );
+		if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC ))
+			break;
+
+	    }
+
+	} while (( nReturn != CTRLC ) && ( pszArg != NULL ));
+
+	return nReturn;
+}
+
+
+
+
+
+// Apply or display attributes for matching files.
+// Attrib holds the search options and AND/OR attribute masks.
+// Recurse into subdirectories when requested.
+int _far FileAttribWorker( register ATTRIB_STRUCT *Attrib )
+{
+	register unsigned int uOldAttribute;
+	int nFind, nReturn = 0, rc, nAttribute;
+	LPTSTR pszSource;
+	FILESEARCH dir;
+
+	// copy date/time range info
+	memmove( &(dir.aRanges), &aRanges, sizeof(RANGES) );
+
+	dir.hdir = INVALID_HANDLE_VALUE;
+
+	// change attributes
+	for ( nFind = FIND_FIRST; ( find_file( nFind, Attrib->szSource, ( Attrib->lMode | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE | FIND_NO_DOTNAMES ), &dir, Attrib->szTarget ) != NULL ); nFind = FIND_NEXT ) {
+
+		if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+			FindClose( dir.hdir );
+			return CTRLC;
+		}
+
+
+		CheckForBreak();
+
+		// kludge for Win32 GetFileAttributes API bug -- won't work with open files!!
+		//  (If it isn't a filelist, we already have the attributes in "dir.attrib")
+
+		// query file mode again because we might be using @filelists (lFileOffset >= 0)
+		if ( dir.lFileOffset != -1L ) {
+			if (( nReturn = QueryFileMode( Attrib->szTarget, (unsigned int *)&nAttribute )) == 0 )
+				dir.attrib = nAttribute;
+			else {
+				if (( Attrib->fFlags & ATTRIB_NOERRORS ) == 0 )
+					error( nReturn, Attrib->szTarget );
+				nReturn = ERROR_EXIT;
+				continue;
+			}
+		}
+
+		// display old attributes, new attributes, and filename
+
+		uOldAttribute = ( dir.attrib & 0x37 );
+
+		dir.attrib = (( uOldAttribute & Attrib->cAnd ) | Attrib->cOr );
+
+		// if attributes were changed, show new ones
+		if (( Attrib->fFlags & ATTRIB_QUIET ) == 0 ) {
+
+			qputs( FileAttribShowBridge( uOldAttribute ));
+
+			if (( Attrib->cAnd != 0x37 ) || ( Attrib->cOr != 0 )) {
+
+				printf( _TEXT(" -> %s"), FileAttribShowBridge( dir.attrib ));
+			}
+
+			printf( _TEXT("  %s"), Attrib->szTarget );
+			crlf();
+			_page_break();
+		}
+
+		// check for a change; ignore if same
+		if ( uOldAttribute != dir.attrib && !( Attrib->fFlags & ATTRIB_NOTHING )) {
+
+			// can't change directory attribute
+			dir.attrib &= ~_A_SUBDIR;
+			if (( rc = SetFileMode( Attrib->szTarget, dir.attrib )) != 0 ) {
+				if (( Attrib->fFlags & ATTRIB_NOERRORS ) == 0 )
+					error( rc, Attrib->szTarget );
+				nReturn = ERROR_EXIT;
+			}
+		}
+	}
+
+	if ( Attrib->fFlags & ATTRIB_SUBDIRS ) {
+	// modify matching subdirectory files too?
+
+		CheckFreeStack( 1024 );
+
+		// strip the filename & add wildcards for directory search
+		sprintf( Attrib->szSource, FMT_DOUBLE_STR, path_part( Attrib->szSource ), WILD_FILE );
+
+		// save the current subdirectory start
+		pszSource = strchr( Attrib->szSource, _TEXT('*') );
+
+		// search for all subdirectories in this (sub)directory
+		//   tell find_file() not to display errors, & to only
+		//   return subdir names
+		for ( nFind = FIND_FIRST; ( find_file( nFind, Attrib->szSource, ( Attrib->lMode | 0x10 | FIND_NO_ERRORS | FIND_ONLY_DIRS | FIND_NO_FILELISTS | FIND_EXCLUDE ), &dir, NULL ) != NULL ); nFind = FIND_NEXT) {
+
+			// make the new "source"
+			sprintf( pszSource, FMT_PATH_STR, dir.szFileName, Attrib->szFilename );
+
+			// process directory tree recursively
+			nReturn = FileAttribWorker( Attrib );
+			if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC )) {
+				// reset the directory search handle
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			// restore the original name
+			strcpy( pszSource, WILD_FILE );
+		}
+	}
+
+	return nReturn;
+}
