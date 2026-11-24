@@ -65,10 +65,14 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, SetFromFile, __Set, __Unset, get_alias, add_list, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, __Set, __Unset, get_alias, add_list, next_env, end_of_env )
+#pragma alloc_text( ENV_TEXT, SetFromFile )
 
 
 
+// Read definitions or deletion names from files or redirected standard input.
+// pszLine selects files; pchList selects the destination; bit 0 of fFlags deletes entries.
+// Join escaped lines, skip blank and colon-comment lines, and return status or CTRLC.
 static int SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 {
 	static TCHAR szDelimiters[] = _TEXT("%[^= \t]");
