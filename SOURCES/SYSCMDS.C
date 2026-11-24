@@ -71,129 +71,19 @@ int _near Cd_Cmd( LPTSTR pszCmdLine )
 }
 
 // change the current disk and directory
+extern int _far DirCdd_Cmd( LPTSTR );
+
+// Far bridge for DIR_TEXT callers that need the near command() interpreter.
+// Forward the command line and execution options unchanged and return its status.
+int _far DirExecuteCommand( LPTSTR pszCmdLine, int fOptions )
+{
+	return command( pszCmdLine, fOptions );
+}
+
+// Near CDD dispatcher; forward to the DIR_TEXT implementation.
 int _near Cdd_Cmd( LPTSTR pszCmdLine )
 {
-	register LPTSTR pszPtr, pszArg;
-	TCHAR szDrives[128], szTreePath[MAXFILENAME], szTemp[MAXFILENAME];
-	int i, n, nReturn = 0, fFlags = CD_CHANGEDRIVE | CD_SAVELASTDIR, fSave, fUpdate;
-
-	if (( pszCmdLine ) && ( *pszCmdLine )) {
-
-		if ( _strnicmp( pszCmdLine, _TEXT("/U"), 2 ) == 0 ) {
-			// update tree(s)
-			fUpdate = 1;
-			pszCmdLine[1] = _TEXT('S');
-		} else if ( _strnicmp( pszCmdLine, _TEXT("/D"), 2 ) == 0 ) {
-			// delete tree(s)
-			fUpdate = 2;
-			pszCmdLine[1] = _TEXT('S');
-		} else
-			fUpdate = 0;
-
-		// disable fuzzy searching
-		if ( _strnicmp( pszCmdLine, _TEXT("/N "), 3 ) == 0 ) {
-			fFlags |= CD_NOFUZZY;
-			strcpy( pszCmdLine, skipspace( pszCmdLine + 3 ));
-
-			// if /A, display current directory on all drives C: - Z:
-		} else if ( _stricmp( pszCmdLine, _TEXT("/A") ) == 0 ) {
-
-			for ( n = 3; ( n <= 26 ); n++ ) {
-
-				if ( QueryDriveReady( n )) {
-					sprintf( szDrives, _TEXT("%c:"), n + 64 );
-					if (( pszPtr = gcdir( szDrives, 1 )) != NULL )
-						printf( FMT_STR_CRLF, pszPtr );
-				}
-			}
-
-			return 0;
-
-		} else if ( _strnicmp( pszCmdLine, _TEXT("/S"), 2 ) == 0 ) {
-
-			LPTSTR pszSave;
-
-			// get tree index location
-			if ( gpIniptr->TreePath != INI_EMPTYSTR )
-				pszPtr = (LPTSTR)( gpIniptr->StrData + gpIniptr->TreePath );
-
-			else
-				pszPtr = _TEXT("C:\\");
-			strcpy( szTreePath, pszPtr );
-			mkdirname( szTreePath, _TEXT("jpstree.idx") );
-			AddQuotes( szTreePath );
-
-			// scan drive for wildcard searches
-			pszSave = strcpy( (LPTSTR)_alloca( ( strlen( pszCmdLine ) + 1 ) * sizeof(TCHAR) ), pszCmdLine );
-
-			pszPtr = skipspace( pszSave + 2 );
-			if ( *pszPtr == _TEXT('\0') ) {
-				// default to all hard disks
-				SetDriveString( szDrives );
-FormatDriveNames:
-				for ( pszPtr = szDrives; ( *pszPtr != _TEXT('\0') ); pszPtr += 4 )
-					strins( pszPtr+1, _TEXT(":\\ ") );
-				pszPtr = szDrives;
-
-			} else {
-				pszPtr = skipspace( pszPtr );
-				if ( strpbrk( pszPtr, _TEXT(":\\. \t") ) == NULL ) {
-					strcpy( szDrives, pszPtr );
-					goto FormatDriveNames;
-				}
-				pszPtr = strcpy( (LPTSTR)_alloca( ( strlen( pszPtr ) + 1 ) * sizeof(TCHAR) ), pszPtr );
-			}
-
-			for ( i = 0; (( pszArg = ntharg( pszPtr, i )) != NULL ); i++ ) {
-
-				if ( fUpdate ) {
-					// remove existing tree from JPSTREE.IDX
-					strcpy( szTemp, pszArg );
-					UpdateFuzzyTree( szTemp, NULL, 1 );
-					if ( fUpdate == 2 )
-						continue;
-				}
-
-				// use TREE to build the directory list
-				printf( BUILDING_INDEX, pszArg );
-				if ( fUpdate ) {
-					// build a temporary file
-					pszArg = strcpy( (LPTSTR)_alloca( ( strlen( pszArg ) + 1 ) * sizeof(TCHAR) ), pszArg );
-					szTemp[0] = _TEXT('\0');
-
-					GetTempDirectory( szTemp );
-
-					UniqueFileName( szTemp );
-					AddQuotes( szTemp );
-				}
-
-				sprintf( pszCmdLine, _TEXT("*@tree /c%s %s %s %s"), (( gpIniptr->CompleteHidden ) ? _TEXT("/h") : NULLSTR ), pszArg, (( i == 0 ) ? _TEXT(">!") : _TEXT(">>!") ), (( fUpdate ) ? szTemp : szTreePath ));
-
-				// make sure TREE isn't disabled!
-				n = findcmd( _TEXT("TREE"), 1 );
-				fSave = commands[ n ].fParse;
-				commands[ n ].fParse &= ~CMD_DISABLED;
-
-				nReturn = command( pszCmdLine, 0 );
-
-				commands[ n ].fParse = fSave;
-
-				// check for ^C or stack overflow
-				if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC ) || ( cv.fException ))
-					return CTRLC;
-
-				if ( fUpdate ) {
-					// insert temp file into JPSTREE.IDX
-					UpdateFuzzyTree( pszArg, szTemp, 0 );
-					remove( szTemp );
-				}
-			}
-
-			return 0;
-		}
-	}
-
-	return ((( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') )) ? Usage( CDD_USAGE ) : __cd( pszCmdLine, fFlags ));
+	return DirCdd_Cmd( pszCmdLine );
 }
 
 
