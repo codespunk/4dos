@@ -426,15 +426,6 @@ int _near Battext_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// Near dispatcher retained for the existing command table.
-extern int _far UtilityBeep_Cmd( LPTSTR );
-int _near Beep_Cmd( LPTSTR pszCmdLine )
-{
-	return UtilityBeep_Cmd( pszCmdLine );
-}
-
-
-
 // CALL a nested batch file (or any executable file )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
 int _near Call_Cmd( LPTSTR pszCmdLine )
@@ -451,15 +442,6 @@ int _near Call_Cmd( LPTSTR pszCmdLine )
 
 	return nReturn;
 }
-
-
-// Near dispatcher retained for the existing command table.
-extern int _far UtilityDelay_Cmd( LPTSTR );
-int _near Delay_Cmd( LPTSTR pszCmdLine )
-{
-	return UtilityDelay_Cmd( pszCmdLine );
-}
-
 
 
 #define DOTYPE_IN 1
@@ -855,44 +837,6 @@ int _fastcall do_parsing( register LPTSTR pszCmdName )
 
 	return ( cv.f.flag._do_end | cv.f.flag._do_leave );
 }
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenEcho_Cmd( LPTSTR );
-int _near Echo_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenEcho_Cmd( pszCmdLine );
-}
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenEchoErr_Cmd( LPTSTR );
-int _near EchoErr_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenEchoErr_Cmd( pszCmdLine );
-}
-
-
-
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenEchos_Cmd( LPTSTR );
-int _near Echos_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenEchos_Cmd( pszCmdLine );
-}
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenEchosErr_Cmd( LPTSTR );
-int _near EchosErr_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenEchosErr_Cmd( pszCmdLine );
-}
-
-
-
 
 
 #define FOR_ATTRIBUTES 1
@@ -2060,27 +2004,6 @@ int _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 }
 
 
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenInkey_Cmd( LPTSTR );
-int _near Inkey_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenInkey_Cmd( pszCmdLine );
-}
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenInput_Cmd( LPTSTR );
-int _near Input_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenInput_Cmd( pszCmdLine );
-}
-
-
-
-
-
 // enable/disable disk verify
 int _near LfnFor_Cmd( LPTSTR pszCmdLine )
 {
@@ -2189,14 +2112,6 @@ int _near On_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenPause_Cmd( LPTSTR );
-int _near Pause_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenPause_Cmd( pszCmdLine );
-}
-
-
 // cancel nested batch files
 int _near Cancel_Cmd( register LPTSTR pszCmdLine )
 {
@@ -2239,13 +2154,6 @@ static int _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 }
 
 
-// REM - do nothing
-int _near Remark_Cmd( LPTSTR pszCmdLine )
-{
-	return 0;
-}
-
-
 // RETURN from a GOSUB
 int _near Ret_Cmd( LPTSTR pszCmdLine )
 {
@@ -2262,39 +2170,6 @@ int _near Ret_Cmd( LPTSTR pszCmdLine )
 	// return a "return from nested BatchCLI()" code
 	return BATCH_RETURN_RETURN;
 }
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenScr_Cmd( LPTSTR );
-int _near Scr_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenScr_Cmd( pszCmdLine );
-}
-
-
-// Far bridge to the near _TEXT parser; preserve its existing calling convention.
-int _far ScreenParseLine( LPTSTR pszText )
-{
-	return ParseLine( NULL, pszText, NULL, CMD_STRIP_QUOTES, 0 );
-}
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenVScrput_Cmd( LPTSTR );
-int _near VScrput_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenVScrput_Cmd( pszCmdLine );
-}
-
-
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
-extern int _far ScreenScrput_Cmd( LPTSTR );
-int _near Scrput_Cmd( LPTSTR pszCmdLine )
-{
-	return ScreenScrput_Cmd( pszCmdLine );
-}
-
-
-
 
 
 // save the current environment, alias list, and current drive/directory

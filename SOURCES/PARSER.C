@@ -1252,6 +1252,13 @@ int _near _fastcall ContinueLine( register LPTSTR pszStartLine )
 }
 
 
+// Far bridge to the near _TEXT parser; preserve its existing calling convention.
+int _far ScreenParseLine( LPTSTR pszText )
+{
+	return ParseLine( NULL, pszText, NULL, CMD_STRIP_QUOTES, 0 );
+}
+
+
 // parse the command line into Argc, Argv format
 int _near ParseLine( LPTSTR pszCmdName, register LPTSTR pszLine, int (_near *pfnCmd)(LPTSTR), unsigned int fParse, int fSetCMDLINE )
 {
