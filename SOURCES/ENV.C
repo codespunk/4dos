@@ -65,11 +65,12 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, add_list, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, next_env, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
 #pragma alloc_text( ENV_TEXT, get_alias )
+#pragma alloc_text( ENV_TEXT, add_list )
 
 
 
@@ -592,7 +593,10 @@ int _fastcall add_variable( LPTSTR pszVariable )
 }
 
 
-// add a variable to the environment or alias to the alias list
+// Create, replace, or delete a definition in pchList (NULL selects the environment).
+// pszVariable is a writable definition; an empty value deletes an existing entry.
+// Normalize names, check capacity, and protect shared list updates from task switches.
+// Return zero on success or an error status.
 int PASCAL add_list( LPTSTR pszVariable, TCHAR _far *pchList )
 {
 	LPTSTR pszLine;
