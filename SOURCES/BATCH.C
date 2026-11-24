@@ -2265,43 +2265,11 @@ int _near Ret_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// set cursor position
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenScr_Cmd( LPTSTR );
 int _near Scr_Cmd( LPTSTR pszCmdLine )
 {
-	int nRow, nColumn;
-	LPTSTR pszText;
-
-	// make sure row & column are displayable on the current screen
-	if (( pszCmdLine == NULL ) || ( GetCursorRange( pszCmdLine, &nRow, &nColumn ) != 0 ))
-		return ( Usage( SCREEN_USAGE ));
-
-	if (( pszText = ntharg( pszCmdLine, 1 )) != NULL ) {
-
-		pszText = gpNthptr + strlen( pszText );
-
-		if ( *pszText )
-			pszText++;
-
-		// center the text?
-		if ( nColumn == 999 ) {
-			if (( nColumn = (( GetScrCols() - strlen( pszText )) / 2 )) < 0 )
-				nColumn = 0;
-		}
-
-		if ( nRow == 999 ) {
-			if (( nRow = ( GetScrRows() / 2 )) < 0 )
-				nRow = 0;
-		}
-	}
-
-	// move the cursor
-	SetCurPos( nRow, nColumn );
-
-	// if the user specified a string, display it
-	if ( pszText != NULL )
-		qputs( pszText );
-
-	return 0;
+	return ScreenScr_Cmd( pszCmdLine );
 }
 
 

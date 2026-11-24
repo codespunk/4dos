@@ -2083,3 +2083,46 @@ int _far ScreenPause_Cmd( LPTSTR pszCmdLine )
 	GetKeystroke( EDIT_NO_ECHO | EDIT_ECHO_CRLF | EDIT_SCROLL_CONSOLE );
 	return 0;
 }
+
+// SCREEN row column [text]
+// Position the cursor and optionally print text; 999 requests centering.
+// Example: SCREEN 5 10 Hello. pszCmdLine supplies coordinates and text.
+// Returns zero or Usage() status; changes cursor position and screen output.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenScr_Cmd( LPTSTR pszCmdLine )
+{
+	int nRow, nColumn;
+	LPTSTR pszText;
+
+	// make sure row & column are displayable on the current screen
+	if (( pszCmdLine == NULL ) || ( GetCursorRange( pszCmdLine, &nRow, &nColumn ) != 0 ))
+		return ( Usage( SCREEN_USAGE ));
+
+	if (( pszText = ntharg( pszCmdLine, 1 )) != NULL ) {
+
+		pszText = gpNthptr + strlen( pszText );
+
+		if ( *pszText )
+			pszText++;
+
+		// center the text?
+		if ( nColumn == 999 ) {
+			if (( nColumn = (( GetScrCols() - strlen( pszText )) / 2 )) < 0 )
+				nColumn = 0;
+		}
+
+		if ( nRow == 999 ) {
+			if (( nRow = ( GetScrRows() / 2 )) < 0 )
+				nRow = 0;
+		}
+	}
+
+	// move the cursor
+	SetCurPos( nRow, nColumn );
+
+	// if the user specified a string, display it
+	if ( pszText != NULL )
+		qputs( pszText );
+
+	return 0;
+}
