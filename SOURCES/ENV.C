@@ -65,13 +65,13 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
 #pragma alloc_text( ENV_TEXT, get_alias )
 #pragma alloc_text( ENV_TEXT, add_list )
 #pragma alloc_text( ENV_TEXT, next_env )
+#pragma alloc_text( ENV_TEXT, end_of_env )
 
 
 
@@ -751,7 +751,8 @@ TCHAR _far * PASCAL next_env( TCHAR _far *pchEnv )
 }
 
 
-// get pointer to end of list
+// Scan pchList for its terminating empty entry.
+// Return a far pointer to the end of the packed list.
 TCHAR _far * PASCAL end_of_env( TCHAR _far *pchList )
 {
 	for ( ; ( *pchList != _TEXT('\0') ); pchList = next_env( pchList ))
