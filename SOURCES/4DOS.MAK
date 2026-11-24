@@ -210,7 +210,7 @@ $(OBJ)\misc.obj : misc.c $(headers) md5.h sha.h
         $(COMP) misc.c
 
 $(OBJ)\env.obj : env.c $(headers)
-        $(COMP) /NT_TEXT env.c
+        $(COMP) /NTENV_TEXT env.c
 
 $(OBJ)\batch.obj : batch.c $(headers)
         $(COMP) /NT_TEXT batch.c

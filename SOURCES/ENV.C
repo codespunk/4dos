@@ -72,24 +72,11 @@ static int _far EnvUnalias_Cmd( LPTSTR );
 static int _far EnvUnfunction_Cmd( LPTSTR );
 static int _far EnvUnset_Cmd( LPTSTR );
 static int _far EnvEset_Cmd( LPTSTR );
-#pragma alloc_text( ENV_TEXT, SetFromFile )
-#pragma alloc_text( ENV_TEXT, __Set )
-#pragma alloc_text( ENV_TEXT, __Unset )
-#pragma alloc_text( ENV_TEXT, get_alias )
-#pragma alloc_text( ENV_TEXT, add_list )
-#pragma alloc_text( ENV_TEXT, next_env )
-#pragma alloc_text( ENV_TEXT, end_of_env )
-#pragma alloc_text( ENV_TEXT, get_variable )
-#pragma alloc_text( ENV_TEXT, get_list )
-#pragma alloc_text( ENV_TEXT, add_variable )
-#pragma alloc_text( ENV_TEXT, EnvAlias_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvFunction_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvSet_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvUnalias_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvUnfunction_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvUnset_Cmd )
-#pragma alloc_text( ENV_TEXT, EnvEset_Cmd )
 
+
+
+// Keep command-table entry points in the default code segment.
+#pragma alloc_text( _TEXT, Alias_Cmd, Function_Cmd, Set_Cmd, Unalias_Cmd, Unfunction_Cmd, Unset_Cmd, Eset_Cmd )
 
 
 // Read definitions or deletion names from files or redirected standard input.
