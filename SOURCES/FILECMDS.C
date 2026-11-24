@@ -1633,194 +1633,26 @@ static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTem
 }
 
 
-#define REN_BY_ATTRIBUTES 1
-#define REN_NOERRORS 2
-#define REN_NOTHING 4
-#define REN_QUERY 8
-#define REN_QUIET 0x10
-#define REN_SUBDIRS 0x20
-#define REN_TOTALS 0x40
-
-// rename files (including to different directories) or directories
+// REN remains a near command dispatcher; implementation is in FILE_TEXT.
+extern int _far FileRen_Cmd( LPTSTR );
 // Near REN dispatcher; forward to the FILE_TEXT implementation.
 int _near Ren_Cmd( LPTSTR pszCmdLine )
 {
-	register LPTSTR pszArg;
-	TCHAR szSource[MAXFILENAME], szTargetName[MAXFILENAME], szTarget[MAXFILENAME];
-	int i, nArgc, nFind, nReturn = 0;
-	unsigned long ulMode = 0;
-	long fRen, lFilesRenamed = 0;
-	FILESEARCH dir;
+	return FileRen_Cmd( pszCmdLine );
+}
 
-	// get date/time/size ranges
-	if ( GetRange( pszCmdLine, &(dir.aRanges), 0 ) != 0 )
-		return ERROR_EXIT;
+// Far bridge to wildcard target-name expansion in wildname().
+// Forward the target buffer, source pattern, and template filename.
+void _far FileRenWildname( LPTSTR target, LPTSTR source, LPTSTR templateName )
+{
+	wildname( target, source, templateName );
+}
 
-	// check for and remove switches
-	// get the target name, or abort if no target
-	if (( GetSwitches( pszCmdLine, _TEXT("*ENPQST"), &fRen, 0 ) != 0 ) || (( pszArg = last_arg( pszCmdLine, &nArgc )) == NULL ))
-		return ( Usage( RENAME_USAGE ));
-
-	if ( fRen & REN_BY_ATTRIBUTES )
-		ulMode |= 0x07;
-
-	// if query, turn off quiet mode
-	if ( fRen & REN_QUERY )
-		fRen &= ~( REN_QUIET | REN_TOTALS );
-
-	copy_filename( szTarget, pszArg );
-	StripQuotes( szTarget );
-	*gpNthptr = _TEXT('\0');		// remove target from command line
-
-	// rename matching directories?
-	if (( fRen & REN_SUBDIRS ) || ( strpbrk( szTarget, WILD_CHARS ) == NULL ))
-		ulMode |= _A_SUBDIR;
-
-	// suppress error message from find_file
-	if ( fRen & REN_NOERRORS )
-		ulMode |= FIND_NO_ERRORS;
-
-	for ( nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc)) != NULL ); nArgc++ ) {
-
-		if ( mkfname( pszArg, (( fRen & REN_NOERRORS ) ? MKFNAME_NOERROR : 0 )) == NULL )
-			continue;
-
-		// strip trailing backslashes
-		if ( ulMode & _A_SUBDIR )
-			strip_trailing( pszArg+3, SLASHES );
-
-		for ( nFind = FIND_FIRST; ; nFind = FIND_NEXT ) {
-
-			if ( find_file( nFind, pszArg, ( ulMode | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE | FIND_NO_DOTNAMES ), &dir, szSource ) == NULL )
-				break;
-
-			if ( setjmp( cv.env ) == -1 ) {
-				FindClose( dir.hdir );
-				nReturn = CTRLC;
-				goto rename_abort;
-			}
-
-			CheckForBreak();
-
-			wildname( szTargetName, szTarget, szSource );
-
-			if ( mkfname( szSource, 0 ) == NULL )
-				return ERROR_EXIT;
-
-			// nasty kludge to emulate COMMAND.COM & CMD.EXE stupid
-			//   renaming convention (if source has path & target
-			//   doesn't, rename into source directory)
-			if ( path_part( szTargetName ) == NULL )
-				strins( szTargetName, path_part( szSource ));
-
-			if ( mkfname( szTargetName, 0 ) == NULL )
-				return ERROR_EXIT;
-
-			if ( is_dir( szTargetName )) {
-				// destination is directory; create target name
-				//   (unless we're renaming directories!)
-				if ( !is_dir( szSource ))
-					mkdirname( szTargetName, fname_part( szSource ));
-			}
-
-			if (( fRen & ( REN_QUIET | REN_TOTALS )) == 0 ) {
-
-				printf( FMT_STR_TO_STR, szSource, szTargetName );
-
-				if ( fRen & REN_QUERY ) {
-					if ((( i = QueryInputChar( NULLSTR, YES_NO_ALL )) == ALL_CHAR ) || ( i == REST_CHAR ))
-						fRen &= ~REN_QUERY;
-					else if ( i == NO_CHAR )
-						continue;
-					else if ( i == ESCAPE ) {
-						FindClose( dir.hdir );
-						break;
-					}
-				} else
-					crlf();
-			}
-
-			if (( fRen & REN_NOTHING ) == 0 ) {
-
-				if ( rename( szSource, szTargetName ) == -1 ) {
-					// check if error is with source or target
-					nReturn = error( _doserrno, ((( _doserrno == ERROR_ACCESS_DENIED) || ( _doserrno == ERROR_NOT_SAME_DEVICE ) || ( _doserrno == ERROR_PATH_NOT_FOUND)) ? szTargetName : szSource ));
-
-				} else {
-
-					lFilesRenamed++;
-
-					// rename description to target dir
-					process_descriptions( szSource, szTargetName, DESCRIPTION_COPY );
-
-					// update JPSTREE.IDX
-					if ( is_dir( szTargetName )) {
-
-						TCHAR szTemp[MAXFILENAME], szBuf[MAXLINESIZ];
-						int n, fSave;
-						FILESEARCH tdir;
-
-						// remove source tree
-						UpdateFuzzyTree( szSource, NULL, 1 );
-						// add new target directory
-						UpdateFuzzyTree( szTargetName, NULL, 0 );
-
-						// now rename any subdirectories
-						strcpy( szTemp, szTargetName );
-						mkdirname( szTemp, WILD_FILE );
-
-						if ( find_file( 0x4E, szTemp, 0x17 | FIND_NO_ERRORS | FIND_ONLY_DIRS | FIND_NO_DOTNAMES | FIND_CLOSE | FIND_NO_FILELISTS, &tdir, NULL ) != NULL ) {
-	
-							// save command line (it'll be destroyed by the command() call)
-							pszCmdLine = strcpy( (LPTSTR)_alloca( ( strlen( pszCmdLine ) + 1 ) * sizeof(TCHAR) ), pszCmdLine );
-
-							// build a temporary file
-							szTemp[0] = _TEXT('\0');
-
-							GetTempDirectory( szTemp );
-
-							UniqueFileName( szTemp );
-
-							sprintf( szBuf, _TEXT("*@tree /c \"%s\" >! \"%s\""), szTargetName, szTemp );
-
-							// use TREE to build the directory list
-							// make sure TREE isn't disabled!
-							n = findcmd( _TEXT("TREE"), 1 );
-
-							fSave = commands[ n ].fParse;
-							commands[ n ].fParse &= ~CMD_DISABLED;
-							i = command( szBuf, 0 );
-							commands[ n ].fParse = fSave;
-
-							// check for ^C or stack overflow
-							if (( setjmp( cv.env ) == -1 ) || ( i == CTRLC ) || ( cv.fException )) {
-								FindClose( dir.hdir );
-								nReturn = CTRLC;
-								goto rename_abort;
-							}
-
-							// insert temp file into JPSTREE.IDX
-							UpdateFuzzyTree( szTargetName, szTemp, 0 );
-							remove( szTemp );
-						}
-					}
-				}
-			} else if ( is_file( szTargetName ) )
-				nReturn = error( _doserrno = ERROR_ACCESS_DENIED, szTargetName );
-		}
-
-		// delete the descriptions for renamed or missing files
-		if ((( fRen & REN_NOTHING ) == 0 ) && ( lFilesRenamed != 0L )) {
-			strcat( pszArg, WILD_FILE );
-			process_descriptions( NULL, pszArg, DESCRIPTION_REMOVE );
-		}
-	}
-
-rename_abort:
-	if (( fRen & REN_QUIET ) == 0 )
-		FilesProcessed( FILES_RENAMED, lFilesRenamed );
-
-	return (( lFilesRenamed != 0L ) ? nReturn : ERROR_EXIT );
+// Far bridge to the near command parser.
+// Forward the command line and execution options unchanged.
+int _far FileRenCommand( LPTSTR pszLine, int fOptions )
+{
+	return command( pszLine, fOptions );
 }
 
 
