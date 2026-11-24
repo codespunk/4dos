@@ -35,95 +35,332 @@
 
 // Keep this compilation unit in _TEXT: the command table uses near pointers.
 
-// Near dispatcher retained for the existing command table.
+// UTILITY_TEXT command dispatchers
+
+// Near command-table entry; implementation resides in UTILITY_TEXT.
 extern int _far UtilityBeep_Cmd( LPTSTR );
 int _near Beep_Cmd( LPTSTR pszCmdLine )
 {
 	return UtilityBeep_Cmd( pszCmdLine );
 }
 
-// Near dispatcher retained for the existing command table.
+// Near command-table entry; implementation resides in UTILITY_TEXT.
 extern int _far UtilityDelay_Cmd( LPTSTR );
 int _near Delay_Cmd( LPTSTR pszCmdLine )
 {
 	return UtilityDelay_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in UTILITY_TEXT.
+extern int _far UtilityBreak_Cmd( char * );
+int _near Break_Cmd( register char *pszCmdLine )
+{
+	return UtilityBreak_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in UTILITY_TEXT.
+extern int _far UtilityCls_Cmd( char * );
+int _near Cls_Cmd( char *pszCmdLine )
+{
+	return UtilityCls_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in UTILITY_TEXT.
+extern int _far UtilityIdle_Cmd( char * );
+int _near Idle_Cmd( LPTSTR pszCmdLine )
+{
+	return UtilityIdle_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in UTILITY_TEXT.
+extern int _far UtilityTruename_Cmd( char * );
+int _near Truename_Cmd( char *pszCmdLine )
+{
+	return UtilityTruename_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in UTILITY_TEXT.
+extern int _far UtilityVer_Cmd( char * );
+int _near Ver_Cmd( char *pszCmdLine )
+{
+	return UtilityVer_Cmd( pszCmdLine );
+}
+
+// SCREEN_TEXT command dispatchers
+
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenEcho_Cmd( LPTSTR );
 int _near Echo_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenEcho_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenEchoErr_Cmd( LPTSTR );
 int _near EchoErr_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenEchoErr_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenEchos_Cmd( LPTSTR );
 int _near Echos_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenEchos_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenEchosErr_Cmd( LPTSTR );
 int _near EchosErr_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenEchosErr_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenInkey_Cmd( LPTSTR );
 int _near Inkey_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenInkey_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenInput_Cmd( LPTSTR );
 int _near Input_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenInput_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenPause_Cmd( LPTSTR );
 int _near Pause_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenPause_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenScr_Cmd( LPTSTR );
 int _near Scr_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenScr_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenScrput_Cmd( LPTSTR );
 int _near Scrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenScrput_Cmd( pszCmdLine );
 }
 
-// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+// Near command-table entry; implementation resides in SCREEN_TEXT.
 extern int _far ScreenVScrput_Cmd( LPTSTR );
 int _near VScrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ScreenVScrput_Cmd( pszCmdLine );
 }
 
-// REM - do nothing
-int _near Remark_Cmd( LPTSTR pszCmdLine )
+// FILE_TEXT command dispatchers
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileDescribe_Cmd( LPTSTR );
+int _near Describe_Cmd( LPTSTR pszCmdLine )
 {
-	return 0;
+	return FileDescribe_Cmd( pszCmdLine );
 }
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileCopy_Cmd( LPTSTR );
+int _near Copy_Cmd( LPTSTR pszCmdLine )
+{
+	return FileCopy_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileMove_Cmd( LPTSTR );
+int _near Mv_Cmd( LPTSTR pszCmdLine )
+{
+	return FileMove_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileRen_Cmd( LPTSTR );
+int _near Ren_Cmd( LPTSTR pszCmdLine )
+{
+	return FileRen_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileDel_Cmd( LPTSTR );
+int _near Del_Cmd( LPTSTR pszCmdLine )
+{
+	return FileDel_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileAttrib_Cmd( LPTSTR );
+int _near Attrib_Cmd( LPTSTR pszCmdLine )
+{
+	return FileAttrib_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileTouch_Cmd( LPTSTR );
+int _near Touch_Cmd( LPTSTR pszCmdLine )
+{
+	return FileTouch_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileHead_Cmd( LPTSTR );
+int _near Head_Cmd( LPTSTR pszCmdLine )
+{
+	return FileHead_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileTail_Cmd( LPTSTR );
+int _near Tail_Cmd( LPTSTR pszCmdLine )
+{
+	return FileTail_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileType_Cmd( LPTSTR );
+int _near Type_Cmd( LPTSTR pszCmdLine )
+{
+	return FileType_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileY_Cmd( LPTSTR );
+int _near Y_Cmd( LPTSTR pszCmdLine )
+{
+	return FileY_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in FILE_TEXT.
+extern int _far FileTee_Cmd( LPTSTR );
+int _near Tee_Cmd( LPTSTR pszCmdLine )
+{
+	return FileTee_Cmd( pszCmdLine );
+}
+
+// DIR_TEXT command dispatchers
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirTree_Cmd( LPTSTR );
+int _near Tree_Cmd( LPTSTR pszCmdLine )
+{
+	return DirTree_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirList_Cmd( LPTSTR );
+int _near Dir_Cmd( LPTSTR pszCmdLine )
+{
+	return DirList_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirCd_Cmd( LPTSTR );
+int _near Cd_Cmd( LPTSTR pszCmdLine )
+{
+	return DirCd_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirCdd_Cmd( LPTSTR );
+int _near Cdd_Cmd( LPTSTR pszCmdLine )
+{
+	return DirCdd_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirMd_Cmd( LPTSTR );
+int _near Md_Cmd( LPTSTR pszCmdLine )
+{
+	return DirMd_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirPushd_Cmd( LPTSTR );
+int _near Pushd_Cmd( LPTSTR pszCmdLine )
+{
+	return DirPushd_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirPopd_Cmd( LPTSTR );
+int _near Popd_Cmd( LPTSTR pszCmdLine )
+{
+	return DirPopd_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirDirs_Cmd( LPTSTR );
+int _near Dirs_Cmd( LPTSTR pszCmdLine )
+{
+	return DirDirs_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in DIR_TEXT.
+extern int _far DirRd_Cmd( LPTSTR );
+int _near Rd_Cmd( LPTSTR pszCmdLine )
+{
+	return DirRd_Cmd( pszCmdLine );
+}
+
+// ENV_TEXT command dispatchers
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvAlias_Cmd( LPTSTR );
+int _near Alias_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvAlias_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvFunction_Cmd( LPTSTR );
+int _near Function_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvFunction_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvSet_Cmd( LPTSTR );
+int _near Set_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvSet_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvUnalias_Cmd( LPTSTR );
+int _near Unalias_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvUnalias_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvUnfunction_Cmd( LPTSTR );
+int _near Unfunction_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvUnfunction_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvUnset_Cmd( LPTSTR );
+int _near Unset_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvUnset_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in ENV_TEXT.
+extern int _far EnvEset_Cmd( LPTSTR );
+int _near Eset_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvEset_Cmd( pszCmdLine );
+}
+
+// BATCH_TEXT command dispatchers
 
 // Near command-table entry; implementation resides in BATCH_TEXT.
 extern int _far BatchLfnFor_Cmd( LPTSTR );
@@ -256,4 +493,12 @@ extern int _far BatchEndlocal_Cmd( LPTSTR );
 int _near Endlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return BatchEndlocal_Cmd( pszCmdLine );
+}
+
+// Miscellaneous command entry points
+
+// REM - do nothing
+int _near Remark_Cmd( LPTSTR pszCmdLine )
+{
+	return 0;
 }

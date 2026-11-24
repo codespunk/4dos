@@ -1,11 +1,3 @@
-extern int _far UtilityVer_Cmd( char * );
-
-extern int _far UtilityTruename_Cmd( char * );
-
-extern int _far UtilityCls_Cmd( char * );
-
-
-
 /*
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -197,18 +189,6 @@ static char KstackScanCodes[128] = {
 
 char szAppendBlock[130] = "";
 
-
-// enable/disable ^C trapping
-// The command dispatcher stores near function pointers.  Keep this
-// entry point near and call the utility implementation in its own segment.
-extern int _far UtilityBreak_Cmd( char * );
-
-int _near Break_Cmd( register char *pszCmdLine )
-{
-	return UtilityBreak_Cmd( pszCmdLine );
-}
-
-
 int _near Closetray_Cmd( char *pszCmdLine )
 {
 	register int i;
@@ -223,14 +203,6 @@ int _near Closetray_Cmd( char *pszCmdLine )
 			rval = error( ERROR_4DOS_CANT_CLOSE, arg );
 	return rval;
 }
-
-
-// clear the screen (using ANSI or BIOS calls), with optional color set
-int _near Cls_Cmd( char *pszCmdLine )
-{
-	return UtilityCls_Cmd( pszCmdLine );
-}
-
 
 // Change stdin, stdout, stderr to a new device
 int _near Ctty_Cmd( register char *pszCmdLine )
@@ -272,16 +244,6 @@ _asm {
 
 	return 0;
 }
-
-
-// IDLE [ON | OFF]
-// Keep the near command entry in _TEXT; call the far UTILITY_TEXT implementation.
-extern int _far UtilityIdle_Cmd( char * );
-int _near Idle_Cmd( LPTSTR pszCmdLine )
-{
-	return UtilityIdle_Cmd( pszCmdLine );
-}
-
 
 int _near Ejectmedia_Cmd( char *pszCmdLine )
 {
@@ -1275,14 +1237,6 @@ int _near Swap_Cmd( char *pszCmdLine )
 	return 0;
 }
 
-
-// display the true path name for the specified file
-int _near Truename_Cmd( char *pszCmdLine )
-{
-	return UtilityTruename_Cmd( pszCmdLine );
-}
-
-
 static int _near _unlock( int nDisk )
 {
 _asm {
@@ -1328,11 +1282,3 @@ int _near Unlock_Cmd( char *pszCmdLine )
 
 	return rval;
 }
-
-
-// print version numbers of 4DOS & DOS
-int _near Ver_Cmd( char *pszCmdLine )
-{
-	return UtilityVer_Cmd( pszCmdLine );
-}
-

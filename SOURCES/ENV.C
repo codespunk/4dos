@@ -65,20 +65,6 @@ static int _near _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-static int _far EnvAlias_Cmd( LPTSTR );
-static int _far EnvFunction_Cmd( LPTSTR );
-static int _far EnvSet_Cmd( LPTSTR );
-static int _far EnvUnalias_Cmd( LPTSTR );
-static int _far EnvUnfunction_Cmd( LPTSTR );
-static int _far EnvUnset_Cmd( LPTSTR );
-static int _far EnvEset_Cmd( LPTSTR );
-
-
-
-// Keep command-table entry points in the default code segment.
-#pragma alloc_text( _TEXT, Alias_Cmd, Function_Cmd, Set_Cmd, Unalias_Cmd, Unfunction_Cmd, Unset_Cmd, Eset_Cmd )
-
-
 // Read definitions or deletion names from files or redirected standard input.
 // pszLine selects files; pchList selects the destination; bit 0 of fFlags deletes entries.
 // Join escaped lines, skip blank and colon-comment lines, and return status or CTRLC.
@@ -148,18 +134,10 @@ static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 	return nError;
 }
 
-
-// Near ALIAS dispatcher; forward to the ENV_TEXT implementation.
-int _near Alias_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvAlias_Cmd( pszCmdLine );
-}
-
-
 // ALIAS [/P] [/R file] [name[=definition]]
 // Display or define aliases; /P pauses output and /R reads definitions from files.
 // Examples: ALIAS; ALIAS /P; ALIAS ll=dir /w.
-static int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
+int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -174,18 +152,10 @@ static int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
 	return nReturn;
 }
 
-
-// Near FUNCTION dispatcher; forward to the ENV_TEXT implementation.
-int _near Function_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvFunction_Cmd( pszCmdLine );
-}
-
-
 // FUNCTION [/P] [/R file] [name[=definition]]
 // Display or define user functions; /P pauses output and /R reads definitions.
 // Examples: FUNCTION; FUNCTION /P; FUNCTION twice=`%@eval[%1*2]`.
-static int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
+int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -200,19 +170,11 @@ static int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
 	return nReturn;
 }
 
-
-// Near SET dispatcher; forward to the ENV_TEXT implementation.
-int _near Set_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvSet_Cmd( pszCmdLine );
-}
-
-
 // SET [/A] [/M] [/P] [/R file] [name[=value]]
 // Display or change environment variables; an empty value removes an entry.
 // /A evaluates expressions, /M selects the master environment, /P pauses, /R reads files.
 // Examples: SET; SET TEMP=C:\TEMP; SET /A COUNT=2+3.
-static int _far EnvSet_Cmd( LPTSTR pszCmdLine )
+int _far EnvSet_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -354,17 +316,10 @@ do_it:	if (( fSet & SET_DEFAULT ) && pchList == glpMasterEnvironment && pchList 
 #define UNSET_USER 0x40
 #define UNSET_VOLATILE 0x80
 
-// Near UNALIAS dispatcher; forward to the ENV_TEXT implementation.
-int _near Unalias_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvUnalias_Cmd( pszCmdLine );
-}
-
-
 // UNALIAS [/Q] [/R file] name ...
 // Remove aliases by name or wildcard; /Q suppresses missing-name diagnostics.
 // /R reads removal names from files. Examples: UNALIAS ll; UNALIAS test*.
-static int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
+int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -377,18 +332,10 @@ static int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
 	return nReturn;
 }
 
-
-// Near UNFUNCTION dispatcher; forward to the ENV_TEXT implementation.
-int _near Unfunction_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvUnfunction_Cmd( pszCmdLine );
-}
-
-
 // UNFUNCTION [/Q] [/R file] name ...
 // Remove user functions by name or wildcard; /Q suppresses missing-name diagnostics.
 // /R reads removal names from files. Examples: UNFUNCTION twice; UNFUNCTION test*.
-static int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
+int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -402,19 +349,11 @@ static int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
 	return nReturn;
 }
 
-
-// Near UNSET dispatcher; forward to the ENV_TEXT implementation.
-int _near Unset_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvUnset_Cmd( pszCmdLine );
-}
-
-
 // UNSET [/M] [/Q] [/R file] name ...
 // Remove environment variables by name or wildcard; /M selects the master environment.
 // /Q suppresses missing-name diagnostics and /R reads names from files.
 // Examples: UNSET TEMP; UNSET /Q TEST*.
-static int _far EnvUnset_Cmd( LPTSTR pszCmdLine )
+int _far EnvUnset_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -518,18 +457,11 @@ int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 #define ESET_USER 0x40
 #define ESET_VOLATILE 0x80
 
-// Near ESET dispatcher; forward to the ENV_TEXT implementation.
-int _near Eset_Cmd( LPTSTR pszCmdLine )
-{
-	return EnvEset_Cmd( pszCmdLine );
-}
-
-
 // ESET [/A | /F | /M] name ...
 // Interactively edit existing definitions; /A selects aliases, /F functions, /M master variables.
 // Without a selector, search environment variables before aliases.
 // Examples: ESET PATH; ESET /A ll; ESET /F twice.
-static int _far EnvEset_Cmd( LPTSTR pszCmdLine )
+int _far EnvEset_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszArg;
 	register int nLength;

@@ -82,23 +82,6 @@ void _fastcall FilesProcessed( LPTSTR szFormat, long lFiles )
 	printf( szFormat, lFiles, (( lFiles == 1L ) ? ONE_FILE : MANY_FILES ));
 }
 
-
-// COPY remains a near dispatcher; implementation resides in FILE_TEXT.
-extern int _far FileCopy_Cmd( LPTSTR );
-// Near COPY dispatcher; forward to the FILE_TEXT implementation.
-int _near Copy_Cmd( LPTSTR pszCmdLine )
-{
-	return FileCopy_Cmd( pszCmdLine );
-}
-
-// MOVE remains a near dispatcher; implementation resides in FILE_TEXT.
-extern int _far FileMove_Cmd( LPTSTR );
-// Near MOVE dispatcher; forward to the FILE_TEXT implementation.
-int _near Mv_Cmd( LPTSTR pszCmdLine )
-{
-	return FileMove_Cmd( pszCmdLine );
-}
-
 // Reset the shared disk-full and clipboard state before MOVE.
 void _far FileMoveResetState( void )
 {
@@ -531,15 +514,6 @@ static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTem
 	*pszTarget = _TEXT('\0');
 }
 
-
-// REN remains a near command dispatcher; implementation is in FILE_TEXT.
-extern int _far FileRen_Cmd( LPTSTR );
-// Near REN dispatcher; forward to the FILE_TEXT implementation.
-int _near Ren_Cmd( LPTSTR pszCmdLine )
-{
-	return FileRen_Cmd( pszCmdLine );
-}
-
 // Far bridge to wildcard target-name expansion in wildname().
 // Forward the target buffer, source pattern, and template filename.
 void _far FileRenWildname( LPTSTR target, LPTSTR source, LPTSTR templateName )
@@ -553,25 +527,6 @@ int _far FileRenCommand( LPTSTR pszLine, int fOptions )
 {
 	return command( pszLine, fOptions );
 }
-
-
-// DEL remains a near dispatcher; implementation is in FILE_TEXT.
-extern int _far FileDel_Cmd( LPTSTR );
-// Near DEL dispatcher; forward to the FILE_TEXT implementation.
-int _near Del_Cmd( LPTSTR pszCmdLine )
-{
-	return FileDel_Cmd( pszCmdLine );
-}
-
-
-// ATTRIB command implementation resides in FILE_TEXT.
-extern int _far FileAttrib_Cmd( LPTSTR );
-// Near ATTRIB dispatcher; forward to the FILE_TEXT implementation.
-int _near Attrib_Cmd( LPTSTR pszCmdLine )
-{
-	return FileAttrib_Cmd( pszCmdLine );
-}
-
 
 // Far bridge to show_atts() for formatting file attribute bits.
 LPTSTR _far FileAttribShowBridge( int nAttribute )
@@ -602,60 +557,8 @@ LPTSTR _fastcall show_atts( register int nAttribute )
 	return szAttributes;
 } 
 
-
-// TOUCH remains a near command dispatcher; implementation is in FILE_TEXT.
-extern int _far FileTouch_Cmd( LPTSTR );
-// Near TOUCH dispatcher; forward to the FILE_TEXT implementation.
-int _near Touch_Cmd( LPTSTR pszCmdLine )
-{
-	return FileTouch_Cmd( pszCmdLine );
-}
-
-
-// File display commands retain near dispatcher entry points.
-extern int _far FileHead_Cmd( LPTSTR );
-extern int _far FileTail_Cmd( LPTSTR );
-extern int _far FileType_Cmd( LPTSTR );
-
-// Near HEAD dispatcher; forward to the FILE_TEXT implementation.
-int _near Head_Cmd( LPTSTR pszCmdLine )
-{
-	return FileHead_Cmd( pszCmdLine );
-}
-
-// Near TAIL dispatcher; forward to the FILE_TEXT implementation.
-int _near Tail_Cmd( LPTSTR pszCmdLine )
-{
-	return FileTail_Cmd( pszCmdLine );
-}
-
-// Near TYPE dispatcher; forward to the FILE_TEXT implementation.
-int _near Type_Cmd( LPTSTR pszCmdLine )
-{
-	return FileType_Cmd( pszCmdLine );
-}
-
-// Y [filename ...]
-// Copy standard input to standard output, then TYPE any named files.
-// Keep the near dispatch entry in its original segment.
-extern int _far FileY_Cmd( LPTSTR );
-// Near Y dispatcher; forward to the FILE_TEXT implementation.
-int _near Y_Cmd( LPTSTR pszCmdLine )
-{
-	return FileY_Cmd( pszCmdLine );
-}
-
 // Far bridge to the near TYPE dispatcher for Y.
 int _far FileYTypeBridge( LPTSTR pszCmdLine )
 {
 	return Type_Cmd( pszCmdLine );
-}
-
-
-// tee copies standard input to output & puts a copy in the specified file(s)
-extern int _far FileTee_Cmd( LPTSTR );
-// Near TEE dispatcher; forward to the FILE_TEXT implementation.
-int _near Tee_Cmd( LPTSTR pszCmdLine )
-{
-	return FileTee_Cmd( pszCmdLine );
 }

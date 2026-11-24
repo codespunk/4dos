@@ -67,30 +67,12 @@ static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
 TCHAR gaPushdQueue[ DIRSTACKSIZE ];	// PUSHD/POPD storage area
 TCHAR szLastDirectory[ MAXPATH ];	// last dir for "CD -"
 
-
-// change the current directory
-extern int _far DirCd_Cmd( LPTSTR );
-int _near Cd_Cmd( LPTSTR pszCmdLine )
-{
-	return DirCd_Cmd( pszCmdLine );
-}
-
-// change the current disk and directory
-extern int _far DirCdd_Cmd( LPTSTR );
-
 // Far bridge for DIR_TEXT callers that need the near command() interpreter.
 // Forward the command line and execution options unchanged and return its status.
 int _far DirExecuteCommand( LPTSTR pszCmdLine, int fOptions )
 {
 	return command( pszCmdLine, fOptions );
 }
-
-// Near CDD dispatcher; forward to the DIR_TEXT implementation.
-int _near Cdd_Cmd( LPTSTR pszCmdLine )
-{
-	return DirCdd_Cmd( pszCmdLine );
-}
-
 
 // get the location of JPSTREE.IDX
 static void _fastcall GetFuzzyDir( LPTSTR pszDir )
@@ -643,52 +625,6 @@ ExitCD:
 
 	return nReturn;
 }
-
-
-// save the directory in the specified dir stack
-// create directory
-extern int _far DirMd_Cmd( LPTSTR );
-int _near Md_Cmd( LPTSTR pszCmdLine )
-{
-	return DirMd_Cmd( pszCmdLine );
-}
-
-// save the current directory & change to new one
-extern int _far DirPushd_Cmd( LPTSTR );
-int _near Pushd_Cmd( LPTSTR pszCmdLine )
-{
-	return DirPushd_Cmd( pszCmdLine );
-}
-
-// POP a PUSHD directory
-extern int _far DirPopd_Cmd( LPTSTR );
-int _near Popd_Cmd( LPTSTR pszCmdLine )
-{
-	return DirPopd_Cmd( pszCmdLine );
-}
-
-// Display the directory stack created by PUSHD
-extern int _far DirDirs_Cmd( LPTSTR );
-int _near Dirs_Cmd( LPTSTR pszCmdLine )
-{
-	return DirDirs_Cmd( pszCmdLine );
-}
-
-// remove directory
-extern int _far DirRd_Cmd( LPTSTR );
-int _near Rd_Cmd( LPTSTR pszCmdLine )
-{
-	return DirRd_Cmd( pszCmdLine );
-}
-
-// attach descriptive labels to filenames
-extern int _far FileDescribe_Cmd( LPTSTR );
-// Near DESCRIBE dispatcher; forward to the FILE_TEXT implementation.
-int _near Describe_Cmd( LPTSTR pszCmdLine )
-{
-	return FileDescribe_Cmd( pszCmdLine );
-}
-
 
 // return the current volume name(s)
 int _near Volume_Cmd( LPTSTR pszCmdLine )
