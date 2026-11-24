@@ -73,6 +73,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 #pragma alloc_text( ENV_TEXT, next_env )
 #pragma alloc_text( ENV_TEXT, end_of_env )
 #pragma alloc_text( ENV_TEXT, get_variable )
+#pragma alloc_text( ENV_TEXT, get_list )
 
 
 
@@ -539,7 +540,9 @@ TCHAR _far * _fastcall get_alias( LPTSTR pszAlias )
 }
 
 
-// retrieve an environment or alias list entry
+// Find pszName in pchList, defaulting to the environment for a NULL list.
+// Match names case-insensitively and support abbreviated alias names.
+// Return a far pointer past the equals sign, or NULL if not found.
 TCHAR _far * PASCAL get_list( LPTSTR pszName, TCHAR _far *pchList )
 {
 	LPTSTR pszArg;
