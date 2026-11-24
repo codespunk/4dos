@@ -50,7 +50,7 @@ int _near ProcessCommands( TCHAR *, TCHAR *, int );
 int _near InternalCommands( TCHAR *, int, int * );
 int _near ExternalCommands( TCHAR *, TCHAR *, int );
 static int _near _fastcall CommandGroups( TCHAR *, int );
-static void _fastcall ParsePrompt( TCHAR _far *, LPTSTR pszBuffer );
+static void _near _fastcall ParsePrompt( TCHAR _far *, LPTSTR pszBuffer );
 
 
 // INT 2Eh "back door" to 4DOS; also used by %@EXEC[] in all platforms
@@ -1504,7 +1504,7 @@ next_path:
 }
 
 
-#pragma alloc_text( SCREENIO_TEXT, ShowPrompt )
+#pragma alloc_text( SCREENIO_TEXT, ShowPrompt, ParsePrompt )
 
 // display the DOS / OS2 command line prompt
 void ShowPrompt( void )
@@ -1549,7 +1549,7 @@ void ShowPrompt( void )
 
 
 // parse the prompt string and store the output
-static void _fastcall ParsePrompt( TCHAR _far *pszPrompt, LPTSTR pszBuffer )
+static void _near _fastcall ParsePrompt( TCHAR _far *pszPrompt, LPTSTR pszBuffer )
 {
 	extern TCHAR gaPushdQueue[];
 

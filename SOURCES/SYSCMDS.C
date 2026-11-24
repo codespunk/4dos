@@ -51,7 +51,7 @@
 
 static void _fastcall GetFuzzyDir( LPTSTR );
 void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
-static int _global( unsigned long, long, LPTSTR, LPTSTR );
+static int _near _global( unsigned long, long, LPTSTR, LPTSTR );
 static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
 
 #pragma alloc_text( MISC_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
@@ -1703,7 +1703,7 @@ int _near Global_Cmd( LPTSTR pszCmdLine )
 
 
 // execute the command in the current directory & all its subdirectories
-static int _global( unsigned long lFlags, long lOffset, register LPTSTR pszCurrentDirectory, LPTSTR pszLine )
+static int _near _global( unsigned long lFlags, long lOffset, register LPTSTR pszCurrentDirectory, LPTSTR pszLine )
 {
 	register LPTSTR pszDirectoryPath;
 	int i, nFind, nReturn;

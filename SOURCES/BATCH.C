@@ -50,18 +50,18 @@
 
 
 static int _fastcall __echo( LPTSTR, int );
-static int _fastcall __echos( LPTSTR, int );
-static int _fastcall __if( LPTSTR, int );
-static int _fastcall __input( LPTSTR, int );
+static int _near _fastcall __echos( LPTSTR, int );
+static int _near _fastcall __if( LPTSTR, int );
+static int _near _fastcall __input( LPTSTR, int );
 static int LoadBTM( void );
-static int _fastcall WhileTest( LPTSTR );
+static int _near _fastcall WhileTest( LPTSTR );
 static void _near UndoGosubVariables( void );
 static int _fastcall goto_label( LPTSTR, int );
 static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
-static int _fastcall __quit( LPTSTR, BOOL );
-static int _fastcall __scrput( LPTSTR, int );
-static int _fastcall _setlocal( void );
-static int _fastcall _endlocal( LPTSTR );
+static int _near _fastcall __quit( LPTSTR, BOOL );
+static int _near _fastcall __scrput( LPTSTR, int );
+static int _near _fastcall _setlocal( void );
+static int _near _fastcall _endlocal( LPTSTR );
 
 static unsigned int GetNibble( void );
 static char DecompressChar( void );
@@ -913,7 +913,7 @@ NextINName:
 
 
 // evaluate WHILE or UNTIL expression
-static int _fastcall WhileTest( LPTSTR pszExpression )
+static int _near _fastcall WhileTest( LPTSTR pszExpression )
 {
 	register int nCondition;
 
@@ -1046,7 +1046,7 @@ int _near EchosErr_Cmd( LPTSTR pszCmdLine )
 
 
 // echo arguments to the screen (stdout) without a trailing CR/LF
-static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
+static int _near _fastcall __echos( LPTSTR pszCmdLine, int fErr )
 {
 	register int fStd;
 
@@ -1787,7 +1787,7 @@ int _near Iff_Cmd( LPTSTR pszCmdLine )
 
 
 // conditional IF command (including ELSE/ELSEIFF)
-static int _fastcall __if( LPTSTR pszCmdLine, int fIff )
+static int _near _fastcall __if( LPTSTR pszCmdLine, int fIff )
 {
 	LPTSTR pszLine, pszArg;
 	int nCondition;
@@ -2254,7 +2254,7 @@ int _near Input_Cmd( LPTSTR pszCmdLine )
 }
 
 
-static int _fastcall __input( LPTSTR pszCmdLine, int fInput )
+static int _near _fastcall __input( LPTSTR pszCmdLine, int fInput )
 {
 	register LPTSTR pszVariable;
 	TCHAR *pszArg, *pszFirstArg, szKeylist[MAXARGSIZ+1];
@@ -2603,7 +2603,7 @@ int _near Quit_Cmd( register LPTSTR pszCmdLine )
 }
 
 
-static int _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
+static int _near _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 {
 	register int nBatch;
 
@@ -2712,7 +2712,7 @@ int _near Scrput_Cmd( LPTSTR pszCmdLine )
 
 // set screen position and print a string with the specified attribute
 //   directly to the screen (either horizontally or vertically)
-static int _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
+static int _near _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
 {
 	LPTSTR pszText;
 	int nAttribute = -1;
@@ -2775,7 +2775,7 @@ int _near Endlocal_Cmd( LPTSTR pszCmdLine )
 }
 
 
-static int _fastcall _setlocal( void )
+static int _near _fastcall _setlocal( void )
 {
 	register LPTSTR pszCurrentDirectory;
 	int nOffset;
@@ -2818,7 +2818,7 @@ static int _fastcall _setlocal( void )
 }
 
 
-static int _fastcall _endlocal( LPTSTR pszCmdLine )
+static int _near _fastcall _endlocal( LPTSTR pszCmdLine )
 {
 	int i, nReturn = 0, fExport, nOffset;
 	TCHAR _far *lpszVar;

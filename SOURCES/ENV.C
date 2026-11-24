@@ -60,7 +60,7 @@
 #define SET_REGDELETE 0x1000
 
 
-static int SetFromFile( LPTSTR, TCHAR _far *, long );
+static int _near SetFromFile( LPTSTR, TCHAR _far *, long );
 static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
@@ -69,7 +69,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
 
-static int SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
+static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 {
 	static TCHAR szDelimiters[] = _TEXT("%[^= \t]");
 	register LPTSTR pszArg;
