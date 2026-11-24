@@ -241,7 +241,7 @@ int _far FileY_Cmd( LPTSTR pszCmdLine )
 }
 
 
-static int _fastcall FileOutput( LPTSTR, int );
+static int _near _fastcall FileOutput( LPTSTR, int );
 
 #define FO_HEAD 1
 #define FO_TAIL 2
@@ -302,7 +302,7 @@ int _far FileType_Cmd( LPTSTR pszCmdLine )
 // Shared HEAD, TAIL, and TYPE output worker.
 // fOp selects the display operation; returns USAGE_ERR for invalid syntax.
 // Handles file matching, redirected input, and display options.
-static int _fastcall FileOutput( LPTSTR pszCmdLine, int fOp )
+static int _near _fastcall FileOutput( LPTSTR pszCmdLine, int fOp )
 {
 	register TCHAR *pszArg, *pszLine;
 	int nArgc, nFind, nReturn = 0, fEOF, nBytes = 0, nEditFlags = EDIT_DATA, fFlags = 0, nColumn = 0, nFH = -1, fNoLF = 0;
@@ -674,7 +674,7 @@ typedef struct
 #define TOUCH_PRESERVE_DATE 0x40
 #define TOUCH_PRESERVE_TIME 0x80
 
-static int _touch( TOUCH_STRUCT *, DATETIME * );
+static int _near _touch( TOUCH_STRUCT *, DATETIME * );
 
 
 // TOUCH [options] filename [filename ...]
@@ -892,7 +892,7 @@ int _far FileTouch_Cmd( LPTSTR pszCmdLine )
 // Apply the requested timestamps to matching files.
 // Touch holds the search and operation flags; sysDateTime supplies the timestamp.
 // Recurse into subdirectories when requested.
-static int _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
+static int _near _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
 {
 	int nReturn = 0, rc, nFind;
 	unsigned int uAttribute = 0;
@@ -1560,7 +1560,7 @@ typedef struct
 	long lFilesDeleted;
 } DEL_STRUCT;
 
-static int _del( DEL_STRUCT * );
+static int _near _del( DEL_STRUCT * );
 
 
 // DEL [options] filename [filename ...]
@@ -1676,7 +1676,7 @@ int _far FileDel_Cmd( LPTSTR pszCmdLine )
 // Recursive deletion worker for DEL.
 // Del holds the source pattern, operation flags, and deletion count.
 // Preserve confirmation, error handling, and directory traversal.
-static int _del( register DEL_STRUCT *Del )
+static int _near _del( register DEL_STRUCT *Del )
 {
 	register int i;
 	unsigned long ulMode = 0;
@@ -1894,7 +1894,7 @@ typedef struct
 	FILESEARCH t_dir;
 } MOVE_STRUCT;
 
-static int _mv( MOVE_STRUCT *);
+static int _near _mv( MOVE_STRUCT *);
 
 
 // MOVE [options] source [source ...] target
@@ -2083,7 +2083,7 @@ int _far FileMove_Cmd( LPTSTR pszCmdLine )
 // Recursive MOVE worker.
 // Move holds source and target paths, options, and the moved-file count.
 // Rename when possible; otherwise copy and delete as required.
-static int _mv(register MOVE_STRUCT *Move)
+static int _near _mv(register MOVE_STRUCT *Move)
 {
 	register int nFind;
 	int nReturn = 0, i;

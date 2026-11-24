@@ -60,8 +60,8 @@
 #define SET_REGDELETE 0x1000
 
 
-static int SetFromFile( LPTSTR, TCHAR _far *, long );
-static int _fastcall __Set( LPTSTR, TCHAR _far * );
+static int _near SetFromFile( LPTSTR, TCHAR _far *, long );
+static int _near _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
@@ -82,7 +82,7 @@ static int _far EnvEset_Cmd( LPTSTR );
 // Read definitions or deletion names from files or redirected standard input.
 // pszLine selects files; pchList selects the destination; bit 0 of fFlags deletes entries.
 // Join escaped lines, skip blank and colon-comment lines, and return status or CTRLC.
-static int SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
+static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 {
 	static TCHAR szDelimiters[] = _TEXT("%[^= \t]");
 	register LPTSTR pszArg;
@@ -233,7 +233,7 @@ static int _far EnvSet_Cmd( LPTSTR pszCmdLine )
 // pszCmdLine contains arguments and switches; pchList selects the list.
 // Handle arithmetic, master environment, pagination, file input, and wildcard queries.
 // Return zero, a list/usage error, or the underlying operation status.
-static int _fastcall __Set( LPTSTR pszCmdLine, TCHAR _far * pchList )
+static int _near _fastcall __Set( LPTSTR pszCmdLine, TCHAR _far * pchList )
 {
 	LPTSTR pszArg;
 	long fSet = 0L;

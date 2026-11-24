@@ -212,7 +212,7 @@ static LPBYTE pTransTab;	// pointer to translation table
 // Read the next four-bit code (0..15) from the compressed stream.
 // No parameters. Advances pInputText on high-nibble reads and toggles
 // fNibble; retains the current byte for the following low-nibble read.
-static unsigned int GetNibble( void )
+static unsigned int _near GetNibble( void )
 {
 	static unsigned char cThis = 0;
 	unsigned int uResult;
@@ -226,7 +226,7 @@ static unsigned int GetNibble( void )
 // Decode one character using the current translation table.
 // No parameters. Returns the decoded byte and consumes one, two or
 // three nibbles through GetNibble(). Requires initialized decoder state.
-static char DecompressChar( void )
+static char _near DecompressChar( void )
 {
 	register unsigned int uNibble;
 

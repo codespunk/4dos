@@ -50,11 +50,11 @@ extern int _pascal CompDriveSetup(char, int, COMPDRIVEINFO *);
 extern int _pascal CompDriveCleanup(COMPDRIVEINFO *);
 extern int _pascal CompData(COMPDRIVEINFO *, FILESEARCH *, LPTSTR , ULONG *, ULONG *);
 
-static void PrintDirHeader( LPTSTR , LPTSTR );
-static void PrintColorName( LPTSTR , TCHAR _far * , int );
-static int GetDirectory(LPTSTR , LPTSTR );
-static int DrawTree( LPTSTR , LPTSTR  );
-static void _nxtrow(void);
+static void _near PrintDirHeader( LPTSTR , LPTSTR );
+static void _near PrintColorName( LPTSTR , TCHAR _far * , int );
+static int _near GetDirectory(LPTSTR , LPTSTR );
+static int _near DrawTree( LPTSTR , LPTSTR  );
+static void _near _nxtrow(void);
 static int _near files_cmp( DIR_ENTRY _far *, DIR_ENTRY _far *);
 
 DIR_ENTRY _huge * _near GetDescriptions( unsigned int, DIR_ENTRY _huge *, unsigned long, unsigned long, LPTSTR );
@@ -103,7 +103,7 @@ int _far DirList_Cmd( LPTSTR );
 static void _near MoveFiles( unsigned int, DIR_ENTRY _huge *, unsigned long );
 
 
-static unsigned long DirMemFree( void )
+static unsigned long _near DirMemFree( void )
 {
 	return ((( (unsigned long)(unsigned int)ServCtrl( SERV_AVAIL, 0 )) -	((( (unsigned long)QuerySystemRAM() ) << 6 ) - (unsigned long)gpIniptr->HighSeg )) << 4 );
 }
@@ -563,7 +563,7 @@ int _far DirTree_Cmd( register LPTSTR pszCmdLine )
 
 
 // display a directory tree
-static int DrawTree( register LPTSTR pszCurrent, LPTSTR pszSequelBuffer )
+static int _near DrawTree( register LPTSTR pszCurrent, LPTSTR pszSequelBuffer )
 {
 	int nReturn = 0, fOK, nAttrib;
 	unsigned long uMode = 0x10 | FIND_NO_ERRORS | FIND_NO_DOTNAMES | FIND_NO_FILELISTS;
@@ -1018,7 +1018,7 @@ dir_bye:
 }
 
 
-static int GetDirectory( register LPTSTR pszCurrent, LPTSTR pszFileName )
+static int _near GetDirectory( register LPTSTR pszCurrent, LPTSTR pszFileName )
 {
 	register unsigned int i;
 	unsigned int j, k, n, uEntries = 0;
@@ -1561,7 +1561,7 @@ void _fastcall dir_free( DIR_ENTRY _huge *files )
 
 
 // print header or footer, with page wrapping optional
-static void PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
+static void _near PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
 {
 	LPTSTR pszBuf = _alloca( ( strlen( pszHeader ) + strlen( pszName ) + 1 ) * sizeof(TCHAR) );
 	sprintf( pszBuf, pszHeader, pszName );
@@ -1570,7 +1570,7 @@ static void PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
 
 
 // print file name in colour, with page wrapping optional
-static void PrintColorName( LPTSTR pszName, TCHAR _far *pszOtherName, int color )
+static void _near PrintColorName( LPTSTR pszName, TCHAR _far *pszOtherName, int color )
 {
 	LPTSTR pszBuf = _alloca( ( 5 + strlen( pszName ) + _fstrlen( pszOtherName ) + 1 ) * sizeof(TCHAR) );
 	nCPLength = sprintf( pszBuf, _TEXT("%s%Fs"), pszName, pszOtherName );
@@ -1595,7 +1595,7 @@ static void PrintColorName( LPTSTR pszName, TCHAR _far *pszOtherName, int color 
 
 
 // go to next row & check for page full
-static void _nxtrow( void )
+static void _near _nxtrow( void )
 {
 	static int nRow, nColumn;
 	int fCtrlC = 0;
