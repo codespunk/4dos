@@ -124,3 +124,38 @@ int _near Remark_Cmd( LPTSTR pszCmdLine )
 {
 	return 0;
 }
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchLfnFor_Cmd( LPTSTR );
+int _near LfnFor_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchLfnFor_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchShift_Cmd( LPTSTR );
+int _near Shift_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchShift_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchBattext_Cmd( LPTSTR );
+int _near Battext_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchBattext_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchOn_Cmd( LPTSTR );
+int _near On_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchOn_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchLoadbtm_Cmd( LPTSTR );
+int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchLoadbtm_Cmd( pszCmdLine );
+}

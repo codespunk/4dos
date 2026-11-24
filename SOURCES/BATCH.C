@@ -50,7 +50,7 @@
 
 
 static int _fastcall __if( LPTSTR, int );
-static int LoadBTM( void );
+static int _far LoadBTM( void );
 static int _fastcall WhileTest( LPTSTR );
 static void _near UndoGosubVariables( void );
 static int _fastcall goto_label( LPTSTR, int );
@@ -155,10 +155,12 @@ int _near Batch( int argc, TCHAR **argv )
 }
 
 
-#pragma alloc_text( MISC_TEXT, LoadBTM )
+#pragma alloc_text( BATCH_TEXT, LoadBTM )
 
-// load a batch file into memory (as a .BTM)
-static int LoadBTM( void )
+// Load the active batch file into memory, decompressing if necessary.
+// No arguments; updates the active batch frame and returns zero or an error.
+// Far entry is required while Batch() remains in _TEXT.
+static int _far LoadBTM( void )
 {
 	UINT uSize, uUnCompSize = 0, uBufferSize;
 	LONG lOSize;
@@ -401,8 +403,14 @@ int _near BatchDebugger( void )
 }
 
 
-// send a block of text to the screen
-int _near Battext_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchBattext_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchBattext_Cmd )
+
+// TEXT ... ENDTEXT
+// Print literal lines from the active batch file until ENDTEXT.
+// Advances the batch line counter; returns zero or a batch/error status.
+// pszCmdLine is the command tail supplied by the near dispatcher.
+int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -2004,8 +2012,14 @@ int _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 }
 
 
-// enable/disable disk verify
-int _near LfnFor_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchLfnFor_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchLfnFor_Cmd )
+
+// LFNFOR [ON | OFF]
+// Query or change long filename handling in FOR loops.
+// Example: LFNFOR ON. Returns zero or a usage error.
+// pszCmdLine is the command tail supplied by the near dispatcher.
+int _far BatchLfnFor_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLFNFor;
 
@@ -2025,8 +2039,14 @@ int _near LfnFor_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// switch a file between .BAT and .BTM types
-int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchLoadbtm_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchLoadbtm_Cmd )
+
+// LOADBTM [ON | OFF]
+// Query or change in-memory batch execution. Example: LOADBTM ON.
+// Returns zero, a usage error, or the loader status.
+// pszCmdLine is the command tail supplied by the near dispatcher.
+int _far BatchLoadbtm_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLoad;
 
@@ -2061,8 +2081,14 @@ int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// ON [BREAK | ERROR | ERRORMSG | ...] condition
-int _near On_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchOn_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchOn_Cmd )
+
+// ON [BREAK | ERROR | ERRORMSG] [command]
+// Install or clear an active batch frame event handler.
+// Example: ON ERROR GOTO failed. Returns zero or a usage error.
+// pszCmdLine is the command tail supplied by the near dispatcher.
+int _far BatchOn_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -2331,8 +2357,14 @@ static int _fastcall _endlocal( LPTSTR pszCmdLine )
 }
 
 
-// shift the batch arguments upwards (-n) or downwards (+n)
-int _near Shift_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchShift_Cmd( LPTSTR );
+#pragma alloc_text( BATCH_TEXT, BatchShift_Cmd )
+
+// SHIFT [n | /n]
+// Adjust the active batch argument offset or remove an argument.
+// Examples: SHIFT; SHIFT -1; SHIFT /2. Returns zero.
+// pszCmdLine is the command tail supplied by the near dispatcher.
+int _far BatchShift_Cmd( LPTSTR pszCmdLine )
 {
 	int i, nShift = 1;
 
