@@ -1765,7 +1765,7 @@ DisplayDirectory:
 }
 
 // Far bridge to the near command interpreter in _TEXT.
-int _far BatchCommand( LPTSTR pszLine, int fOptions )
+int _far _fastcall BatchCommand( LPTSTR pszLine, int fOptions )
 {
 	return command( pszLine, fOptions );
 }
@@ -1777,7 +1777,7 @@ int _far BatchRunCLI( void )
 }
 
 // Far bridge to the near line continuation parser in _TEXT.
-int _far BatchContinueLine( LPTSTR pszLine )
+int _far _fastcall BatchContinueLine( LPTSTR pszLine )
 {
 	return ContinueLine( pszLine );
 }

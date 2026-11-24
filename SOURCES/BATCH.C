@@ -49,6 +49,7 @@
 #include "strmenc.h"
 
 
+static int _near _fastcall BatchTestCondition( LPTSTR, int );
 static int _near _fastcall __if( LPTSTR, int );
 static int _near LoadBTM( void );
 static int _near _fastcall WhileTest( LPTSTR );
@@ -440,10 +441,10 @@ int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
 
 // CALL a nested batch file (or any executable file )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
-extern int _far BatchCommand( LPTSTR, int );
+extern int _far _fastcall BatchCommand( LPTSTR, int );
 extern int _far BatchRunCLI( void );
 extern int _far BatchGlobalCommand( LPTSTR );
-extern int _far BatchContinueLine( LPTSTR );
+extern int _far _fastcall BatchContinueLine( LPTSTR );
 extern int _far BatchCall_Cmd( LPTSTR );
 
 // CALL command [arguments]
@@ -813,7 +814,7 @@ static int _near _fastcall WhileTest( LPTSTR pszExpression )
 	if ( cv.f.flag._do_end != 0 )
 		return 0;
 
-	if (( nCondition = TestCondition( strcpy( gszCmdline, pszExpression ), 0 )) == -USAGE_ERR) {
+	if (( nCondition = BatchTestCondition( strcpy( gszCmdline, pszExpression ), 0 )) == -USAGE_ERR) {
 		gpInternalName = _TEXT("DO");
 		return -( Usage( DO_USAGE ));
 	}
@@ -1636,7 +1637,7 @@ if_usage:
 	pszLine = strcpy( (LPTSTR)_alloca( ( strlen( pszCmdLine ) + 1 ) * sizeof(TCHAR) ), pszCmdLine );
 
 	// test condition & strip condition text from line
-	if ((( nCondition = TestCondition( pszLine, 1 )) == -USAGE_ERR ) || ( *pszLine == _TEXT('\0') ))
+	if ((( nCondition = BatchTestCondition( pszLine, 1 )) == -USAGE_ERR ) || ( *pszLine == _TEXT('\0') ))
 		goto if_usage;
 
 	// IFF / THEN / ELSE support
@@ -1717,7 +1718,13 @@ static LPTSTR _near _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 // DO / IF / IFF testing
 // Evaluate the mutable condition string; fIf selects parsing mode.
 // Return truth or negative usage error; may consume condition text.
+// Far entry point for condition evaluation outside BATCH_TEXT.
 int _far _fastcall TestCondition( LPTSTR pszLine, int fIf )
+{
+	return BatchTestCondition( pszLine, fIf );
+}
+
+static int _near _fastcall BatchTestCondition( LPTSTR pszLine, int fIf )
 {
 	register int nCondition;
 	register LPTSTR pszArg;
@@ -1759,7 +1766,7 @@ int _far _fastcall TestCondition( LPTSTR pszLine, int fIf )
 				strcpy( pszArg, pszArg + 1 );
 				pszTest = (LPTSTR)_alloca( ( strlen( pszArg ) + 1 ) * sizeof(TCHAR) );
 				pszArg = strcpy( pszTest, pszArg );
-				nCondition = TestCondition( pszArg, 0 );
+				nCondition = BatchTestCondition( pszArg, 0 );
 				goto Conditionals;
 			}
 		}
@@ -2534,7 +2541,7 @@ int _far BatchSwitch_Cmd( LPTSTR pszCmdLine )
 				strins( pszLine, pszTest );
 			}
 
-			if ( TestCondition( gszCmdline, 0 ) == 1 )
+			if ( BatchTestCondition( gszCmdline, 0 ) == 1 )
 				return 0;
 
 		} else if ( stricmp( gszCmdline, _TEXT("EndSwitch") ) == 0 ) {
