@@ -1532,3 +1532,323 @@ rename_abort:
 
 	return (( lFilesRenamed != 0L ) ? nReturn : ERROR_EXIT );
 }
+
+
+#define DEL_BY_ATTRIBUTES 1
+#define DEL_NOERRORS 2
+#define DEL_FORCE 4
+#define DEL_NOTHING 8
+#define DEL_QUERY 0x10
+#define DEL_QUIET 0x20
+#define DEL_SUBDIRS 0x40
+#define DEL_TOTALS 0x80
+#define DEL_RMDIR 0x100
+#define DEL_ALL 0x200
+#define DEL_ZAP_ALL 0x400
+#define DEL_DIRS_ONLY 0x800
+#define DEL_WIPE 0x1000
+#define DEL_KILL 0x2000
+#define DEL_RECYCLE 0x4000
+
+
+typedef struct
+{
+	TCHAR szSource[MAXFILENAME];
+	TCHAR szTarget[MAXFILENAME];
+	LPTSTR szFilename;
+	long fFlags;
+	long lFilesDeleted;
+} DEL_STRUCT;
+
+static int _del( DEL_STRUCT * );
+
+
+// DEL [options] filename [filename ...]
+// Delete matching files, with optional confirmation and recursion.
+// Example: DEL /P *.TMP.
+int _far FileDel_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg;
+	int nArgc, nReturn = 0, i, nLength;
+	QDISKINFO DiskInfo;
+	DEL_STRUCT Del;
+
+	long lBytesFreed = 0L;
+
+
+	// get date/time/size ranges
+	if ( GetRange( pszCmdLine, &aRanges, 0 ) != 0 )
+		return ERROR_EXIT;
+
+	// check for and remove switches
+	if (( GetSwitches( pszCmdLine, _TEXT("*EFNPQSTXYZDWKR"), &(Del.fFlags), 0 ) != 0 ) || ( first_arg( pszCmdLine ) == NULL ))
+		return ( Usage( DELETE_USAGE ));
+
+	// if query, turn off quiet flag
+	if ( Del.fFlags & DEL_QUERY )
+		Del.fFlags &= ~( DEL_QUIET | DEL_TOTALS );
+
+	Del.lFilesDeleted = 0L;
+	for ( nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc )) != NULL ); nArgc++ ) {
+
+		// build the source name
+		if ( mkfname( pszArg, 0 ) == NULL )
+			return ERROR_EXIT;
+
+		// if it's a directory, append the "*.*" wildcard
+		if (( AddWildcardIfDirectory( pszArg ) == 0 ) && ( Del.fFlags & DEL_DIRS_ONLY )) {
+			if (( Del.fFlags & DEL_NOERRORS ) == 0 )
+				nReturn = error( ERROR_4DOS_NOT_A_DIRECTORY, pszArg );
+			continue;
+		}
+
+		copy_filename( Del.szSource, pszArg );
+
+		nLength = strlen( path_part( Del.szSource ));
+
+		// save the source filename part ( for recursive calls &
+		//   include lists)
+		Del.szFilename = Del.szSource + nLength;
+
+
+		if ((( Del.fFlags & DEL_QUERY ) == 0 ) && (( Del.fFlags & DEL_ALL ) == 0 )) {
+
+			// confirm before deleting an entire directory
+			//   ( filename & extension == wildcards only)
+			sscanf( Del.szFilename, _TEXT("%*[?*.;]%n"), &i );
+			if (( i > 0 ) && ( Del.szFilename[i] == _TEXT('\0') )) {
+
+				printf( "%s : ", Del.szSource );
+
+				if ( QueryInputChar( ARE_YOU_SURE, YES_NO ) != YES_CHAR )
+					continue;
+			}
+		}
+
+		pszArg = (LPTSTR)_alloca( ( strlen( Del.szFilename ) + 1 ) * sizeof(TCHAR) );
+		Del.szFilename = strcpy( pszArg, Del.szFilename );
+
+		if ((( Del.fFlags & DEL_QUIET ) == 0 ) && ( is_net_drive( Del.szSource ) == 0 ) && ( QueryDriveRemote( gcdisk( Del.szSource )) == 0 )) {
+
+			// get TRUENAME (to see through JOIN & SUBST)
+			pszArg = true_name( Del.szSource, first_arg( Del.szSource ));
+			QueryDiskInfo( pszArg, &DiskInfo, 1 );
+
+			lBytesFreed -= DiskInfo.BytesFree;
+		}
+
+		i = _del( &Del );
+
+		if (( setjmp( cv.env ) == -1 ) || ( i == CTRLC ))
+			nReturn = CTRLC;
+
+
+		if ((( Del.fFlags & DEL_QUIET ) == 0 ) && ( is_net_drive( Del.szSource ) == 0 ) && ( QueryDriveRemote( gcdisk( Del.szSource)) == 0 )) {
+
+			pszArg = true_name( Del.szSource, first_arg( Del.szSource ));
+			QueryDiskInfo( pszArg, &DiskInfo, 1 );
+
+			lBytesFreed += DiskInfo.BytesFree;
+		}
+
+		if ( nReturn == CTRLC )
+			break;
+
+		if ( i != 0 )
+			nReturn = ERROR_EXIT;
+	}
+
+	if (( Del.fFlags & DEL_QUIET ) == 0 ) {
+		// display number of files deleted, & bytes freed
+		FilesProcessed( FILES_DELETED, Del.lFilesDeleted );
+		if ( lBytesFreed > 0L )
+			printf( FILES_BYTES_FREED, lBytesFreed );
+		crlf();
+	}
+
+
+	return (( Del.lFilesDeleted != 0L ) ? nReturn : ERROR_EXIT );
+}
+
+
+
+
+// Recursive deletion worker for DEL.
+// Del holds the source pattern, operation flags, and deletion count.
+// Preserve confirmation, error handling, and directory traversal.
+static int _del( register DEL_STRUCT *Del )
+{
+	register int i;
+	unsigned long ulMode = 0;
+	int nFind, nReturn = 0, rc = 0;
+	LPTSTR pszArg, pszSource;
+	FILESEARCH dir;
+
+	// copy date/time range info
+	memmove( &(dir.aRanges), &aRanges, sizeof(RANGES) );
+
+	// delete hidden files too?
+	if (( Del->fFlags & DEL_BY_ATTRIBUTES ) || ( Del->fFlags & DEL_ZAP_ALL ))
+		ulMode |= 0x07;
+
+	dir.hdir = INVALID_HANDLE_VALUE;
+
+	// trap ^C in DEL loop, and close directory search handles
+	if ( setjmp( cv.env ) == -1 ) {
+_del_abort:
+		FindClose( dir.hdir );
+		return CTRLC;
+	}
+
+	// suppress error message from find_file
+	if ( Del->fFlags & DEL_NOERRORS )
+		ulMode |= FIND_NO_ERRORS;
+
+	// do a new-style delete
+	for ( nFind = FIND_FIRST; ( find_file( nFind, Del->szSource, ( ulMode | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE ), &dir, Del->szTarget) != NULL ); nFind = FIND_NEXT) {
+
+		if ( Del->fFlags & DEL_QUERY ) {
+
+			qputs( DELETE_QUERY );
+			if ((( i = QueryInputChar( Del->szTarget, YES_NO_ALL )) == ALL_CHAR ) || ( i == REST_CHAR ))
+				Del->fFlags &= ~DEL_QUERY;
+			else if ( i == NO_CHAR )
+				continue;
+			else if ( i == ESCAPE ) {
+				FindClose( dir.hdir );
+				break;
+			}
+
+		} else if (( Del->fFlags & ( DEL_QUIET | DEL_TOTALS )) == 0 ) {
+
+			printf( DELETING_FILE, Del->szTarget );
+
+		}
+
+		if (( Del->fFlags & DEL_NOTHING ) == 0 ) {
+
+			// overwrite a file with 0's before erasing it
+			if ( Del->fFlags & DEL_WIPE ) {
+
+				char *lpZero;
+
+				unsigned long lSize;
+
+				if (( lSize = QueryFileSize( Del->szTarget, 0 )) > 0L ) {
+
+					// if /Z(ap) flag, clear rdonly attributes before wiping
+					if (( Del->fFlags & DEL_ZAP_ALL ) || ( gnInclusiveMode & _A_RDONLY ))
+						SetFileMode( Del->szTarget, _A_NORMAL );
+
+					if (( i = _sopen( Del->szTarget, (_O_WRONLY | _O_BINARY), _SH_DENYRW )) < 0) {
+						rc = _doserrno;
+						goto Del_Next;
+					}
+
+				    lpZero = (char *)malloc( 512 );
+				    memset( lpZero, 0, 512 );
+
+				    while ( lSize != 0L ) {
+						_write( i, lpZero, (( lSize > 512L ) ? 512 : (int)lSize ));
+						if ( lSize > 512 )
+							lSize -= 512;
+						else
+							lSize = 0L;
+				    }
+
+				    free( lpZero );
+				    _close( i );
+				}
+			}
+
+			// support for DEL /F(orce) in OS/2 2
+
+			if (( Del->fFlags & ( DEL_FORCE | DEL_WIPE )) && ( gnOsVersion >= 2010 )) {
+				rc = _doserrno = ForceDelete( Del->szTarget);
+			} else
+				rc = remove( Del->szTarget );
+
+
+			CheckForBreak();
+
+			if ( rc != 0 ) {
+
+				// if /Z(ap) flag, clear hidden/rdonly
+				//   attributes & try to delete again
+				if ((( Del->fFlags & DEL_ZAP_ALL ) || ( gnInclusiveMode & _A_RDONLY )) && ( SetFileMode( Del->szTarget,_A_NORMAL ) == 0 )) {
+
+					rc = remove( Del->szTarget );
+
+				}
+			}
+Del_Next:
+			if ( rc ) {
+				if (( Del->fFlags & DEL_NOERRORS ) == 0 )
+					nReturn = error( _doserrno, Del->szTarget );
+				else
+					nReturn = ERROR_EXIT;
+			} else
+				Del->lFilesDeleted++;
+		}
+	}
+
+	// delete the description(s) for deleted or missing files
+	sprintf( Del->szSource, FMT_DOUBLE_STR, path_part( Del->szSource ), WILD_FILE );
+
+	// update description file
+	if ((( Del->fFlags & DEL_NOTHING) == 0 ) && (( Del->lFilesDeleted != 0L ) || ( Del->fFlags & DEL_RMDIR )))
+		process_descriptions( NULL, Del->szSource, DESCRIPTION_REMOVE );
+
+	// delete matching subdirectory files too?
+	if ( Del->fFlags & DEL_SUBDIRS ) {
+
+		CheckFreeStack( 1024 );
+
+		// save the current subdirectory start
+		pszSource = strchr( Del->szSource, _TEXT('*') );
+
+		// search for all subdirectories in this (sub)directory
+		//   tell find_file() not to display errors and to only
+		//   return subdir names
+
+		for ( nFind = FIND_FIRST; ( find_file( nFind, Del->szSource, ( ulMode | 0x10 | FIND_NO_ERRORS | FIND_ONLY_DIRS | FIND_NO_FILELISTS | FIND_EXCLUDE ), &dir, NULL ) != NULL ); nFind = FIND_NEXT ) {
+
+			// make the new "source"
+
+			sprintf( pszSource, FMT_PATH_STR, dir.szFileName, Del->szFilename );
+
+			// process directory tree recursively
+			nReturn = _del( Del );
+
+			if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC))
+				goto _del_abort;
+
+			// restore the original name
+			strcpy( pszSource, WILD_FILE );
+		}
+	}
+
+	// delete the subdirectory?
+	if (( Del->fFlags & DEL_RMDIR ) && (( Del->fFlags & DEL_NOTHING ) == 0 )) {
+
+		// remove the last filename from the directory name
+		pszSource = path_part( Del->szSource );
+		strip_trailing( pszSource, SLASHES );
+
+		// don't try to delete the root or current directories
+		if ((( pszArg = gcdir( pszSource, 1 )) == NULL ) || (( strlen( pszSource) > 3 ) && ( _stricmp( pszSource, pszArg ) != 0 ))) {
+
+			int nRC;
+
+			if (( Del->fFlags & DEL_ZAP_ALL ) || ( gnInclusiveMode & _A_RDONLY ))
+				SetFileMode( pszSource, _A_SUBDIR );
+			if (( nRC = DestroyDirectory( pszSource )) != 0 ) {
+				if (( Del->fFlags & DEL_NOERRORS ) == 0 )
+					error( nRC, pszSource );
+			} else	// remove the directory & its description
+				process_descriptions( NULL, pszSource, DESCRIPTION_REMOVE );
+		}
+	}
+
+	return nReturn;
+}
