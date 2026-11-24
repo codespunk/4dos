@@ -457,28 +457,13 @@ int _near Call_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// wait for the specified number of seconds
+// Near dispatcher retained for the existing command table.
+extern int _far UtilityDelay_Cmd( LPTSTR );
 int _near Delay_Cmd( LPTSTR pszCmdLine )
 {
-	register unsigned int i;
-	LPTSTR pszToken;
-	ULONG ulWait = 1L;
-	long lFlags = 0, lTemp;
-
-	if (( pszCmdLine ) && ( *pszCmdLine )) {
-		
-		for ( i = 0; (( pszToken = ntharg( pszCmdLine, i )) != NULL ); i++ ) {
-			if (( lTemp = switch_arg( pszToken, _TEXT("BM") )) != 0L )
-				lFlags |= lTemp;
-			else if ( isdigit( *pszToken ))
-				sscanf( pszToken, FMT_ULONG, &ulWait );
-		}
-	}
-
-	SysWait( ulWait, (int)lFlags );
-
-	return 0;
+	return UtilityDelay_Cmd( pszCmdLine );
 }
+
 
 
 #define DOTYPE_IN 1

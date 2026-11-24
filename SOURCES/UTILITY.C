@@ -330,3 +330,31 @@ int _far UtilityBeep_Cmd( LPTSTR pszCmdLine )
 
 	return 0;
 }
+
+// DELAY [/B] [/M] [duration]
+// Wait for the requested duration (default one second).
+// /B permits a keypress to end the wait; /M selects milliseconds.
+// Examples: DELAY; DELAY 5; DELAY /M 100.
+// pszCmdLine supplies options and duration; returns zero after SysWait.
+// Preserves existing token parsing and interrupt behavior.
+int _far UtilityDelay_Cmd( LPTSTR pszCmdLine )
+{
+	register unsigned int i;
+	LPTSTR pszToken;
+	ULONG ulWait = 1L;
+	long lFlags = 0, lTemp;
+
+	if (( pszCmdLine ) && ( *pszCmdLine )) {
+
+		for ( i = 0; (( pszToken = ntharg( pszCmdLine, i )) != NULL ); i++ ) {
+			if (( lTemp = switch_arg( pszToken, _TEXT("BM") )) != 0L )
+				lFlags |= lTemp;
+			else if ( isdigit( *pszToken ))
+				sscanf( pszToken, FMT_ULONG, &ulWait );
+		}
+	}
+
+	SysWait( ulWait, (int)lFlags );
+
+	return 0;
+}
