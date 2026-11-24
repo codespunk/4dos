@@ -54,7 +54,11 @@ void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
 static int _global( unsigned long, long, LPTSTR, LPTSTR );
 static void ReadAndWriteFiles( int, int, TCHAR *, int, int );
 
-#pragma alloc_text( MISC_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
+// GetFuzzyDir resolves JPSTREE.IDX using TreePath or the default C:\ directory.
+// ReadAndWriteFiles copies nonempty lines between open file handles.
+// UpdateFuzzyTree inserts or deletes directory entries in the fuzzy index.
+// Fuzzy directory index location, file processing, and maintenance.
+#pragma alloc_text( DIR_TEXT, GetFuzzyDir, UpdateFuzzyTree, ReadAndWriteFiles )
 #pragma alloc_text( MISC_TEXT, gtime, gdate, _timer, _log_entry, getlabel )
 #pragma alloc_text( MISC_TEXT, GetLogName )
 
