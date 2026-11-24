@@ -1897,7 +1897,9 @@ typedef struct
 static int _mv( MOVE_STRUCT *);
 
 
-// move files by renaming across directories or copying/deleting
+// MOVE [options] source [source ...] target
+// Move files by renaming or by copying and deleting the source.
+// Example: MOVE REPORT.TXT C:\ARCHIVE\.
 int _far FileMove_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
@@ -2078,6 +2080,9 @@ int _far FileMove_Cmd( LPTSTR pszCmdLine )
 
 
 
+// Recursive MOVE worker.
+// Move holds source and target paths, options, and the moved-file count.
+// Rename when possible; otherwise copy and delete as required.
 static int _mv(register MOVE_STRUCT *Move)
 {
 	register int nFind;
@@ -2403,6 +2408,600 @@ Move_Status:
 
 	// set "target" back to original value
 	*pszTargetArg = _TEXT('\0');
+
+	return nReturn;
+}
+
+// COPY implementation in FILE_TEXT. FileCopy stays in MISC_TEXT for MOVE.
+extern int fDiskFull;
+extern int fClip;
+extern void _far FileRenWildname( LPTSTR, LPTSTR, LPTSTR );
+extern int _far FileMoveCopyBridge( LPTSTR, LPTSTR, unsigned long, long *, FILESEARCH * );
+
+// COPY_OPTIONS
+#define COPY_BY_ATTRIBUTES 1
+#define COPY_ASCII 2
+#define COPY_BINARY 4
+#define COPY_CHANGED 8
+#define COPY_NOERRORS 0x10
+#define COPY_PERCENT 0x20
+#define COPY_HIDDEN 0x40
+#define COPY_FTP_ASCII 0x80
+#define COPY_MODIFIED 0x100
+#define COPY_NOTHING 0x200
+#define COPY_KEEP 0x400
+#define COPY_QUERY 0x800
+#define COPY_QUIET 0x1000
+#define COPY_REPLACE 0x2000
+#define COPY_SUBDIRS 0x4000
+#define COPY_TOTALS 0x8000
+#define COPY_UPDATED 0x10000L
+#define COPY_VERIFY 0x20000L
+#define COPY_CLEAR_ARCHIVE 0x40000L
+#define COPY_DOS62_Y 0x80000L
+#define COPY_KEEP_ATTRIBUTES 0x100000L
+#define COPY_RESTART 0x200000L
+#define COPY_OVERWRITE_RDONLY 0x400000L
+#define COPY_EXISTS 0x800000L
+
+
+typedef struct
+{
+	TCHAR szSource[MAXFILENAME];
+	TCHAR szSourceName[MAXFILENAME];
+	TCHAR szTarget[MAXFILENAME];
+	TCHAR szTargetName[MAXFILENAME];
+	LPTSTR szFilename;
+	LPTSTR pFirstCopyArg;		// pointer to first source arg in COPY
+	unsigned long fOptions;
+	unsigned long fFlags;
+	long lFilesCopied;
+
+	long lAppendOffset;
+
+	FILESEARCH t_dir;
+} COPY_STRUCT;
+
+static int _copy( COPY_STRUCT *);
+
+
+
+// COPY [options] source [source ...] [target]
+// Copy or concatenate files, honoring ASCII/binary and overwrite options.
+// Examples: COPY A.TXT B.TXT; COPY A.TXT+B.TXT ALL.TXT.
+int _far FileCopy_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg;
+	TCHAR szClip[MAXFILENAME], *pszTarget = NULL;
+	int nArgc, nTlen, nReturn = 0, nLength, fOldVerify = 0;
+	long lCopy;
+	COPY_STRUCT Copy;
+
+	Copy.lFilesCopied = 0L;
+	Copy.lAppendOffset = 0;
+	Copy.fFlags = COPY_CREATE;
+	Copy.fOptions = 0;
+
+	fDiskFull = 0;
+
+	// remove the white space around appends (+)
+	collapse_whitespace( pszCmdLine, _TEXT("+") );
+
+	// get date/time/size ranges
+	if ( GetRange( pszCmdLine, &aRanges, 0 ) != 0 )
+		return ERROR_EXIT;
+
+	gnExclusiveMode = gnInclusiveMode = gnOrMode = 0;
+
+	// scan command line, parsing for & removing switches
+	for ( nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc )) != NULL ); ) {
+
+		// check for MS-DOS 6.2 /-Y option & convert it to a COPY /R
+		if ( _stricmp( pszArg, _TEXT("/-Y") ) == 0 )
+			lCopy = COPY_REPLACE;
+
+		else if (( lCopy = switch_arg( pszArg, "*ABCEGH MNOPQRSTUVXYK Z" )) == -1 )
+
+			return ( Usage( COPY_USAGE ));	// invalid switch
+
+		Copy.fOptions |= lCopy;
+
+		// leading ASCII (/A) or Binary (/B) switch?
+		if ( nArgc == 0 ) {
+			if ( lCopy & COPY_ASCII )
+				Copy.fFlags |= ASCII_SOURCE;
+			else if ( lCopy & COPY_BINARY )
+				Copy.fFlags |= BINARY_SOURCE;
+		}
+
+		// remove leading /A & /B, & collapse spaces before
+		//   trailing /A & /B
+		if (( lCopy & ( COPY_ASCII | COPY_BINARY )) && ( nArgc > 0 )) {
+
+			// strip leading whitespace
+			while (( iswhite( *(--gpNthptr) )) && ( gpNthptr >= pszCmdLine ))
+				strcpy( gpNthptr, gpNthptr+1 );
+
+		} else if ( *pszArg == gpIniptr->SwChr ) {
+
+			// remove the switch
+			strcpy( gpNthptr, skipspace( gpNthptr + strlen( pszArg )));
+			continue;
+
+		} else if ( nArgc > 0 ) {
+			// save pointer to potential target
+			pszTarget = gpNthptr;
+		}
+
+		nArgc++;
+	}
+
+	// check for COMMAND.COM / CMD.EXE prompt if file exists & not in batch
+	if (( gpIniptr->CopyPrompt ) && ( cv.bn < 0 ))
+		Copy.fOptions |= COPY_REPLACE;
+
+	// check for flag to preserve all attributes (won't work w/Netware!)
+	if ( Copy.fOptions & COPY_KEEP_ATTRIBUTES )
+		Copy.fFlags |= MOVING_FILES;
+
+	// if query, turn off quiet flag
+	if ( Copy.fOptions & COPY_QUERY )
+		Copy.fOptions &= ~( COPY_QUIET | COPY_TOTALS );
+
+	// display percentage copied?
+	if (( Copy.fOptions & COPY_PERCENT ) && (( Copy.fOptions & COPY_QUIET ) == 0 ))
+		Copy.fFlags |= COPY_PROGRESS;
+
+	// abort if no file arguments
+	if ( first_arg( pszCmdLine ) == NULL )
+		return ( Usage( COPY_USAGE ));
+
+	// get the target name, or "*.*" for default name
+	if ( pszTarget != NULL ) {
+
+		copy_filename( Copy.szTarget, first_arg( pszTarget ));
+
+		// check for ASCII (/A) or binary (/B) switches at end of line
+		switch ( switch_arg( ntharg( pszTarget, 1 ), _TEXT("AB") )) {
+		case 1:
+			Copy.fFlags |= ASCII_TARGET;
+			break;
+		case 2:
+			Copy.fFlags |= BINARY_TARGET;
+		}
+
+		*pszTarget = _TEXT('\0');		// remove target from command line
+
+		// check target for device name
+		if ( QueryIsDevice( Copy.szTarget )) {
+			// set "target is device" flag
+			Copy.fFlags |= DEVICE_TARGET;
+		} else if ( QueryIsPipeName( Copy.szTarget )) {
+			// set "target is device" flag
+			Copy.fFlags |= PIPE_TARGET;
+		}
+
+		if ( Copy.fFlags & ( DEVICE_TARGET | PIPE_TARGET )) {
+			// can't "replace" or "update" device or pipe!
+			Copy.fOptions &= ~( COPY_REPLACE | COPY_UPDATED);
+		}
+
+	} else {
+		if (( pszArg = (( Copy.fOptions & COPY_SUBDIRS ) ? gcdir( NULL, 0 ) : WILD_FILE )) == NULL )
+			return ERROR_EXIT;
+		strcpy( Copy.szTarget, pszArg );
+	}
+
+	if ( Copy.fOptions & COPY_VERIFY ) {
+
+		// save original VERIFY status
+		fOldVerify = QueryVerifyWrite();
+
+		// set VERIFY ON
+		SetVerifyWrite( 1 );
+
+	}
+
+	if ( setjmp( cv.env ) == -1 ) {
+		nReturn = CTRLC;
+		goto copy_abort;
+	}
+
+	// if target not a char device or pipe, build full filename
+	if (( Copy.fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 ) {
+
+		if ( mkfname( Copy.szTarget, 0 ) == NULL )
+			goto copy_abort;
+
+		// don't build target name yet if copying subdirs
+		if (( Copy.fOptions & COPY_SUBDIRS ) == 0 ) {
+
+			if (( AddWildcardIfDirectory( Copy.szTarget ) == 0 ) &&  ( Copy.szTarget[ strlen( Copy.szTarget ) - 1] == _TEXT('\\') )) {
+				nReturn = error( ERROR_PATH_NOT_FOUND, Copy.szTarget );
+				goto copy_abort;
+			}
+		}
+	}
+
+	// check for appending
+	pszArg = pszCmdLine;
+	do {
+		pszArg = scan( pszArg, _TEXT("+"), QUOTES + 1 );
+
+		if ( *pszArg == _TEXT('+') ) {
+
+			// remove the '+' and set append flags
+			*pszArg = _TEXT(' ');
+
+			// default for appending files is ASCII
+			if (( Copy.fFlags & BINARY_SOURCE ) == 0 )
+				Copy.fFlags |= ASCII_SOURCE;
+
+			// can't append to a device or pipe!
+			if (( Copy.fFlags & DEVICE_TARGET ) == 0 )
+				Copy.fFlags |= APPEND_FLAG;
+		}
+
+	} while ( *pszArg );
+
+	Copy.pFirstCopyArg = pszCmdLine;
+
+	nTlen = strlen( Copy.szTarget );
+
+	for ( nReturn = nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc )) != NULL ); nArgc++ ) {
+
+		// clear "source is device/pipe" flags
+		Copy.fFlags &= ~( DEVICE_SOURCE | PIPE_SOURCE );
+
+		if ( QueryIsDevice( pszArg ))
+			Copy.fFlags |= DEVICE_SOURCE;
+		else if ( QueryIsPipeName( pszArg ))
+			Copy.fFlags |= PIPE_SOURCE;
+		else {
+			// if source is not a device, make a full filename
+			if ( mkfname( pszArg, 0 ) == NULL )
+				break;
+
+			AddWildcardIfDirectory( pszArg );
+		}
+
+		copy_filename( Copy.szSource, pszArg );
+
+		// check for trailing ASCII (/A) or Binary (/B) switches
+		if (( lCopy = switch_arg( ntharg( pszCmdLine, nArgc+1 ), _TEXT("AB") )) > 0 ) {
+
+			// remove the source ASCII or binary flags
+			Copy.fFlags &= ~( ASCII_SOURCE | BINARY_SOURCE );
+			Copy.fFlags |= (( lCopy == 1 ) ? ASCII_SOURCE : BINARY_SOURCE );
+			nArgc++;
+		}
+
+		// check for dumdums doing an infinitely recursive COPY
+		//   (i.e., "COPY /S . subdir" )
+		nLength = ((( pszArg = path_part( Copy.szSource )) != NULL ) ? strlen( pszArg ) : 0 );
+		if ( Copy.fOptions & COPY_SUBDIRS ) {
+			if ( _strnicmp( pszArg, Copy.szTarget, nLength ) == 0 )
+				return ( error( ERROR_4DOS_INFINITE_COPY, Copy.szSource ));
+		}
+
+		// save the source filename part ( for recursive calls and
+		//   include lists)
+		Copy.szFilename = Copy.szSource + nLength;
+		pszArg = (LPTSTR)_alloca( ( strlen( Copy.szFilename ) + 1 ) * sizeof(TCHAR) );
+		Copy.szFilename = strcpy( pszArg, Copy.szFilename );
+
+		szClip[0] = _TEXT('\0');
+		fClip = 0;
+		if ( stricmp( Copy.szSource, CLIP ) == 0 ) {
+			RedirToClip( szClip, 99 );
+			if ( CopyFromClipboard( szClip ) != 0 )
+				continue;
+			strcpy( Copy.szSource, szClip );
+			fClip = 1;
+			Copy.fFlags &= ~DEVICE_SOURCE;
+		} else if ( stricmp( Copy.szTarget, CLIP ) == 0 ) {
+			RedirToClip( szClip, 99 );
+			if ( Copy.fFlags & APPEND_FLAG ) {
+				if ( CopyFromClipboard( szClip ) != 0 )
+					continue;
+			}
+			strcpy( Copy.szTarget, szClip );
+			fClip = 2;
+			Copy.fFlags &= ~DEVICE_TARGET;
+		}
+
+		nReturn = _copy( &Copy );
+
+		HoldSignals();
+		if ( nReturn != CTRLC ) {
+
+			if ( fClip & 1 )
+				strcpy( Copy.szSource, CLIP );
+			else if ( fClip & 2 ) {
+				// copying to clipboard - get a handle to the temp
+				//   file and use it to copy the file to the clip
+				if (( fClip = _sopen( Copy.szTarget, _O_RDONLY | _O_BINARY, _SH_DENYNO )) >= 0 ) {
+					CopyToClipboard( fClip );
+					_close( fClip );
+				}
+				strcpy( Copy.szTarget, CLIP );
+			}
+		}
+
+		if ( szClip[0] )
+			remove( szClip );
+		EnableSignals();
+
+		// restore original "target"
+		if (( Copy.fFlags & APPEND_FLAG ) == 0 )
+			Copy.szTarget[ nTlen ] = _TEXT('\0');
+
+		if (( setjmp( cv.env ) == -1 ) || ( cv.fException ) || ( nReturn == CTRLC )) {
+			nReturn = (( fDiskFull == 0 ) ? CTRLC : ERROR_EXIT );
+			break;
+		}
+
+
+	}
+
+copy_abort:
+
+	// reset VERIFY flag to original state
+	if ( Copy.fOptions & COPY_VERIFY )
+		SetVerifyWrite( fOldVerify );
+
+	if (( Copy.fOptions & COPY_QUIET ) == 0 ) {
+
+		FilesProcessed( FILES_COPIED, Copy.lFilesCopied );
+	}
+
+
+	return (( Copy.lFilesCopied != 0L ) ? nReturn : ERROR_EXIT );
+}
+
+
+
+#pragma alloc_text( MISC_TEXT, _copy )
+
+
+// Recursive COPY worker (assigned to MISC_TEXT).
+// Copy holds source and target paths, copy flags, and append offset.
+// Process matching files and update the copied-file count.
+static int _copy( register COPY_STRUCT *Copy )
+{
+	register int nFind;
+	int i, nReturn = 0;
+	LPTSTR pszSourceArg, pszTargetArg;
+	FILESEARCH dir;
+	long lMode = 0;
+
+
+	EnableSignals();
+
+	// copy date/time/size range info
+	memmove( &(dir.aRanges), &aRanges, sizeof(RANGES) );
+
+	// get hidden & system files too
+	if (( Copy->fOptions & COPY_BY_ATTRIBUTES ) || ( Copy->fOptions & COPY_HIDDEN))
+		lMode |= 0x07;
+
+	// if copying subdirectories, create the target (must be a directory!)
+	if ( Copy->fOptions & COPY_SUBDIRS ) {
+
+		// remove trailing '/' or '\'
+		strip_trailing( Copy->szTarget+3, SLASHES );
+
+		if (( Copy->fOptions & COPY_NOTHING ) == 0 ) {
+
+			// if we created the directory, then copy any
+			//    existing description
+			if (( Copy->fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 ) {
+
+				i = is_dir( Copy->szTarget );
+
+				MakeDirectory( Copy->szTarget, 1 );
+
+				if ( is_dir( Copy->szTarget ) == 0 )
+					return ( error( ERROR_PATH_NOT_FOUND, Copy->szTarget ));
+
+				// copy description to newly-created target
+				if ( i == 0 ) {
+					copy_filename( Copy->szSourceName, path_part( Copy->szSource ));
+					strip_trailing( Copy->szSourceName+3, SLASHES );
+					process_descriptions( Copy->szSourceName, Copy->szTarget, DESCRIPTION_COPY );
+				}
+			}
+		}
+
+		if (( Copy->fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 )
+			mkdirname( Copy->szTarget, WILD_FILE );
+	}
+
+	// suppress error message from find_file
+	if ( Copy->fOptions & COPY_NOERRORS ) {
+		lMode |= FIND_NO_ERRORS;
+		Copy->fFlags |= NO_ERRORS;
+	}
+
+	for ( nFind = FIND_FIRST; ; nFind = FIND_NEXT ) {
+
+		// if it's a device, only look for it once
+		if ( Copy->fFlags & ( DEVICE_SOURCE | PIPE_SOURCE )) {
+
+			if ( nFind == FIND_NEXT )
+				break;
+
+			copy_filename( Copy->szSourceName, Copy->szSource );
+
+		} else {
+
+			if ( find_file( nFind, Copy->szSource, ( lMode | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE ), &dir, Copy->szSourceName ) == NULL )
+				break;
+
+			if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			CheckForBreak();
+
+		}
+
+		// clear overwrite query flag
+		Copy->fOptions &= ~COPY_EXISTS;
+
+		// don't copy unmodified files
+		if (( Copy->fOptions & COPY_MODIFIED ) && (( dir.attrib & _A_ARCH ) == 0 ))
+			continue;
+
+		// build the target name
+		FileRenWildname( Copy->szTargetName, Copy->szTarget, Copy->szSourceName );
+
+		// if changed (/C), only copy source if target is older
+		// if update (/U), only copy the source if the target is
+		//   older or doesn't exist
+		// if replace (/R) prompt before overwriting existing file
+
+		if (( Copy->fOptions & ( COPY_KEEP | COPY_UPDATED | COPY_CHANGED | COPY_REPLACE )) && ( find_file( FIND_FIRST, Copy->szTargetName, 0x07L | FIND_CLOSE | FIND_EXACTLY | FIND_NO_ERRORS | FIND_NO_FILELISTS, &(Copy->t_dir), NULL ) != NULL )) {
+
+			if ( Copy->fOptions & COPY_KEEP )
+				continue;		// don't overwrite existing file (/O)
+
+			if ( Copy->fOptions & ( COPY_UPDATED | COPY_CHANGED )) {
+
+				if (( Copy->t_dir.fd.wr_date > dir.fd.wr_date ) || (( Copy->t_dir.fd.wr_date == dir.fd.wr_date ) && ( Copy->t_dir.ft.wr_time >= dir.ft.wr_time )))
+
+					continue;
+			}
+
+			// if querying for replacement, don't ask if appending!
+			if (( Copy->fOptions & COPY_REPLACE ) && ( Copy->fFlags & COPY_CREATE ))
+				Copy->fOptions |= COPY_EXISTS;
+
+		} else if ( Copy->fOptions & COPY_CHANGED )
+			continue;	// target doesn't exist
+
+		// check for special conditions w/append
+		//   (the source is the same as the target)
+		if ( _stricmp( Copy->szSourceName, Copy->szTargetName ) == 0 ) {
+
+			// if not the first arg, check to make sure the arg
+			//   wasn't the target & hasn't been overwritten
+			if (( Copy->fFlags & COPY_CREATE ) == 0 ) {
+				// check for "copy all.lst + *.lst"
+				if ( _stricmp( first_arg( Copy->pFirstCopyArg ), Copy->szSourceName ) != 0 )
+					nReturn = error( ERROR_4DOS_CONTENTS_LOST, Copy->szSourceName );
+			}
+
+			// if target file is first source file, ignore it
+			if ( Copy->fFlags & APPEND_FLAG )
+				goto next_copy;
+		}
+
+		if ((( Copy->fOptions & ( COPY_QUIET | COPY_TOTALS )) == 0 ) || (( Copy->fOptions & COPY_REPLACE ) && ( Copy->fOptions & COPY_EXISTS ))) {
+
+			printf( "%s =>%s %s", (( fClip == 1 ) ? CLIP : Copy->szSourceName ), (( Copy->fFlags & COPY_CREATE ) ? NULLSTR : ">" ), (( fClip == 2 ) ? CLIP : Copy->szTargetName ));
+
+
+			// query if /Q, or /R and target exists
+			if ( Copy->fOptions & ( COPY_QUERY | COPY_EXISTS )) {
+
+				if ((( i = QueryInputChar((( Copy->fOptions & COPY_EXISTS ) ? REPLACE : NULLSTR ), YES_NO_ALL )) == ALL_CHAR ) || ( i == REST_CHAR ))
+					Copy->fOptions &= ~( COPY_QUERY | COPY_REPLACE );
+				else if ( i == NO_CHAR )
+					continue;
+				else if ( i == ESCAPE ) {
+					FindClose( dir.hdir );
+					break;
+				}
+			} else
+				crlf();
+		}
+
+		if (( Copy->fOptions & COPY_NOTHING ) == 0 ) {
+
+			// if /Z, overwrite RDONLY files
+			if ( Copy->fOptions & COPY_OVERWRITE_RDONLY )
+				SetFileMode( Copy->szTargetName, 0 );
+
+			if ((( nReturn = FileMoveCopyBridge( Copy->szTargetName, Copy->szSourceName, Copy->fFlags, &( Copy->lAppendOffset ), &dir )) == CTRLC ) || ( cv.fException ) || ( setjmp( cv.env ) == -1 )) {
+				// reset the directory search handles
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			if ( nReturn == 0 ) {
+
+				Copy->lFilesCopied++;
+
+				if ( Copy->fOptions & COPY_CLEAR_ARCHIVE ) {
+					// clear the archive bit
+					SetFileMode( Copy->szSourceName, dir.attrib & 0xDF );
+				}
+
+				// copy an existing description to the new name
+				if (( Copy->fFlags & ( APPEND_FLAG | DEVICE_SOURCE | DEVICE_TARGET | PIPE_SOURCE | PIPE_TARGET)) == 0 )
+					process_descriptions( Copy->szSourceName, Copy->szTargetName, DESCRIPTION_COPY );
+			}
+		}
+
+next_copy:
+		EnableSignals();
+
+		// if target is unambiguous file, append next file(s)
+		//   if appending to wildcard, use first target name
+		if ( strpbrk( Copy->szTarget, WILD_CHARS ) == NULL ) {
+			if (( Copy->fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 )
+				Copy->fFlags |= APPEND_FLAG;
+		} else if ( Copy->fFlags & APPEND_FLAG )
+			copy_filename( Copy->szTarget, Copy->szTargetName );
+
+		// if appending, clear the CREATE flag
+		if ( Copy->fFlags & APPEND_FLAG )
+			Copy->fFlags &= ~COPY_CREATE;
+
+	}
+
+	// copy subdirectories too?
+	if ( Copy->fOptions & COPY_SUBDIRS ) {
+
+		CheckFreeStack( 1024 );
+
+		sprintf( Copy->szSource, FMT_DOUBLE_STR, path_part( Copy->szSource), WILD_FILE );
+
+		// save the current source filename start
+		pszSourceArg = strchr( Copy->szSource, _TEXT('*') );
+
+		// save the current target filename start
+		if (( Copy->fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 )
+			pszTargetArg = Copy->szTarget + strlen( path_part( Copy->szTarget ));
+
+		// search for all subdirectories in this (sub)directory
+		//   tell find_file() not to display errors, and to return
+		//   only subdirectory names
+
+		for ( nFind = FIND_FIRST; ( find_file( nFind, Copy->szSource, ( lMode | 0x10 | FIND_NO_ERRORS | FIND_ONLY_DIRS | FIND_NO_FILELISTS | FIND_EXCLUDE ), &dir, NULL ) != NULL ); nFind = FIND_NEXT ) {
+
+			// make the new "source" and "target"
+
+			sprintf( pszSourceArg, FMT_PATH_STR, dir.szFileName, Copy->szFilename );
+
+			// strip the filename part from the target
+			if (( Copy->fFlags & ( DEVICE_TARGET | PIPE_TARGET )) == 0 )
+				copy_filename( pszTargetArg, dir.szFileName );
+
+			// process directory tree recursively
+			nReturn = _copy( Copy );
+			if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			// restore the original name
+			strcpy( pszSourceArg, WILD_FILE );
+
+		}
+	}
 
 	return nReturn;
 }
