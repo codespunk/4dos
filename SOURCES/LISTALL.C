@@ -52,13 +52,13 @@
 
 
 static int ListInit( void );
-static int _fastcall ListOpenFile( LPTSTR );
-static void ListHome( void );
-static int _fastcall ListMoveLine( int);
-static LONG _fastcall MoveViewPtr( LONG, LONG * );
-static LONG _fastcall ComputeLines( LONG, LONG );
-static VOID SetRightMargin( void );
-static int _fastcall DisplayLine( UINT, LONG );
+static int _near _fastcall ListOpenFile( LPTSTR );
+static void _near ListHome( void );
+static int _near _fastcall ListMoveLine( int);
+static LONG _near _fastcall MoveViewPtr( LONG, LONG * );
+static LONG _near _fastcall ComputeLines( LONG, LONG );
+static VOID _near SetRightMargin( void );
+static int _near _fastcall DisplayLine( UINT, LONG );
 int FormatLine( TCHAR [], int, LONG, int *, int );
 static BOOL _near _fastcall SearchFile( long );
 VOID ListPrintFile( void );
@@ -705,7 +705,7 @@ static int ListInit( void )
 
 
 // open the file & initialize buffers
-static int _fastcall ListOpenFile( LPTSTR pszFileName )
+static int _near _fastcall ListOpenFile( LPTSTR pszFileName )
 {
 	LFile.lpEOF = 0L;
 
@@ -749,7 +749,7 @@ static int _fastcall ListOpenFile( LPTSTR pszFileName )
 
 
 // reset to the beginning of the file
-static void ListHome( void )
+static void _near ListHome( void )
 {
 	// Reset the memory buffer to purge old file data
 	LFile.lpBufferEnd = LFile.lpBufferStart + LFile.uTotalSize;
@@ -781,7 +781,7 @@ static void ListHome( void )
 
 
 // move up/down "n" lines
-static int _fastcall ListMoveLine( int nRows )
+static int _near _fastcall ListMoveLine( int nRows )
 {
 	long lTemp, lRows;
 
@@ -798,7 +798,7 @@ static int _fastcall ListMoveLine( int nRows )
 }
 
 
-static VOID SetRightMargin( void )
+static VOID _near SetRightMargin( void )
 {
 	nRightMargin = (( lListFlags & LIST_WRAP ) ? nScreenColumns + 1 : MAXLISTLINE );
 	if ( !( lListFlags & LIST_HEX ) && lListFlags & LIST_LINENUMBERS )
@@ -859,7 +859,7 @@ void _fastcall ListSetCurrent( long lOffset )
 
 
 // Display Line
-static int _fastcall DisplayLine( UINT nRow, LONG lLinePtr )
+static int _near _fastcall DisplayLine( UINT nRow, LONG lLinePtr )
 {
 	register int n, nCol;
 	INT nLength, nBytesPrinted = 0, nHOffset = 0, nHexOffset;
@@ -920,7 +920,7 @@ static int _fastcall DisplayLine( UINT nRow, LONG lLinePtr )
 
 
 // Compute number of lines between the specified points in the file
-static LONG _fastcall ComputeLines( LONG lOldPtr, LONG lNewPtr )
+static LONG _near _fastcall ComputeLines( LONG lOldPtr, LONG lNewPtr )
 {
 	register int ch, n, fDirection = 0;
 	LONG lRowCount;
@@ -1068,7 +1068,7 @@ int FormatLine( TCHAR szBuffer[], int nBufferLength, long lLinePtr, int *nBytesP
 // MoveViewPtr - Update view pointer by scrolling the number of
 //   lines specified in ptrRow.  If limited by the top or bottom
 //   of the file, modify ptrRow to indicate the actual number of rows.
-static LONG _fastcall MoveViewPtr( LONG lFilePtr, LONG *ptrRow )
+static LONG _near _fastcall MoveViewPtr( LONG lFilePtr, LONG *ptrRow )
 {
 	register int i, n;
 	LONG lOffset = 0L, lRow, lRowCount = 0L;

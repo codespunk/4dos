@@ -46,7 +46,7 @@
 #define CDD_COLORS 4
 #define BATCH_DEBUG 0x10
 
-static void _fastcall ScrollBar( int, int );
+static void _near _fastcall ScrollBar( int, int );
 static TCHAR _far * _near wSelect( TCHAR _far * _far *, int, int, LPTSTR );
 
 static POPWINDOWPTR aWin[4];		// array of active windows
@@ -209,7 +209,7 @@ void wWriteStrAtt( int nRow, int nColumn, int nAttribute, TCHAR _far *lpszLine )
 
 
 // Display a scroll bar along the right border of the active window.
-static void _fastcall ScrollBar( int nPosition, int nOutOf )
+static void _near _fastcall ScrollBar( int nPosition, int nOutOf )
 {
 	register int i, nHigh;
 

@@ -52,11 +52,11 @@
 #include "sha.h"
 
 static int _fastcall QueryIsLFN( TCHAR * );
-static LPTSTR _fastcall NextRange( TCHAR * );
+static LPTSTR _near _fastcall NextRange( TCHAR * );
 static int _fastcall GetRangeArgs( TCHAR *, RANGES * );
-static int _fastcall GetStrTime( TCHAR *, int *, int * );
+static int _near _fastcall GetStrTime( TCHAR *, int *, int * );
 
-static void GetStrSize( TCHAR *, long * );
+static void _near GetStrSize( TCHAR *, long * );
 
 static int _fastcall QueryIsRelative( TCHAR * );
 static int _near similar_char( char *, int, char *, int );
@@ -1091,7 +1091,7 @@ int PASCAL GetRange( register LPTSTR pszLine, RANGES *aRanges, int fOnlyFirst )
 
 
 // skip to the next range argument
-static LPTSTR _fastcall NextRange( LPTSTR pszArg )
+static LPTSTR _near _fastcall NextRange( LPTSTR pszArg )
 {
 	while (( *pszArg ) && ( *pszArg != _TEXT(']') ) && ( *pszArg++ != _TEXT(',') ))
 		;
@@ -1306,7 +1306,7 @@ static int _fastcall GetRangeArgs( LPTSTR pszRange, RANGES *aRanges )
 
 
 // get time
-static int _fastcall GetStrTime( LPTSTR pszTime, register int *pnHours, int *pnMinutes )
+static int _near _fastcall GetStrTime( LPTSTR pszTime, register int *pnHours, int *pnMinutes )
 {
 	TCHAR szAmPm[2];
 
@@ -1342,7 +1342,7 @@ static int _fastcall GetStrTime( LPTSTR pszTime, register int *pnHours, int *pnM
 
 // get size
 
-static void GetStrSize( register char *pszSize, long *plSize )
+static void _near GetStrSize( register char *pszSize, long *plSize )
 
 {
 	*plSize = 0L;

@@ -45,13 +45,13 @@
 #include "4all.h"
 
 
-static void _fastcall CloseDirSearchHandles( int, FILESEARCH * );
-static int _fastcall TabComplete( LPTSTR, LPTSTR, int );
-static int _fastcall FilenameLength( LPTSTR );
-static int _fastcall PositionEGets( LPCTSTR );
-static void _fastcall clearline( LPTSTR );
-static void _fastcall efputs( LPCTSTR );
-static void _fastcall PadBlanks( int );
+static void _near _fastcall CloseDirSearchHandles( int, FILESEARCH * );
+static int _near _fastcall TabComplete( LPTSTR, LPTSTR, int );
+static int _near _fastcall FilenameLength( LPTSTR );
+static int _near _fastcall PositionEGets( LPCTSTR );
+static void _near _fastcall clearline( LPTSTR );
+static void _near _fastcall efputs( LPCTSTR );
+static void _near _fastcall PadBlanks( int );
 
 void CutEgets( void );
 
@@ -1487,7 +1487,7 @@ TryAgain:
 }
 
 
-static void _fastcall CloseDirSearchHandles( int fURL, FILESEARCH *dir )
+static void _near _fastcall CloseDirSearchHandles( int fURL, FILESEARCH *dir )
 {
 	DosFindClose( dir->hdir );
 
@@ -1496,7 +1496,7 @@ static void _fastcall CloseDirSearchHandles( int fURL, FILESEARCH *dir )
 
 
 // check the FileComplete .INI directive for a matching extension / type
-static int _fastcall TabComplete( LPTSTR pszCommand, LPTSTR pszFilename, int nAttribute )
+static int _near _fastcall TabComplete( LPTSTR pszCommand, LPTSTR pszFilename, int nAttribute )
 {
 	register int i, j;
 	int nLength, fNot;
@@ -1587,7 +1587,7 @@ static int _fastcall TabComplete( LPTSTR pszCommand, LPTSTR pszFilename, int nAt
 
 
 // return the length of the filename (bounded by szInvalidChars)
-static int _fastcall FilenameLength( LPTSTR pszFileName )
+static int _near _fastcall FilenameLength( LPTSTR pszFileName )
 {
 	LPTSTR pszEnd;
 
@@ -1600,7 +1600,7 @@ static int _fastcall FilenameLength( LPTSTR pszFileName )
 
 
 // get & set column position in the current line
-static int _fastcall PositionEGets( LPCTSTR pCur )
+static int _near _fastcall PositionEGets( LPCTSTR pCur )
 {
 	LPTSTR pszPtr;
 
@@ -1629,7 +1629,7 @@ static int _fastcall PositionEGets( LPCTSTR pCur )
 
 
 // scrub the line from "pszLine" onwards
-static void _fastcall clearline( LPTSTR pszLine )
+static void _near _fastcall clearline( LPTSTR pszLine )
 {
 	register int i;
 
@@ -1644,7 +1644,7 @@ static void _fastcall clearline( LPTSTR pszLine )
 
 
 // print the string to STDOUT
-static void _fastcall efputs( LPCTSTR lpcszStr )
+static void _near _fastcall efputs( LPCTSTR lpcszStr )
 {
 	register int nRow = 0;
 
@@ -1681,7 +1681,7 @@ static void _fastcall efputs( LPCTSTR lpcszStr )
 
 
 // print the specified number of spaces
-static void _fastcall PadBlanks( int nWidth )
+static void _near _fastcall PadBlanks( int nWidth )
 {
 	color_printf( -1, FMT_LEFT_STR, nWidth, NULLSTR );
 }
@@ -1722,7 +1722,7 @@ void CutEgets( void )
 	PositionEGets( pszCurrentPos );
 }
 
-static int _fastcall __echo( LPTSTR, int );
+static int _near _fastcall __echo( LPTSTR, int );
 
 // ECHO [ON | OFF | text]
 // Query or change command echoing, or print text with a newline.
@@ -1746,7 +1746,7 @@ int _far ScreenEchoErr_Cmd( LPTSTR pszCmdLine )
 // Shared ECHO implementation. pszCmdLine is the original command tail;
 // fErr selects stderr and bypasses echo-state changes. Returns zero.
 // May modify batch echo flags or interactive verbosity.
-static int _fastcall __echo( LPTSTR pszCmdLine, int fErr )
+static int _near _fastcall __echo( LPTSTR pszCmdLine, int fErr )
 {
 	int fEcho;
 
@@ -1785,7 +1785,7 @@ EchoErr:
 	return 0;
 }
 
-static int _fastcall __echos( LPTSTR, int );
+static int _near _fastcall __echos( LPTSTR, int );
 
 // ECHOS [text]
 // Print text to stdout without a newline. Example: ECHOS Working...
@@ -1806,7 +1806,7 @@ int _far ScreenEchosErr_Cmd( LPTSTR pszCmdLine )
 // Shared no-newline output helper. pszCmdLine is the command tail;
 // fErr selects stderr instead of stdout. Returns zero.
 // Establishes the existing Ctrl+C recovery point in cv.env.
-static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
+static int _near _fastcall __echos( LPTSTR pszCmdLine, int fErr )
 {
 	register int fStd;
 
@@ -1833,7 +1833,7 @@ static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
 #define INPUT_DIGITS 0x100
 #define INKEY_MOUSE 0x200
 
-static int _fastcall __input( LPTSTR, int );
+static int _near _fastcall __input( LPTSTR, int );
 
 // INKEY [options] [prompt] %variable
 // Read one key into a variable. Example: INKEY Press a key: %%KEY (in a batch file).
@@ -1856,7 +1856,7 @@ int _far ScreenInput_Cmd( LPTSTR pszCmdLine )
 // timeout, password, editing and other existing input switches.
 // Modifies the tail and gszCmdline; stores the result with add_variable().
 // Returns its status, Usage() status, ERROR_EXIT on key EOF, or zero on timeout.
-static int _fastcall __input( LPTSTR pszCmdLine, int fInput )
+static int _near _fastcall __input( LPTSTR pszCmdLine, int fInput )
 {
 	register LPTSTR pszVariable;
 	TCHAR *pszArg, *pszFirstArg, szKeylist[MAXARGSIZ+1];
@@ -2127,7 +2127,7 @@ int _far ScreenScr_Cmd( LPTSTR pszCmdLine )
 	return 0;
 }
 
-static int _fastcall __scrput( LPTSTR, int );
+static int _near _fastcall __scrput( LPTSTR, int );
 
 extern int _far ScreenParseLine( LPTSTR );
 
@@ -2151,7 +2151,7 @@ int _far ScreenScrput_Cmd( LPTSTR pszCmdLine )
 // fVscrput selects vertical rather than horizontal output. Parses coordinates,
 // colors and escapes, then writes directly to the screen.
 // Returns zero or Usage() status; may modify the command tail.
-static int _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
+static int _near _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
 {
 	LPTSTR pszText;
 	int nAttribute = -1;

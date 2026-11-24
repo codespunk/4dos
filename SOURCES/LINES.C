@@ -50,7 +50,7 @@
 
 static int _fastcall __drawline( LPTSTR, int );
 int PASCAL _line( int, int, int, int, int, int, int );
-static int _fastcall GetLineChar( int, int );
+static int _near _fastcall GetLineChar( int, int );
 
 
 #define N   1
@@ -521,7 +521,7 @@ int _fastcall verify_row_col( unsigned int nRow, unsigned int nColumn )
 // Read the character at the specified cursor location.
 //   Return -1 if not a line drawing char, or the offset into the "szBreakdown"
 //   table if it is.
-static int _fastcall GetLineChar( int nRow, int nColumn )
+static int _near _fastcall GetLineChar( int nRow, int nColumn )
 {
 	char caCell[4];
 

@@ -468,7 +468,7 @@ _asm {
 }
 
 
-static int _fastcall CheckForNoEcho( register LPTSTR pszStartLine )
+static int _near _fastcall CheckForNoEcho( register LPTSTR pszStartLine )
 {
 	// check for leading '@' (no echo)
 	if (( *pszStartLine == _TEXT('@') ) || ( strnicmp( pszStartLine, _TEXT("*@"), 2 ) == 0 )) {

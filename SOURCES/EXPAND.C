@@ -1144,7 +1144,7 @@ int _fastcall GetClipboardLine( int nLine, LPTSTR pszLine, int nMaxLength )
 
 
 // strip leading & trailing whitespace, process escape chars, and resolve path components
-static int _fastcall ProcessFileName( LPTSTR pszFile, int fMakePath )
+static int _near _fastcall ProcessFileName( LPTSTR pszFile, int fMakePath )
 {
 	trim( pszFile, WHITESPACE );
 	EscapeLine( pszFile );
