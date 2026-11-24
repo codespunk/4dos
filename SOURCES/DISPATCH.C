@@ -243,3 +243,17 @@ int _near Case_Cmd( LPTSTR pszCmdLine )
 {
 	return BatchCase_Cmd( pszCmdLine );
 }
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchSetlocal_Cmd( LPTSTR );
+int _near Setlocal_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchSetlocal_Cmd( pszCmdLine );
+}
+
+// Near command-table entry; implementation resides in BATCH_TEXT.
+extern int _far BatchEndlocal_Cmd( LPTSTR );
+int _near Endlocal_Cmd( LPTSTR pszCmdLine )
+{
+	return BatchEndlocal_Cmd( pszCmdLine );
+}

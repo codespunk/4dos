@@ -56,8 +56,8 @@ static void _far UndoGosubVariables( void );
 static int _far _fastcall goto_label( LPTSTR, int );
 static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
 static int _far _fastcall __quit( LPTSTR, BOOL );
-static int _fastcall _setlocal( void );
-static int _fastcall _endlocal( LPTSTR );
+static int _far _fastcall _setlocal( void );
+static int _far _fastcall _endlocal( LPTSTR );
 
 extern void _far BatchDecompile( CompHead _far *, LPBYTE, unsigned int );
 extern void _far _fastcall TripleKey( char * );
@@ -66,10 +66,12 @@ static TCHAR DELIMS[] = _TEXT("%9[^  .\"`\\+=:<>|%]");
 static unsigned char cEncryptSig[4] = ENCRYPT_SIG;
 
 extern int fNoComma;
+extern int _far BatchRunCLI( void );
 
 
 // Execute a batch file (.BAT or .BTM or .CMD)
-int _near Batch( int argc, TCHAR **argv )
+
+int _far Batch( int argc, TCHAR **argv )
 {
 	register int i;
 	int nReturn = 0;
@@ -139,7 +141,7 @@ int _near Batch( int argc, TCHAR **argv )
 	if ( cv.fCall ) {
 
 	    cv.fCall = 0;
-	    if (( nReturn = BatchCLI()) == 0 )
+	    if (( nReturn = BatchRunCLI()) == 0 )
 		nReturn = bframe[ cv.bn ].nReturn;
 
 	    ExitBatchFile();
@@ -155,7 +157,6 @@ int _near Batch( int argc, TCHAR **argv )
 }
 
 
-#pragma alloc_text( BATCH_TEXT, LoadBTM )
 
 // Load the active batch file into memory, decompressing if necessary.
 // No arguments; updates the active batch frame and returns zero or an error.
@@ -290,7 +291,8 @@ LoadBTM_error:
 
 
 // clean up & exit a batch file
-int _near ExitBatchFile( void )
+
+int _far ExitBatchFile( void )
 {
 	register int n;
 
@@ -339,7 +341,10 @@ int _near ExitBatchFile( void )
 }
 
 
-int _near BatchDebugger( void )
+extern int _far BatchDebugger( void );
+
+// Display the active batch file in the debugger; return the selected key.
+int _far BatchDebugger( void )
 {
 	extern int gnPopExitKey;
 	int i, nFH, nEditMode = EDIT_DATA;
@@ -404,7 +409,6 @@ int _near BatchDebugger( void )
 
 
 extern int _far BatchBattext_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchBattext_Cmd )
 
 // TEXT ... ENDTEXT
 // Print literal lines from the active batch file until ENDTEXT.
@@ -441,7 +445,6 @@ extern int _far BatchRunCLI( void );
 extern int _far BatchGlobalCommand( LPTSTR );
 extern int _far BatchContinueLine( LPTSTR );
 extern int _far BatchCall_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchCall_Cmd )
 
 // CALL command [arguments]
 // Execute a command with nested batch execution enabled; return its status.
@@ -470,7 +473,6 @@ int _far BatchCall_Cmd( LPTSTR pszCmdLine )
 
 // DO loop
 extern int _far BatchDo_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchDo_Cmd )
 
 // DO [count | WHILE condition | UNTIL condition | variable = range] ... ENDDO.
 // Example: DO 3 (with a following body and ENDDO).
@@ -802,7 +804,6 @@ NextINName:
 
 
 // evaluate WHILE or UNTIL expression
-#pragma alloc_text( BATCH_TEXT, WhileTest )
 
 // Evaluate a mutable copy of the loop expression; return truth or usage error.
 static int _fastcall WhileTest( LPTSTR pszExpression )
@@ -821,7 +822,6 @@ static int _fastcall WhileTest( LPTSTR pszExpression )
 }
 
 
-#pragma alloc_text( BATCH_TEXT, do_parsing )
 
 // check for DO processing
 // Inspect the command token and update DO nesting/skip flags; return parser status.
@@ -877,7 +877,6 @@ int _far _fastcall do_parsing( register LPTSTR pszCmdName )
 
 // FOR - allows iterative execution of DOS commands
 extern int _far BatchFor_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchFor_Cmd )
 
 // FOR variable IN (set) DO command; iterate over values or files.
 // Example: FOR %f IN (*.TXT) DO ECHO %f
@@ -1391,7 +1390,6 @@ for_bye:
 // Call subroutine (GOSUB labelname )
 extern int _far BatchRunCLI( void );
 extern int _far BatchGosub_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchGosub_Cmd )
 
 // GOSUB label [arguments]
 // Execute a nested batch subroutine, preserving the caller position and flags.
@@ -1455,7 +1453,6 @@ int _far BatchGosub_Cmd( LPTSTR pszCmdLine )
 
 // GOTO a label in the batch file
 extern int _far BatchGoto_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchGoto_Cmd )
 
 // GOTO [/I] label
 // Seek to a batch label; /I preserves DO/IFF state. Example: GOTO done
@@ -1481,7 +1478,6 @@ int _far BatchGoto_Cmd( LPTSTR pszCmdLine )
 
 
 // remove the Gosub local variables
-#pragma alloc_text( BATCH_TEXT, UndoGosubVariables )
 
 // Remove the active GOSUB argument variables from the environment.
 static void _far UndoGosubVariables( void )
@@ -1501,7 +1497,6 @@ static void _far UndoGosubVariables( void )
 }
 
 
-#pragma alloc_text( BATCH_TEXT, goto_label )
 
 // position the file pointer following the label line
 // Search the active batch file for a label; flags control errors and GOSUB arguments.
@@ -1602,7 +1597,6 @@ static int _far _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 
 // conditional IF command
 extern int _far BatchIf_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchIf_Cmd )
 
 // IF condition command; execute the command when true.
 // Example: IF EXIST FILE.TXT ECHO Found
@@ -1615,7 +1609,6 @@ int _far BatchIf_Cmd( LPTSTR pszCmdLine )
 
 // conditional IFF command
 extern int _far BatchIff_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchIff_Cmd )
 
 // IFF condition THEN ... ELSE ... ENDIFF; manage structured conditional execution.
 // Example: IFF EXIST FILE.TXT THEN
@@ -1627,7 +1620,6 @@ int _far BatchIff_Cmd( LPTSTR pszCmdLine )
 
 
 // conditional IF command (including ELSE/ELSEIFF)
-#pragma alloc_text( BATCH_TEXT, __if )
 
 // Shared IF/IFF implementation; fIff selects structured mode.
 // Consume the condition and execute the selected command.
@@ -1691,7 +1683,6 @@ if_usage:
 }
 
 
-#pragma alloc_text( BATCH_TEXT, ExpandArgument )
 
 // expand the argument
 // Expand one argument into the parser buffer; return its pointer or NULL.
@@ -1722,7 +1713,6 @@ static LPTSTR _fastcall ExpandArgument( LPTSTR pszLine, int nArgument )
 }
 
 
-#pragma alloc_text( BATCH_TEXT, TestCondition )
 
 // DO / IF / IFF testing
 // Evaluate the mutable condition string; fIf selects parsing mode.
@@ -2010,7 +2000,6 @@ Conditionals:
 }
 
 
-#pragma alloc_text( BATCH_TEXT, iff_parsing )
 
 // check for IFF THEN / ELSE / ENDIFF condition
 //   (if waiting for ENDIFF or ELSE, ignore the command)
@@ -2077,7 +2066,6 @@ int _far _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 
 
 extern int _far BatchLfnFor_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchLfnFor_Cmd )
 
 // LFNFOR [ON | OFF]
 // Query or change long filename handling in FOR loops.
@@ -2104,7 +2092,6 @@ int _far BatchLfnFor_Cmd( LPTSTR pszCmdLine )
 
 
 extern int _far BatchLoadbtm_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchLoadbtm_Cmd )
 
 // LOADBTM [ON | OFF]
 // Query or change in-memory batch execution. Example: LOADBTM ON.
@@ -2146,7 +2133,6 @@ int _far BatchLoadbtm_Cmd( LPTSTR pszCmdLine )
 
 
 extern int _far BatchOn_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchOn_Cmd )
 
 // ON [BREAK | ERROR | ERRORMSG] [command]
 // Install or clear an active batch frame event handler.
@@ -2204,7 +2190,6 @@ int _far BatchOn_Cmd( LPTSTR pszCmdLine )
 
 // cancel nested batch files
 extern int _far BatchCancel_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchCancel_Cmd )
 
 // CANCEL [errorlevel]
 // Terminate all nested batch files; return ABORT_LINE. Example: CANCEL 1
@@ -2218,7 +2203,6 @@ int _far BatchCancel_Cmd( register LPTSTR pszCmdLine )
 //   NOTE: you can also use this command to set the ERRORLEVEL (even from
 //   the command line!)
 extern int _far BatchQuit_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchQuit_Cmd )
 
 // QUIT [errorlevel]
 // Terminate the current batch file; return ABORT_LINE. Example: QUIT 1
@@ -2228,7 +2212,6 @@ int _far BatchQuit_Cmd( register LPTSTR pszCmdLine )
 }
 
 
-#pragma alloc_text( BATCH_TEXT, __quit )
 
 // Terminate the current or all nested batch frames; optionally set ERRORLEVEL.
 static int _far _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
@@ -2259,7 +2242,6 @@ static int _far _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 
 // RETURN from a GOSUB
 extern int _far BatchRet_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchRet_Cmd )
 
 // RETURN [value]
 // Set the GOSUB return value and signal the nested batch interpreter.
@@ -2283,20 +2265,27 @@ int _far BatchRet_Cmd( LPTSTR pszCmdLine )
 
 // save the current environment, alias list, and current drive/directory
 //   (restored by ENDLOCAL or end of batch file )
-int _near Setlocal_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchSetlocal_Cmd( LPTSTR );
+
+// Save the current batch-local environment and shell settings. Syntax: SETLOCAL. Returns zero or an error status.
+int _far BatchSetlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _setlocal() );
 }
 
 
 // restore the disk, directory, and environment (saved by SETLOCAL)
-int _near Endlocal_Cmd( LPTSTR pszCmdLine )
+extern int _far BatchEndlocal_Cmd( LPTSTR );
+
+// Restore batch-local state, optionally exporting named variables. Syntax: ENDLOCAL [variables]. Returns restoration status.
+int _far BatchEndlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _endlocal( pszCmdLine ) );
 }
 
 
-static int _fastcall _setlocal( void )
+
+static int _far _fastcall _setlocal( void )
 {
 	register LPTSTR pszCurrentDirectory;
 	int nOffset;
@@ -2339,7 +2328,8 @@ static int _fastcall _setlocal( void )
 }
 
 
-static int _fastcall _endlocal( LPTSTR pszCmdLine )
+
+static int _far _fastcall _endlocal( LPTSTR pszCmdLine )
 {
 	int i, nReturn = 0, fExport, nOffset;
 	TCHAR _far *lpszVar;
@@ -2441,7 +2431,6 @@ static int _fastcall _endlocal( LPTSTR pszCmdLine )
 
 
 extern int _far BatchShift_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchShift_Cmd )
 
 // SHIFT [n | /n]
 // Adjust the active batch argument offset or remove an argument.
@@ -2488,7 +2477,6 @@ int _far BatchShift_Cmd( LPTSTR pszCmdLine )
 
 // Switch Case Statement
 extern int _far BatchSwitch_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchSwitch_Cmd )
 
 // SWITCH value; scan the batch file for a matching CASE or DEFAULT.
 // Example: SWITCH %choice
@@ -2562,7 +2550,6 @@ int _far BatchSwitch_Cmd( LPTSTR pszCmdLine )
 
 // found a trailing CASE or DEFAULT - skip everything until EndSwitch
 extern int _far BatchCase_Cmd( LPTSTR );
-#pragma alloc_text( BATCH_TEXT, BatchCase_Cmd )
 
 // CASE value / DEFAULT after a selected branch; skip to ENDSWITCH.
 // Return interpreter status; advances the active batch file.

@@ -213,7 +213,7 @@ $(OBJ)\env.obj : env.c $(headers)
         $(COMP) /NTENV_TEXT env.c
 
 $(OBJ)\batch.obj : batch.c $(headers)
-        $(COMP) /NT_TEXT batch.c
+        $(COMP) /NTBATCH_TEXT batch.c
 
 $(OBJ)\dispatch.obj : dispatch.c $(headers)
         $(COMP) /NT_TEXT dispatch.c

@@ -690,7 +690,7 @@ int _near _fastcall command( register LPTSTR pszLine, int fOptions )
 
 			// default is Trace into
 
-			extern int _near BatchDebugger( void );
+			extern int _far BatchDebugger( void );
 
 			pszBatchDebugLine = pszStartLine;
 			nReturn = BatchDebugger( );

@@ -33,7 +33,7 @@
 
 int _near Alias_Cmd( LPTSTR );
 int _near Attrib_Cmd( LPTSTR );
-int _near Batch( int, TCHAR ** );
+int _far Batch( int, TCHAR ** );
 int _near Battext_Cmd( LPTSTR );
 int _near Beep_Cmd( LPTSTR );
 int _near Break_Cmd( LPTSTR );
@@ -175,7 +175,7 @@ int _near Y_Cmd( LPTSTR );
 // Support routines in all versions
 
 // BATCH.C
-int _near ExitBatchFile( void );
+int _far ExitBatchFile( void );
 int  _far _fastcall do_parsing( LPTSTR );
 int  _far _fastcall iff_parsing( LPTSTR, LPTSTR );
 int _far _fastcall TestCondition( LPTSTR, int );
