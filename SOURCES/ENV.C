@@ -72,6 +72,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 #pragma alloc_text( ENV_TEXT, add_list )
 #pragma alloc_text( ENV_TEXT, next_env )
 #pragma alloc_text( ENV_TEXT, end_of_env )
+#pragma alloc_text( ENV_TEXT, get_variable )
 
 
 
@@ -522,7 +523,8 @@ int _near Eset_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// get environment variable
+// Look up pszVariable in the current environment.
+// Return a far pointer to its value, or NULL if not found.
 TCHAR _far * _fastcall get_variable( LPTSTR pszVariable )
 {
 	return ( get_list( pszVariable, glpEnvironment ));
