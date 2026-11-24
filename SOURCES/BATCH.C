@@ -2190,14 +2190,11 @@ int _near On_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// wait for a keystroke; display optional message
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenPause_Cmd( LPTSTR );
 int _near Pause_Cmd( LPTSTR pszCmdLine )
 {
-	// make sure STDOUT hasn't been redirected
-	qprintf( ( _isatty( STDOUT ) ? STDOUT : STDERR ), FMT_STR, (( pszCmdLine == NULL ) ? PAUSE_PROMPT : pszCmdLine ));
- 
-	GetKeystroke( EDIT_NO_ECHO | EDIT_ECHO_CRLF | EDIT_SCROLL_CONSOLE );
-	return 0;
+	return ScreenPause_Cmd( pszCmdLine );
 }
 
 

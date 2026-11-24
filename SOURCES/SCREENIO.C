@@ -2068,3 +2068,18 @@ good_key:
 
 	return ( add_variable( gszCmdline ));
 }
+
+// PAUSE [message]
+// Display a prompt and wait for a key without echoing it.
+// Examples: PAUSE; PAUSE Press any key.
+// pszCmdLine supplies an optional prompt; uses stderr if stdout is redirected.
+// Returns zero after the key read.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenPause_Cmd( LPTSTR pszCmdLine )
+{
+	// make sure STDOUT hasn't been redirected
+	qprintf( ( _isatty( STDOUT ) ? STDOUT : STDERR ), FMT_STR, (( pszCmdLine == NULL ) ? PAUSE_PROMPT : pszCmdLine ));
+
+	GetKeystroke( EDIT_NO_ECHO | EDIT_ECHO_CRLF | EDIT_SCROLL_CONSOLE );
+	return 0;
+}
