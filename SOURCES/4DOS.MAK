@@ -244,6 +244,9 @@ $(OBJ)\utility.obj : utility.c $(headers)
 $(OBJ)\fileutil.obj : fileutil.c $(headers)
         $(COMP) /NTFILE_TEXT fileutil.c
 
+$(OBJ)\dirutil.obj : dirutil.c $(headers)
+        $(COMP) /NTDIR_TEXT dirutil.c
+
 $(OBJ)\iofmt.obj : iofmt.c $(headers)
         $(COMP) /NTMISC_TEXT iofmt.c
 
@@ -355,6 +358,7 @@ $(LINKTARG) : \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
               $(OBJ)\utility.obj \
               $(OBJ)\fileutil.obj \
+              $(OBJ)\dirutil.obj \
 #       other
               4dostart.lib startupm.lib 4dos.mak $(LNKNAME) build.txt \
               setup.mak dolink.mak

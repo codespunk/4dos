@@ -846,57 +846,11 @@ int _fastcall DestroyDirectory( LPTSTR pszDirectory )
 
 
 // create directory
+extern int _far DirMd_Cmd( LPTSTR );
 int _near Md_Cmd( LPTSTR pszCmdLine )
 {
-	register int nReturn = 0;
-	unsigned int nArg, fUpdateFuzzy;
-	long fMD;
-	LPTSTR pszDirectory;
-	LPTSTR pszPath;
-
-	// check for and remove switches; abort if no directory name arguments
-	if (( GetSwitches( pszCmdLine, _TEXT("SN"), &fMD, 0 ) != 0 ) || ( first_arg( pszCmdLine ) == NULL ))
-		return ( Usage( MD_USAGE ));
-	fUpdateFuzzy = (( fMD & 2 ) == 0 );
-
-
-	for ( nArg = 0; (( pszDirectory = ntharg( pszCmdLine, nArg | 0x800 )) != NULL ); nArg++) {
-
-		mkfname( pszDirectory, 0 );
-
-		// remove trailing '/' or '\'
-		strip_trailing( pszDirectory+3, SLASHES );
-
-		// create directory tree if /S specified
-		if ( fMD & 1 ) {
-
-			// skip UNC name
-			if ( pszDirectory[0] == _TEXT('\\') ) {
-				for ( pszPath = pszDirectory + 2; (( *pszPath != _TEXT('\0') ) && ( *pszPath++ != _TEXT('\\') )); )
-					;
-			} else
-				pszPath = pszDirectory + 3;
-
-			for ( _doserrno = 0; ( *pszPath != _TEXT('\0') ); pszPath++ ) {
-
-				if (( *pszPath == _TEXT('\\') ) || ( *pszPath == _TEXT('/') )) {
-					*pszPath = _TEXT('\0');
-
-					if (( MakeDirectory( pszDirectory, fUpdateFuzzy ) == -1 ) && ( _doserrno != ERROR_ACCESS_DENIED ))
-
-						break;
-					*pszPath = _TEXT('\\');
-				}
-			}
-		}
-
-		if ( MakeDirectory( pszDirectory, fUpdateFuzzy ) == -1 )
-			nReturn = error( _doserrno, pszDirectory );
-	}
-
-	return nReturn;
+	return DirMd_Cmd( pszCmdLine );
 }
-
 
 // save the current directory & change to new one
 int _near Pushd_Cmd( LPTSTR pszCmdLine )
