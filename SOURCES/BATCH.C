@@ -63,8 +63,7 @@ static int _fastcall __scrput( LPTSTR, int );
 static int _fastcall _setlocal( void );
 static int _fastcall _endlocal( LPTSTR );
 
-static unsigned int GetNibble( void );
-static char DecompressChar( void );
+extern void _far BatchDecompile( CompHead _far *, LPBYTE, unsigned int );
 static void _fastcall TripleKey( char * );
 
 static TCHAR DELIMS[] = _TEXT("%9[^  .\"`\\+=:<>|%]");
@@ -160,78 +159,7 @@ int _near Batch( int argc, TCHAR **argv )
 }
 
 
-#pragma alloc_text( MISC_TEXT, DecompressChar, GetNibble, LoadBTM )
-
-static int fNibble;			// 0 = first nibble, 1 = second
-static LPBYTE pInputText;	// pointer to current character in input
-static LPBYTE pTransTab;	// pointer to translation table
-
-
-// Get the next nibble during decompression
-static unsigned int GetNibble( void )
-{
-	static unsigned char cThis = 0;
-	unsigned int uResult;
-
-	uResult = ( fNibble ? ( cThis & 0xF ) : (( cThis = *pInputText++ ) >> 4 ));
-	fNibble ^= 1;
-	return uResult;
-}
-
-
-// Decompress one character
-static char DecompressChar( void )
-{
-	register unsigned int uNibble;
-
-	//Get next nibble
-	uNibble = GetNibble();
-
-	// Determine decompression type
-	switch(uNibble) {
-	case 0:
-		// Return an uncompressed byte
-		uNibble = GetNibble();
-		return (char)(uNibble | ((unsigned char)GetNibble() << 4));
-	case 1:
-		// Return a compressed byte from the second half of the table
-		uNibble = GetNibble();
-		return (pTransTab[uNibble + 14]);
-	default:
-		// Return a compressed byte from the first part of the table
-		return (pTransTab[uNibble - 2]);
-	}
-}
-
-
-// Decompress a compressed batch file
-void BatchDecompile( CompHead _far *lpHeader, LPBYTE lpszOutputBuf, unsigned int uCount )
-{
-	// Initialize globals
-	pTransTab = &(lpHeader->cCommon[0]);
-	pInputText = pTransTab + BC_COM_SIZE;
-	fNibble = 0;
-
-	// Check for new format
-	if ( lpHeader->usSignature == 0xEBBE ) {
-
-		// is it encrypted?
-		if ((( lpHeader->fEncrypted & 0xF ) ^ ( lpHeader->fEncrypted >> 4 )) == 0 ) {
-			// skip password
-			pInputText += 4;
-		}
-
-	} else {
-		// old format doesn't have encryption word
-		pInputText -= 2;
-		pTransTab -= 2;
-	}
-
-	// Decompress all characters
-	while ( uCount-- )
-		*lpszOutputBuf++ = DecompressChar();
-}
-
+#pragma alloc_text( MISC_TEXT, LoadBTM )
 
 // load a batch file into memory (as a .BTM)
 static int LoadBTM( void )

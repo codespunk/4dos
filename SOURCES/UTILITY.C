@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "4all.h"
+#include "batcomp.h"
 
 // BREAK [ON | OFF]
 // Display or change extended Ctrl+C / Ctrl+Break checking.
@@ -201,4 +202,81 @@ int _far UtilityIdle_Cmd( char *pszCmdLine )
             return Usage( IDLE_USAGE );
     }
     return 0;
+}
+
+static int fNibble;			// 0 = first nibble, 1 = second
+static LPBYTE pInputText;	// pointer to current character in input
+static LPBYTE pTransTab;	// pointer to translation table
+
+
+// Read the next four-bit code (0..15) from the compressed stream.
+// No parameters. Advances pInputText on high-nibble reads and toggles
+// fNibble; retains the current byte for the following low-nibble read.
+static unsigned int GetNibble( void )
+{
+	static unsigned char cThis = 0;
+	unsigned int uResult;
+
+	uResult = ( fNibble ? ( cThis & 0xF ) : (( cThis = *pInputText++ ) >> 4 ));
+	fNibble ^= 1;
+	return uResult;
+}
+
+
+// Decode one character using the current translation table.
+// No parameters. Returns the decoded byte and consumes one, two or
+// three nibbles through GetNibble(). Requires initialized decoder state.
+static char DecompressChar( void )
+{
+	register unsigned int uNibble;
+
+	//Get next nibble
+	uNibble = GetNibble();
+
+	// Determine decompression type
+	switch(uNibble) {
+	case 0:
+		// Return an uncompressed byte
+		uNibble = GetNibble();
+		return (char)(uNibble | ((unsigned char)GetNibble() << 4));
+	case 1:
+		// Return a compressed byte from the second half of the table
+		uNibble = GetNibble();
+		return (pTransTab[uNibble + 14]);
+	default:
+		// Return a compressed byte from the first part of the table
+		return (pTransTab[uNibble - 2]);
+	}
+}
+
+
+// Decode uCount bytes from lpHeader into lpszOutputBuf.
+// Caller supplies valid old/new-format data and sufficient output space.
+// Initializes private decoder state; skips the key in encrypted new-format
+// data. Input must already be decrypted. No return value or EOF appended.
+void _far BatchDecompile( CompHead _far *lpHeader, LPBYTE lpszOutputBuf, unsigned int uCount )
+{
+	// Initialize globals
+	pTransTab = &(lpHeader->cCommon[0]);
+	pInputText = pTransTab + BC_COM_SIZE;
+	fNibble = 0;
+
+	// Check for new format
+	if ( lpHeader->usSignature == 0xEBBE ) {
+
+		// is it encrypted?
+		if ((( lpHeader->fEncrypted & 0xF ) ^ ( lpHeader->fEncrypted >> 4 )) == 0 ) {
+			// skip password
+			pInputText += 4;
+		}
+
+	} else {
+		// old format doesn't have encryption word
+		pInputText -= 2;
+		pTransTab -= 2;
+	}
+
+	// Decompress all characters
+	while ( uCount-- )
+		*lpszOutputBuf++ = DecompressChar();
 }
