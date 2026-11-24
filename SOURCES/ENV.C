@@ -74,6 +74,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 #pragma alloc_text( ENV_TEXT, end_of_env )
 #pragma alloc_text( ENV_TEXT, get_variable )
 #pragma alloc_text( ENV_TEXT, get_list )
+#pragma alloc_text( ENV_TEXT, add_variable )
 
 
 
@@ -592,7 +593,8 @@ TCHAR _far * PASCAL get_list( LPTSTR pszName, TCHAR _far *pchList )
 }
 
 
-// add or delete environment var
+// Add, update, or delete an entry in the current environment.
+// pszVariable is a writable definition; return the status from add_list().
 int _fastcall add_variable( LPTSTR pszVariable )
 {
 	return ( add_list( pszVariable, glpEnvironment ));
