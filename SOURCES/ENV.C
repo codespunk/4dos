@@ -71,6 +71,7 @@ static int _far EnvSet_Cmd( LPTSTR );
 static int _far EnvUnalias_Cmd( LPTSTR );
 static int _far EnvUnfunction_Cmd( LPTSTR );
 static int _far EnvUnset_Cmd( LPTSTR );
+static int _far EnvEset_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -87,6 +88,7 @@ static int _far EnvUnset_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, EnvUnalias_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvUnfunction_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvUnset_Cmd )
+#pragma alloc_text( ENV_TEXT, EnvEset_Cmd )
 
 
 
@@ -529,8 +531,18 @@ int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 #define ESET_USER 0x40
 #define ESET_VOLATILE 0x80
 
-// edit an existing environment variable or alias
+// Near ESET dispatcher; forward to the ENV_TEXT implementation.
 int _near Eset_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvEset_Cmd( pszCmdLine );
+}
+
+
+// ESET [/A | /F | /M] name ...
+// Interactively edit existing definitions; /A selects aliases, /F functions, /M master variables.
+// Without a selector, search environment variables before aliases.
+// Examples: ESET PATH; ESET /A ll; ESET /F twice.
+static int _far EnvEset_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszArg;
 	register int nLength;
