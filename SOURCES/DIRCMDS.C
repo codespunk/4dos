@@ -50,12 +50,12 @@ extern int _pascal CompDriveSetup(char, int, COMPDRIVEINFO *);
 extern int _pascal CompDriveCleanup(COMPDRIVEINFO *);
 extern int _pascal CompData(COMPDRIVEINFO *, FILESEARCH *, LPTSTR , ULONG *, ULONG *);
 
-static void _near PrintDirHeader( LPTSTR , LPTSTR );
-static void _near PrintColorName( LPTSTR , TCHAR _far * , int );
+static void _near _fastcall PrintDirHeader( LPTSTR , LPTSTR );
+static void _near _fastcall PrintColorName( LPTSTR , TCHAR _far * , int );
 static int _near GetDirectory(LPTSTR , LPTSTR );
 static int _near DrawTree( LPTSTR , LPTSTR  );
 static void _near _nxtrow(void);
-static int _near files_cmp( DIR_ENTRY _far *, DIR_ENTRY _far *);
+static int _near _fastcall files_cmp( DIR_ENTRY _far *, DIR_ENTRY _far *);
 
 DIR_ENTRY _huge * _near GetDescriptions( unsigned int, DIR_ENTRY _huge *, unsigned long, unsigned long, LPTSTR );
 
@@ -1561,7 +1561,7 @@ void _fastcall dir_free( DIR_ENTRY _huge *files )
 
 
 // print header or footer, with page wrapping optional
-static void _near PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
+static void _near _fastcall PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
 {
 	LPTSTR pszBuf = _alloca( ( strlen( pszHeader ) + strlen( pszName ) + 1 ) * sizeof(TCHAR) );
 	sprintf( pszBuf, pszHeader, pszName );
@@ -1570,7 +1570,7 @@ static void _near PrintDirHeader( LPTSTR pszHeader, LPTSTR pszName )
 
 
 // print file name in colour, with page wrapping optional
-static void _near PrintColorName( LPTSTR pszName, TCHAR _far *pszOtherName, int color )
+static void _near _fastcall PrintColorName( LPTSTR pszName, TCHAR _far *pszOtherName, int color )
 {
 	LPTSTR pszBuf = _alloca( ( 5 + strlen( pszName ) + _fstrlen( pszOtherName ) + 1 ) * sizeof(TCHAR) );
 	nCPLength = sprintf( pszBuf, _TEXT("%s%Fs"), pszName, pszOtherName );
@@ -1804,7 +1804,7 @@ NotNumeric:
 
 
 // compare routine for filename sort
-static int _near files_cmp( DIR_ENTRY _far *a, DIR_ENTRY _far *b )
+static int _near _fastcall files_cmp( DIR_ENTRY _far *a, DIR_ENTRY _far *b )
 {
 	register LPTSTR pszSort;
 	register int nError = 0;
@@ -1958,7 +1958,7 @@ static int _near files_cmp( DIR_ENTRY _far *a, DIR_ENTRY _far *b )
 }
 
 
-static void _near downHeap( DIR_ENTRY _huge *lpBase, unsigned int k, unsigned int n )
+static void _near _fastcall downHeap( DIR_ENTRY _huge *lpBase, unsigned int k, unsigned int n )
 {
 	register unsigned int i;
 	char szTmp[ sizeof(DIR_ENTRY) ];
@@ -1976,7 +1976,7 @@ static void _near downHeap( DIR_ENTRY _huge *lpBase, unsigned int k, unsigned in
 
 
 // do a heapsort on the directory (much smaller & less stack than Quicksort)
-static void _near heapSort( DIR_ENTRY _huge *lpBase, unsigned int uEntries )
+static void _near _fastcall heapSort( DIR_ENTRY _huge *lpBase, unsigned int uEntries )
 {
 	register unsigned int i;
 	char szTmp[ sizeof(DIR_ENTRY) ];

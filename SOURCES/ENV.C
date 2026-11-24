@@ -60,7 +60,7 @@
 #define SET_REGDELETE 0x1000
 
 
-static int _near SetFromFile( LPTSTR, TCHAR _far *, long );
+static int _near _fastcall SetFromFile( LPTSTR, TCHAR _far *, long );
 static int _near _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
@@ -68,7 +68,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 // Read definitions or deletion names from files or redirected standard input.
 // pszLine selects files; pchList selects the destination; bit 0 of fFlags deletes entries.
 // Join escaped lines, skip blank and colon-comment lines, and return status or CTRLC.
-static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
+static int _near _fastcall SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 {
 	static TCHAR szDelimiters[] = _TEXT("%[^= \t]");
 	register LPTSTR pszArg;

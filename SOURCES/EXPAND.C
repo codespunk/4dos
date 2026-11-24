@@ -71,8 +71,8 @@ static int _near _fastcall UserFunctions( LPTSTR, LPTSTR );
 static int _near _fastcall VariableFunctions( LPTSTR, LPTSTR );
 static LPTSTR _near _fastcall var_internal( LPTSTR );
 static int _near _fastcall AttributeString( LPTSTR, int * );
-static void _near FormatLong( LPTSTR, LPCTSTR, ULONG_PTR );
-static int _near Format64bit( LPTSTR, LPCTSTR, t_int64 * );
+static void _near _fastcall FormatLong( LPTSTR, LPCTSTR, ULONG_PTR );
+static int _near _fastcall Format64bit( LPTSTR, LPCTSTR, t_int64 * );
 static int _fastcall __history( LPTSTR, int );
 
 
@@ -3488,7 +3488,7 @@ static int _near _fastcall AttributeString( LPTSTR pszAttributes, register int *
 
 
 // format a long value for FUNC_EMS, FUNC_XMS, etc.
-static void _near FormatLong( LPTSTR pszTarget, LPCTSTR pszFormat, ULONG_PTR ulVal )
+static void _near _fastcall FormatLong( LPTSTR pszTarget, LPCTSTR pszFormat, ULONG_PTR ulVal )
 {
 	// lVal comes in as a value in B - if user wants K or M, shift it
 	if ( pszFormat != NULL ) {
@@ -3508,7 +3508,7 @@ static void _near FormatLong( LPTSTR pszTarget, LPCTSTR pszFormat, ULONG_PTR ulV
 
 // format a 64-bit value for FUNC_FILESIZE, etc.
 // return 0 if OK, !0 if invalid format
-static int _near Format64bit( LPTSTR pszTarget, LPCTSTR pszFormat, t_int64 *llVal )
+static int _near _fastcall Format64bit( LPTSTR pszTarget, LPCTSTR pszFormat, t_int64 *llVal )
 {
 	// *llVal comes in as a value in B - if user wants K, M or G, divide it
 #ifdef NATIVE_INT64

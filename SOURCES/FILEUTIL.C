@@ -1560,7 +1560,7 @@ typedef struct
 	long lFilesDeleted;
 } DEL_STRUCT;
 
-static int _near _del( DEL_STRUCT * );
+static int _near _fastcall _del( DEL_STRUCT * );
 
 
 // DEL [options] filename [filename ...]
@@ -1676,7 +1676,7 @@ int _far FileDel_Cmd( LPTSTR pszCmdLine )
 // Recursive deletion worker for DEL.
 // Del holds the source pattern, operation flags, and deletion count.
 // Preserve confirmation, error handling, and directory traversal.
-static int _near _del( register DEL_STRUCT *Del )
+static int _near _fastcall _del( register DEL_STRUCT *Del )
 {
 	register int i;
 	unsigned long ulMode = 0;
@@ -1894,7 +1894,7 @@ typedef struct
 	FILESEARCH t_dir;
 } MOVE_STRUCT;
 
-static int _near _mv( MOVE_STRUCT *);
+static int _near _fastcall _mv( MOVE_STRUCT *);
 
 
 // MOVE [options] source [source ...] target
@@ -2083,7 +2083,7 @@ int _far FileMove_Cmd( LPTSTR pszCmdLine )
 // Recursive MOVE worker.
 // Move holds source and target paths, options, and the moved-file count.
 // Rename when possible; otherwise copy and delete as required.
-static int _near _mv(register MOVE_STRUCT *Move)
+static int _near _fastcall _mv(register MOVE_STRUCT *Move)
 {
 	register int nFind;
 	int nReturn = 0, i;

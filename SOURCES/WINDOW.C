@@ -675,7 +675,7 @@ NoHonk:
 
 
 // do a Shell sort on the list (much smaller & less stack than Quicksort)
-static void _near ssort( TCHAR _far * _far * lppList, unsigned int uEntries )
+static void _near _fastcall ssort( TCHAR _far * _far * lppList, unsigned int uEntries )
 {
 	register unsigned int i, uGap;
 	int j;

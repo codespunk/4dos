@@ -56,10 +56,10 @@ static LPTSTR _near _fastcall NextRange( TCHAR * );
 static int _fastcall GetRangeArgs( TCHAR *, RANGES * );
 static int _near _fastcall GetStrTime( TCHAR *, int *, int * );
 
-static void _near GetStrSize( TCHAR *, long * );
+static void _near _fastcall GetStrSize( TCHAR *, long * );
 
 static int _fastcall QueryIsRelative( TCHAR * );
-static int _near similar_char( char *, int, char *, int );
+static int _near _fastcall similar_char( char *, int, char *, int );
 
 
 int fNoComma = 0;
@@ -1342,7 +1342,7 @@ static int _near _fastcall GetStrTime( LPTSTR pszTime, register int *pnHours, in
 
 // get size
 
-static void _near GetStrSize( register char *pszSize, long *plSize )
+static void _near _fastcall GetStrSize( register char *pszSize, long *plSize )
 
 {
 	*plSize = 0L;
@@ -2719,7 +2719,7 @@ LPTSTR _fastcall strlast( LPTSTR pszString )
 #pragma alloc_text( ASM_TEXT, similar_char, similar_text )
 
 // 20 bytes of stack usage on each recursion (_fastcall doesn't help)
-static int _near similar_char( char *s1, int l1, char *s2, int l2 )
+static int _near _fastcall similar_char( char *s1, int l1, char *s2, int l2 )
 {
 	int maximum = 0, pos1 = 0, pos2 = 0, n;
 	static char *p1, *p2;
