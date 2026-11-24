@@ -39,6 +39,21 @@
 #include "4all.h"
 
 
+extern int _far DirTree_Cmd( LPTSTR );
+// Near command dispatcher; forward to DIR_TEXT.
+int _near Tree_Cmd( LPTSTR pszCmdLine )
+{
+	return DirTree_Cmd( pszCmdLine );
+}
+
+extern int _far DirList_Cmd( LPTSTR );
+// Near command dispatcher; forward to DIR_TEXT.
+int _near Dir_Cmd( LPTSTR pszCmdLine )
+{
+	return DirList_Cmd( pszCmdLine );
+}
+
+
 // Structure for the internal commands
 // The args are:
 //	command name
