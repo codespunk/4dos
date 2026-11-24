@@ -1852,3 +1852,557 @@ Del_Next:
 
 	return nReturn;
 }
+
+// MOVE uses far bridges for helpers and state shared with COPY.
+extern void _far FileMoveResetState( void );
+extern int _far FileMoveDiskFull( void );
+extern int _far FileMoveCopyBridge( LPTSTR, LPTSTR, unsigned long, long *, FILESEARCH * );
+
+#define MOVE_BY_ATTRIBUTES 1
+#define MOVE_CHANGED 2
+#define MOVE_TO_DIR 4
+#define MOVE_NOERRORS 8
+#define MOVE_FORCEDEL 0x10
+#define MOVE_PERCENT 0x20
+#define MOVE_HIDDEN 0x40
+#define MOVE_FTP_ASCII 0x80
+#define MOVE_MODIFIED 0x100
+#define MOVE_NOTHING 0x200
+#define MOVE_KEEP 0x400
+#define MOVE_QUERY 0x800
+#define MOVE_QUIET 0x1000
+#define MOVE_REPLACE 0x2000
+#define MOVE_SUBDIRS 0x4000
+#define MOVE_TOTALS 0x8000
+#define MOVE_UPDATED 0x10000L
+#define MOVE_VERIFY 0x20000L
+#define MOVE_WIPE 0x40000L
+#define MOVE_OVERWRITE_RDONLY 0x80000L
+#define MOVE_RESTART 0x100000L
+#define MOVE_EXISTS 0x200000L
+#define MOVE_SOURCEISDIR 0x400000L
+
+typedef struct
+{
+	TCHAR szSource[MAXFILENAME];
+	TCHAR szSourceName[MAXFILENAME];
+	TCHAR szTarget[MAXFILENAME];
+	TCHAR szTargetName[MAXFILENAME];
+	LPTSTR szFilename;
+	long fFlags;
+	long lFilesMoved;
+	FILESEARCH t_dir;
+} MOVE_STRUCT;
+
+static int _mv( MOVE_STRUCT *);
+
+
+// move files by renaming across directories or copying/deleting
+int _far FileMove_Cmd( LPTSTR pszCmdLine )
+{
+	register LPTSTR pszArg;
+	unsigned int fTargetIsDir, fFreed;
+	int nArgc, nTlen, nReturn = 0, nLength, fOldVerify = 0;
+	QDISKINFO DiskInfo;
+	MOVE_STRUCT Move;
+
+	long lBytesFreed = 0L;
+
+
+	Move.lFilesMoved = 0L;
+	FileMoveResetState();
+
+
+	// get date/time/size ranges
+	if ( GetRange( pszCmdLine, &aRanges, 0 ) != 0 )
+		return ERROR_EXIT;
+
+	// check for and remove switches
+	// abort if no filename arguments
+
+	if (( GetSwitches( pszCmdLine, "*CDEFGH MNOPQRSTUVWZ", &(Move.fFlags), 0 ) != 0 ) || ( first_arg( pszCmdLine ) == NULL ))
+
+		return ( Usage( MOVE_USAGE ));
+
+	// if query before moving, disable MOVE_QUIET & MOVE_TOTALS
+	if ( Move.fFlags & MOVE_QUERY )
+		Move.fFlags &= ~( MOVE_QUIET | MOVE_TOTALS );
+
+	// check for COMMAND.COM / CMD.EXE prompt if file exists & not in batch
+	if (( gpIniptr->CopyPrompt ) && ( cv.bn < 0 ))
+		Move.fFlags |= MOVE_REPLACE;
+
+	// get the target name, or "*.*" for default name
+	if (( pszArg = last_arg( pszCmdLine, &nArgc )) != NULL ) {
+
+		copy_filename( Move.szTarget, pszArg );
+		*gpNthptr = _TEXT('\0');		// remove target from command line
+
+	} else {
+		// turn off "create directory" flag - if no target is specified,
+		//   files are being moved to the current (existing!) directory
+		Move.fFlags &= ~MOVE_TO_DIR;
+
+		if (( pszArg = (( Move.fFlags & MOVE_SUBDIRS ) ? gcdir( NULL, 0 ) : WILD_FILE )) == NULL )
+			return ERROR_EXIT;
+		strcpy( Move.szTarget, pszArg );
+	}
+
+	// can't move a file to a device or pipe!
+	if (( QueryIsDevice( Move.szTarget )) || ( QueryIsPipeName( Move.szTarget )))
+		return ( error( ERROR_ACCESS_DENIED, Move.szTarget ));
+
+	if ( mkfname( Move.szTarget, 0 ) == NULL )
+		return ERROR_EXIT;
+
+	// is the target a directory?
+	if (( fTargetIsDir = is_dir( Move.szTarget )) == 0 ) {
+
+		if ( Move.fFlags & MOVE_TO_DIR ) {
+
+			// if /D, target MUST be directory, so prompt to create it
+
+			printf( MOVE_CREATE_DIR, Move.szTarget );
+
+			if ( QueryInputChar( NULLSTR, YES_NO ) != YES_CHAR )
+				return ERROR_EXIT;
+
+		// if > 1 source, target must be dir!
+		} else if (( nArgc > 1 ) || ( Move.szTarget[ strlen( Move.szTarget)-1] == _TEXT('\\') ))
+			return ( error( ERROR_PATH_NOT_FOUND, Move.szTarget ));
+	}
+
+	nTlen = strlen( Move.szTarget );
+
+	if ( Move.fFlags & MOVE_VERIFY ) {
+
+		// save original VERIFY status
+		fOldVerify = QueryVerifyWrite();
+
+		// set VERIFY ON
+		SetVerifyWrite( 1 );
+	}
+
+	for ( nArgc = 0; (( pszArg = ntharg( pszCmdLine, nArgc )) != NULL ); nArgc++ ) {
+
+		if ( mkfname( pszArg, 0 ) == NULL ) {
+			nReturn = ERROR_EXIT;
+			break;
+		}
+
+		Move.fFlags &= ~MOVE_SOURCEISDIR;
+		if ( is_dir( pszArg )) {
+
+			// check to see if it's just a directory rename in the
+			//   same path
+			copy_filename( Move.szSource, path_part( pszArg ) );
+			if (( _stricmp( Move.szSource, path_part( Move.szTarget) ) == 0 ) && (is_file( Move.szTarget) == 0 ) && ( fTargetIsDir == 0 )) {
+				if ( rename( pszArg, Move.szTarget ) == 0 ) {
+					process_descriptions( pszArg, Move.szTarget, ( DESCRIPTION_COPY | DESCRIPTION_REMOVE ) );
+					Move.lFilesMoved++;
+					continue;
+				}
+			}
+
+			// get entire contents of subdirectory
+			mkdirname( pszArg, WILD_FILE );
+			Move.fFlags |= MOVE_SOURCEISDIR;
+		}
+
+		copy_filename( Move.szSource, pszArg );
+
+		// check for dumdums doing an infinitely recursive MOVE
+		//   (i.e., "MOVE /S . subdir" )
+		pszArg = path_part( Move.szSource );
+		nLength = strlen( pszArg );
+		if ( Move.fFlags & MOVE_SUBDIRS ) {
+			if ( _strnicmp( pszArg, Move.szTarget, nLength ) == 0 ) {
+				nReturn = error( ERROR_4DOS_INFINITE_MOVE, Move.szSource );
+				break;
+			}
+		}
+
+		// save the source filename part ( for recursive calls and
+		//   include lists)
+		Move.szFilename = Move.szSource + nLength;
+		pszArg = (LPTSTR)_alloca( ( strlen( Move.szFilename ) + 1 ) * sizeof(TCHAR) );
+		Move.szFilename = strcpy( pszArg, Move.szFilename );
+
+		fFreed = 0;
+		if (( strnicmp( Move.szSource, Move.szTarget, 2 ) != 0 ) && ( is_net_drive( Move.szSource ) == 0 ) && ( QueryDriveRemote( gcdisk( Move.szSource )) == 0 )) {
+			fFreed = 1;
+
+			// get TRUENAME (to see through JOIN & SUBST)
+			pszArg = true_name( Move.szSource, first_arg( Move.szSource ));
+			QueryDiskInfo( pszArg, &DiskInfo, 1 );
+
+			lBytesFreed -= DiskInfo.BytesFree;
+		}
+
+		nReturn = _mv( &Move );
+
+		// restore original target name
+		Move.szTarget[ nTlen ] = _TEXT('\0');
+
+		if (( setjmp( cv.env ) == -1 ) || ( nReturn == CTRLC )) {
+			nReturn = (( FileMoveDiskFull() == 0 ) ? CTRLC : ERROR_EXIT );
+			break;
+		}
+
+		if ( fFreed ) {
+
+			pszArg = true_name( Move.szSource, first_arg( Move.szSource ));
+			QueryDiskInfo( pszArg, &DiskInfo, 1 );
+
+			lBytesFreed += DiskInfo.BytesFree;
+		}
+	}
+
+	// reset VERIFY flag to original state
+	if ( Move.fFlags & MOVE_VERIFY )
+		SetVerifyWrite( fOldVerify );
+
+	if (( Move.fFlags & MOVE_QUIET) == 0 ) {\
+
+		FilesProcessed( FILES_MOVED, Move.lFilesMoved );
+		if (( lBytesFreed > 0L ) && ( Move.lFilesMoved > 0L ))
+			printf( FILES_BYTES_FREED, lBytesFreed );
+		crlf();
+	}
+
+
+
+	return (( Move.lFilesMoved != 0L ) ? nReturn : ERROR_EXIT );
+}
+
+
+
+
+static int _mv(register MOVE_STRUCT *Move)
+{
+	register int nFind;
+	int nReturn = 0, i;
+	unsigned int uRDONLY;
+	unsigned long fCopyFlags = COPY_CREATE | MOVING_FILES;
+	TCHAR *pszArg, *pszSourceArg, *pszTargetArg;
+	long lMode = 0;
+
+	long lAppendOffset = 0L;
+
+	FILESEARCH dir;
+
+
+	dir.hdir = INVALID_HANDLE_VALUE;
+	if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+		FindClose( dir.hdir );
+		return CTRLC;
+	}
+
+	// copy date/time range info
+	memmove( &(dir.aRanges), &aRanges, sizeof(RANGES) );
+
+	// get hidden & system files too
+	if (( Move->fFlags & MOVE_BY_ATTRIBUTES ) || ( Move->fFlags & MOVE_HIDDEN))
+		lMode |= 0x07;
+
+
+	// if the target is a directory, add a wildcard filename
+	if (( AddWildcardIfDirectory( Move->szTarget ) == 0 ) &&  (( Move->fFlags & MOVE_SUBDIRS ) || ( Move->fFlags & MOVE_TO_DIR ))) {
+
+		// if moving subdirectories, create the target
+
+		// remove trailing '/' or '\' in target
+		strip_trailing( Move->szTarget+3, SLASHES );
+
+		MakeDirectory( Move->szTarget, 1 );
+		if ( is_dir( Move->szTarget ) == 0 )
+			return ( error( ERROR_PATH_NOT_FOUND, Move->szTarget ));
+
+		// move description to newly-created target
+		if ( Move->fFlags & MOVE_SOURCEISDIR ) {
+			copy_filename( Move->szSourceName, path_part( Move->szSource) );
+			strip_trailing( Move->szSourceName+3, SLASHES );
+			process_descriptions( Move->szSourceName, Move->szTarget, DESCRIPTION_COPY );
+		}
+
+		mkdirname( Move->szTarget, WILD_FILE );
+	}
+
+	// suppress error message from find_file
+	if ( Move->fFlags & MOVE_NOERRORS ) {
+		lMode |= FIND_NO_ERRORS;
+		fCopyFlags |= NO_ERRORS;
+	}
+
+	// expand the wildcards
+	for ( nFind = FIND_FIRST; ; nFind = FIND_NEXT) {
+
+		if ( find_file( nFind, Move->szSource, ( lMode | FIND_BYATTS | FIND_RANGE | FIND_EXCLUDE ), &dir, Move->szSourceName ) == NULL )
+			break;
+
+		if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+			FindClose( dir.hdir );
+			return CTRLC;
+		}
+
+
+		CheckForBreak();
+
+		// prevent destructive moves like "mv *.* test.fil"
+		if (( strpbrk( Move->szTarget, WILD_CHARS ) == NULL ) && ( nFind == FIND_NEXT)) {
+			FindClose( dir.hdir );
+			return ( error( ERROR_4DOS_CANT_CREATE, Move->szTarget ));
+		}
+
+		// don't move unmodified files?
+		if (( Move->fFlags & MOVE_MODIFIED ) && (( dir.attrib & _A_ARCH ) == 0 ))
+			continue;
+
+		// make the target name
+		FileRenWildname( Move->szTargetName, Move->szTarget, Move->szSourceName );
+
+		// clear the EXISTS flag
+		Move->fFlags &= ~MOVE_EXISTS;
+
+		// if changed (/C), only move source if target is older
+		// if update (/U), only move the source if the target is
+		//   older or doesn't exist
+		// if replace (/R) prompt before overwriting existing file
+
+		if (( Move->fFlags & ( MOVE_KEEP | MOVE_UPDATED | MOVE_CHANGED | MOVE_REPLACE )) && ( find_file( FIND_FIRST, Move->szTargetName, 0x07L | FIND_EXACTLY | FIND_CLOSE | FIND_NO_ERRORS | FIND_NO_FILELISTS, &( Move->t_dir), NULL ) != NULL )) {
+
+			// if /O, don't overwrite an existing file
+			if ( Move->fFlags & MOVE_KEEP )
+				continue;
+
+			if ( Move->fFlags & ( MOVE_UPDATED | MOVE_CHANGED )) {
+
+				if (( Move->t_dir.fd.wr_date > dir.fd.wr_date) || (( Move->t_dir.fd.wr_date == dir.fd.wr_date ) && ( Move->t_dir.ft.wr_time >= dir.ft.wr_time )))
+
+					continue;
+			}
+
+			if ( Move->fFlags & MOVE_REPLACE )
+				Move->fFlags |= MOVE_EXISTS;
+
+		} else if ( Move->fFlags & MOVE_CHANGED )
+			continue;	// target doesn't exist
+
+		// check for same name
+		if ( _stricmp( Move->szSourceName, Move->szTargetName ) == 0 ) {
+			FindClose( dir.hdir );
+			return ( error( ERROR_4DOS_DUP_COPY, Move->szSourceName ));
+		}
+
+		if ((( Move->fFlags & ( MOVE_QUIET | MOVE_TOTALS )) == 0 ) || ( Move->fFlags & MOVE_EXISTS )) {
+
+			printf( FMT_STR_TO_STR, Move->szSourceName, Move->szTargetName );
+
+			if ( Move->fFlags & ( MOVE_QUERY | MOVE_EXISTS )) {
+				if ((( i = QueryInputChar((( Move->fFlags & MOVE_EXISTS ) ? REPLACE : NULLSTR ), YES_NO_ALL )) == ALL_CHAR ) || ( i == REST_CHAR ))
+					Move->fFlags &= ~( MOVE_QUERY | MOVE_REPLACE );
+				else if ( i == NO_CHAR )
+					continue;
+				else if ( i == ESCAPE ) {
+					FindClose( dir.hdir );
+					break;
+				}
+			} else
+				crlf();
+		}
+
+		if (( Move->fFlags & MOVE_NOTHING ) == 0 ) {
+
+			// if source is RDONLY, remove the bit (Netware refuses
+			//   to rename a RDONLY file)
+			if ( dir.attrib & _A_RDONLY ) {
+				SetFileMode( Move->szSourceName, (dir.attrib & ~_A_RDONLY) );
+				uRDONLY = 1;
+			} else
+				uRDONLY = 0;
+
+			// if /Z, overwrite RDONLY files
+			if ( Move->fFlags & MOVE_OVERWRITE_RDONLY )
+				SetFileMode( Move->szTargetName, 0 );
+
+			// try a simple rename first (except if the MOVE is
+			//  to a different drive)
+			nReturn = -1;
+			if ( _ctoupper( *Move->szSourceName ) == _ctoupper( *Move->szTargetName )) {
+
+			    if (( nReturn = rename( Move->szSourceName, Move->szTargetName )) != 0 ) {
+					// rename didn't work; try deleting target
+					remove( Move->szTargetName );
+					nReturn = rename( Move->szSourceName, Move->szTargetName );
+			    }
+			}
+
+			if ( nReturn != 0 ) {
+
+				if (( Move->fFlags & MOVE_PERCENT ) && (( Move->fFlags & MOVE_QUIET ) == 0 ))
+					fCopyFlags |= COPY_PROGRESS;
+
+				if ( Move->fFlags & MOVE_RESTART )
+					fCopyFlags |= COPY_RESTARTABLE;
+
+				// rename didn't work; try a destructive copy
+				if ((( nReturn = FileMoveCopyBridge( Move->szTargetName, Move->szSourceName, fCopyFlags, &lAppendOffset, &dir )) == CTRLC ) || ( setjmp( cv.env ) == -1 )) {
+
+					// reset the directory search handle
+					FindClose( dir.hdir );
+					SetFileMode( Move->szSourceName, dir.attrib );
+					return CTRLC;
+				}
+
+				// FileCopy turns off ^C handling on return
+				EnableSignals();
+
+				if ( nReturn != 0 ) {
+					// reset original attributes on error
+					SetFileMode( Move->szSourceName, dir.attrib );
+					continue;
+				}
+
+				// file copied OK, so remove the original
+
+				// rub out read-only, hidden, and system files
+				if ( dir.attrib & ( _A_RDONLY | _A_HIDDEN | _A_SYSTEM ))
+					SetFileMode( Move->szSourceName, 0 );
+
+				// overwrite a file with 0's before erasing it
+
+				if ( Move->fFlags & MOVE_WIPE ) {
+
+					char *lpZero;
+
+					unsigned long lSize;
+
+					if (( lSize = QueryFileSize( Move->szSourceName, 0 )) > 0L ) {
+
+						if (( i = _sopen( Move->szSourceName, (_O_WRONLY | _O_BINARY), _SH_DENYRW )) < 0 )
+							goto Move_Status;
+
+					    lpZero = (char *)malloc( 512 );
+						memset( lpZero, 0, 512 );
+
+					    while ( lSize != 0L ) {
+							_write( i, lpZero, (( lSize > 512L ) ? 512 : (int)lSize ));
+							if ( lSize > 512 )
+								lSize -= 512;
+							else
+								lSize = 0L;
+					    }
+
+					    free( lpZero );
+					    _close( i );
+					}
+				}
+
+				_doserrno = 0;
+
+				if (( Move->fFlags & MOVE_FORCEDEL ) && ( gnOSFlags & DOS_IS_OS2 )) {
+
+					_doserrno = ForceDelete( Move->szSourceName );
+				} else
+
+				{
+
+					remove( Move->szSourceName );
+				}
+
+Move_Status:
+				if (( _doserrno != 0 ) && (( Move->fFlags & MOVE_NOERRORS ) == 0 )) {
+					if ( _doserrno == ERROR_ACCESS_DENIED )
+						_doserrno = ERROR_4DOS_CANT_DELETE;
+					error( _doserrno, Move->szSourceName );
+				}
+			}
+
+			// if source is RDONLY, restore the bit in the target
+			if ( uRDONLY )
+				SetFileMode( Move->szTargetName, dir.attrib );
+
+			// increment # of files moved counter
+			Move->lFilesMoved++;
+
+			// move description to target
+			process_descriptions( Move->szSourceName, Move->szTargetName, DESCRIPTION_COPY );
+		}
+
+	}
+
+	// build wildcard source for directory search
+	sprintf( Move->szSource, FMT_DOUBLE_STR, path_part( Move->szSource ), WILD_FILE );
+
+	// save the current target filename start
+	pszTargetArg = Move->szTarget + strlen( path_part( Move->szTarget ));
+
+	// update the source descript.ion file by deleting descriptions
+	//   for any moved or missing files
+	if ((( Move->fFlags & MOVE_NOTHING ) == 0 ) && (( Move->lFilesMoved != 0L ) || ( Move->fFlags & MOVE_SUBDIRS )))
+		process_descriptions( NULL, Move->szSource, DESCRIPTION_REMOVE );
+
+	// move subdirectories too?
+	if ( Move->fFlags & MOVE_SUBDIRS ) {
+
+		CheckFreeStack( 1024 );
+
+		// save the current source filename start
+		pszSourceArg = strchr( Move->szSource, _TEXT('*') );
+
+		// search for all subdirectories in this (sub)directory
+		//   tell find_file() not to display errors, and to return
+		//   only subdirectory names
+
+
+		for ( nFind = FIND_FIRST; ( find_file( nFind, Move->szSource, ( lMode | 0x10 | FIND_ONLY_DIRS | FIND_NO_ERRORS | FIND_NO_FILELISTS | FIND_EXCLUDE ), &dir, NULL ) != NULL ); nFind = FIND_NEXT ) {
+
+			// strip the filename part from the target
+			//   and make the new "source" and "target"
+
+			sprintf( pszSourceArg, FMT_PATH_STR, dir.szFileName, Move->szFilename );
+
+			copy_filename( pszTargetArg, dir.szFileName );
+
+			// process directory tree recursively
+			Move->fFlags |= MOVE_SOURCEISDIR;
+			nReturn = _mv( Move );
+			if (( setjmp( cv.env ) == -1 ) || ( cv.fException ) || ( nReturn == CTRLC)) {
+				FindClose( dir.hdir );
+				return CTRLC;
+			}
+
+			// restore the original name
+			strcpy( pszSourceArg, WILD_FILE );
+
+			if ( nReturn != 0 ) {
+				FindClose( dir.hdir );
+				break;
+			}
+		}
+
+		// try to delete the subdirectory (unless it's the root or
+		//   the current dir for that drive)
+		if (( Move->fFlags & MOVE_NOTHING ) == 0 ) {
+
+			// strip name and trailing '\'
+			pszSourceArg[-1] = _TEXT('\0');
+
+			if ((( pszArg = gcdir( Move->szSource, 1 )) != NULL ) && ( strlen( Move->szSource ) > 3 ) && ( _stricmp( Move->szSource, pszArg ) != 0 )) {
+				// remove the directory & its description
+				SetFileMode( Move->szSource, _A_SUBDIR );
+				DestroyDirectory( Move->szSource );
+				process_descriptions( NULL, Move->szSource, DESCRIPTION_REMOVE );
+			} else {
+				// can't use DestroyDirectory if move was on same drive!
+				UpdateFuzzyTree( Move->szSource, NULL, 1 );
+			}
+		}
+
+	}
+
+	// set "target" back to original value
+	*pszTargetArg = _TEXT('\0');
+
+	return nReturn;
+}
