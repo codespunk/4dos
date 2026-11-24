@@ -105,3 +105,53 @@ int _far DirMd_Cmd( LPTSTR pszCmdLine )
 
 	return nReturn;
 }
+
+// RD directory ...
+// Remove matching empty directories, honoring ranges and exclusions.
+// Update the fuzzy index and remove descriptions from the parent directory.
+// Examples: RD TEMP; RD OLD1 OLD2; RD TEMP*.
+int _far DirRd_Cmd( LPTSTR pszCmdLine )
+{
+	register int nFind;
+	unsigned int nArg, nReturn;
+	TCHAR szSource[MAXFILENAME+1], *pszDirectory;
+	FILESEARCH dir;
+
+	if ( GetRange( pszCmdLine, &(dir.aRanges), 0 ) != 0 )
+		return ERROR_EXIT;
+
+	if ( first_arg( pszCmdLine ) == NULL )
+		return ( Usage( RD_USAGE ));
+
+	dir.hdir = INVALID_HANDLE_VALUE;
+	if (( setjmp( cv.env ) == -1 ) || ( cv.fException )) {
+		FindClose( dir.hdir );
+		return CTRLC;
+	}
+
+	for ( nReturn = nArg = 0; (( pszDirectory = ntharg( pszCmdLine, nArg )) != NULL ); nArg++ ) {
+
+		// expand filename & remove any trailing backslash
+		mkfname( pszDirectory, 0 );
+		strip_trailing( pszDirectory+3, SLASHES );
+
+		for ( nFind = FIND_FIRST; ; nFind = FIND_NEXT ) {
+
+			if ( find_file( nFind, pszDirectory, ( _A_SUBDIR | _A_RDONLY | _A_HIDDEN | _A_SYSTEM | _A_ARCH | FIND_ONLY_DIRS | FIND_RANGE | FIND_EXCLUDE ), &dir, szSource ) == NULL )
+				break;
+
+			if ( DestroyDirectory( szSource ) != 0 )
+				nReturn = error( _doserrno, szSource );
+
+		}
+
+		// check for directory not found!
+		if ( nFind == FIND_FIRST )
+			nReturn = ERROR_EXIT;
+
+		// remove descriptions from parent directory
+		process_descriptions( NULL, pszDirectory, DESCRIPTION_REMOVE );
+	}
+
+	return nReturn;
+}
