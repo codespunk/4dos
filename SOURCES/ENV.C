@@ -65,6 +65,7 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
+static int _far EnvAlias_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -75,6 +76,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 #pragma alloc_text( ENV_TEXT, get_variable )
 #pragma alloc_text( ENV_TEXT, get_list )
 #pragma alloc_text( ENV_TEXT, add_variable )
+#pragma alloc_text( ENV_TEXT, EnvAlias_Cmd )
 
 
 
@@ -148,8 +150,17 @@ static int SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 }
 
 
-// create or display aliases
+// Near ALIAS dispatcher; forward to the ENV_TEXT implementation.
 int _near Alias_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvAlias_Cmd( pszCmdLine );
+}
+
+
+// ALIAS [/P] [/R file] [name[=definition]]
+// Display or define aliases; /P pauses output and /R reads definitions from files.
+// Examples: ALIAS; ALIAS /P; ALIAS ll=dir /w.
+static int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
