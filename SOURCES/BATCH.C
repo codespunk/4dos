@@ -56,7 +56,6 @@ static void _near UndoGosubVariables( void );
 static int _fastcall goto_label( LPTSTR, int );
 static LPTSTR _fastcall ExpandArgument( LPTSTR, int );
 static int _fastcall __quit( LPTSTR, BOOL );
-static int _fastcall __scrput( LPTSTR, int );
 static int _fastcall _setlocal( void );
 static int _fastcall _endlocal( LPTSTR );
 
@@ -2273,70 +2272,29 @@ int _near Scr_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// set screen position and print a string with the specified attribute
-//   directly to the screen (vertically)
+// Far bridge to the near _TEXT parser; preserve its existing calling convention.
+int _far ScreenParseLine( LPTSTR pszText )
+{
+	return ParseLine( NULL, pszText, NULL, CMD_STRIP_QUOTES, 0 );
+}
+
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenVScrput_Cmd( LPTSTR );
 int _near VScrput_Cmd( LPTSTR pszCmdLine )
 {
-	return ( __scrput( pszCmdLine, 1 ));
+	return ScreenVScrput_Cmd( pszCmdLine );
 }
 
 
-// set screen position and print a string with the specified attribute
-//   directly to the screen (vertically)
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenScrput_Cmd( LPTSTR );
 int _near Scrput_Cmd( LPTSTR pszCmdLine )
 {
-	return ( __scrput( pszCmdLine, 0 ));
+	return ScreenScrput_Cmd( pszCmdLine );
 }
 
 
-// set screen position and print a string with the specified attribute
-//   directly to the screen (either horizontally or vertically)
-static int _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
-{
-	LPTSTR pszText;
-	int nAttribute = -1;
-	int nRow = 0, nColumn = 0;
 
-	// make sure row & column are displayable on the current screen
-	ntharg( pszCmdLine, (int)0x8002 );
-	pszText = gpNthptr;
-	if (( pszText != NULL ) && ( GetCursorRange( pszCmdLine, &nRow, &nColumn ) == 0 ))
-		nAttribute = GetColors( pszText, 0 );
-
-	if (( pszText == NULL ) || ( nAttribute == -1 ))
-		return ( Usage(( fVscrput ) ? VSCRPUT_USAGE : SCRPUT_USAGE ));
-
-	// strip any quotes & process escape characters
-	// We do it here to keep GetColors from removing whitespace around
-	//   the text argument!
-	ParseLine( NULL, pszText, NULL, CMD_STRIP_QUOTES, 0 );
-
-	if ( nColumn == 999 ) {
-		nColumn = ( GetScrCols() - (( fVscrput ) ? 0 : strlen( pszText ))) / 2;
-		if ( nColumn < 0 )
-			nColumn = 0;
-	}
-
-	if ( nRow == 999 ) {
-		nRow = ( GetScrRows() - (( fVscrput ) ? strlen( pszText ) : 0 )) / 2;
-		if ( nRow < 0 )
-			nRow = 0;
-	}
-
-	// write the string with the specified attribute
-	// first, check for VSCRPUT (vertical write )
-	if ( fVscrput )
-		WriteVStrAtt( nRow, nColumn, nAttribute, pszText );
-	else
-		WriteStrAtt( nRow, nColumn, nAttribute, pszText );
-
-#if _WIN
-	// restore original position
-	SetCurPos( nSavedRow, nSavedColumn );
-#endif
-
-	return 0;
-}
 
 
 // save the current environment, alias list, and current drive/directory

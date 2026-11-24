@@ -2126,3 +2126,74 @@ int _far ScreenScr_Cmd( LPTSTR pszCmdLine )
 
 	return 0;
 }
+
+static int _fastcall __scrput( LPTSTR, int );
+
+extern int _far ScreenParseLine( LPTSTR );
+
+// VSCRPUT row column colors text
+// Write colored text vertically. Example: VSCRPUT 2 5 WHITE ON BLUE Hello.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenVScrput_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __scrput( pszCmdLine, 1 ));
+}
+
+// SCRPUT row column colors text
+// Write colored text horizontally. Example: SCRPUT 2 5 WHITE ON BLUE Hello.
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenScrput_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __scrput( pszCmdLine, 0 ));
+}
+
+// Shared colored screen output helper. pszCmdLine is a writable command tail;
+// fVscrput selects vertical rather than horizontal output. Parses coordinates,
+// colors and escapes, then writes directly to the screen.
+// Returns zero or Usage() status; may modify the command tail.
+static int _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
+{
+	LPTSTR pszText;
+	int nAttribute = -1;
+	int nRow = 0, nColumn = 0;
+
+	// make sure row & column are displayable on the current screen
+	ntharg( pszCmdLine, (int)0x8002 );
+	pszText = gpNthptr;
+	if (( pszText != NULL ) && ( GetCursorRange( pszCmdLine, &nRow, &nColumn ) == 0 ))
+		nAttribute = GetColors( pszText, 0 );
+
+	if (( pszText == NULL ) || ( nAttribute == -1 ))
+		return ( Usage(( fVscrput ) ? VSCRPUT_USAGE : SCRPUT_USAGE ));
+
+	// strip any quotes & process escape characters
+	// We do it here to keep GetColors from removing whitespace around
+	//   the text argument!
+	ScreenParseLine( pszText );
+
+	if ( nColumn == 999 ) {
+		nColumn = ( GetScrCols() - (( fVscrput ) ? 0 : strlen( pszText ))) / 2;
+		if ( nColumn < 0 )
+			nColumn = 0;
+	}
+
+	if ( nRow == 999 ) {
+		nRow = ( GetScrRows() - (( fVscrput ) ? strlen( pszText ) : 0 )) / 2;
+		if ( nRow < 0 )
+			nRow = 0;
+	}
+
+	// write the string with the specified attribute
+	// first, check for VSCRPUT (vertical write )
+	if ( fVscrput )
+		WriteVStrAtt( nRow, nColumn, nAttribute, pszText );
+	else
+		WriteStrAtt( nRow, nColumn, nAttribute, pszText );
+
+#if _WIN
+	// restore original position
+	SetCurPos( nSavedRow, nSavedColumn );
+#endif
+
+	return 0;
+}
