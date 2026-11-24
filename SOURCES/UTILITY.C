@@ -1,5 +1,5 @@
 /* Experimental transient UTILITY_TEXT segment.
- * BREAK is dispatched through a near wrapper in DOSCMDS.C.
+ * Commands are dispatched directly through far command-table pointers.
  */
 #include "product.h"
 #include <stdio.h>
@@ -23,7 +23,7 @@
 // With no argument, display the current setting.
 // Examples: BREAK; BREAK ON; BREAK OFF.
 
-int _far UtilityBreak_Cmd( char *pszCmdLine )
+int _far Break_Cmd( char *pszCmdLine )
 {
 	int argc;
 
@@ -57,7 +57,7 @@ _asm {
 // Clear the screen, move the cursor home, and optionally set colors.
 // Examples: CLS; CLS BRIGHT WHITE ON BLUE; CLS YELLOW ON BLUE BORDER RED.
 
-int _far UtilityCls_Cmd( char *pszCmdLine )
+int _far Cls_Cmd( char *pszCmdLine )
 {
 	register int nAttrib = -1;
 
@@ -107,7 +107,7 @@ int _far UtilityCls_Cmd( char *pszCmdLine )
 // Display the true DOS pathname, resolving substituted drives where supported.
 // Examples: TRUENAME C:\AUTOEXEC.BAT; TRUENAME C:\DOS\..\CONFIG.SYS.
 
-int _far UtilityTruename_Cmd( char *pszCmdLine )
+int _far Truename_Cmd( char *pszCmdLine )
 {
 	char name[MAXFILENAME];
 
@@ -129,7 +129,7 @@ extern void _far UtilityShowOS( void );
 // and DOS kernel location information where available.
 // Examples: VER; VER /R.
 
-int _far UtilityVer_Cmd( char *pszCmdLine )
+int _far Ver_Cmd( char *pszCmdLine )
 {
 	extern int fWin98;
 	extern int fWinME;
@@ -182,7 +182,7 @@ struct utility_idle_state {
     unsigned short indos;
 };
 
-int _far UtilityIdle_Cmd( char *pszCmdLine )
+int _far Idle_Cmd( char *pszCmdLine )
 {
     struct utility_idle_state _far *idle = GetIdlePtr();
 
@@ -298,7 +298,7 @@ void _far _fastcall TripleKey( char *pKey )
 // Examples: BEEP; BEEP 440 2.
 // pszCmdLine supplies tone pairs; returns zero or Usage() status.
 // SysBeep handles timing; consume a pending key on Ctrl+C as before.
-int _far UtilityBeep_Cmd( LPTSTR pszCmdLine )
+int _far Beep_Cmd( LPTSTR pszCmdLine )
 {
 	unsigned int uFrequency, uDuration, uLength;
 
@@ -337,7 +337,7 @@ int _far UtilityBeep_Cmd( LPTSTR pszCmdLine )
 // Examples: DELAY; DELAY 5; DELAY /M 100.
 // pszCmdLine supplies options and duration; returns zero after SysWait.
 // Preserves existing token parsing and interrupt behavior.
-int _far UtilityDelay_Cmd( LPTSTR pszCmdLine )
+int _far Delay_Cmd( LPTSTR pszCmdLine )
 {
 	register unsigned int i;
 	LPTSTR pszToken;

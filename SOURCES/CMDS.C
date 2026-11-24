@@ -192,7 +192,7 @@ int QueryNumCmds( void )
 
 
 // display the enabled internal commands
-int _near Cmds_Cmd( TCHAR *pszCmdLine )
+int _far Cmds_Cmd( TCHAR *pszCmdLine )
 {
 	register int i, nColumn, nMaxColumns;
 
@@ -258,4 +258,10 @@ int _fastcall findcmd( TCHAR *pszCommand, int fAlwaysFind )
 	}
 
 	return -1;
+}
+
+// REM and ENDSWITCH - do nothing.
+int _far Remark_Cmd( LPTSTR pszCmdLine )
+{
+	return 0;
 }

@@ -3,7 +3,7 @@ ldosumb+initerrs+4dlinit+fname+decout+srchenv+
 findems+findureg+iniparse+lreloc+hexout+
 server+swapchk+serverrs+reshigh+dosumb+relocate+dv+errormsg+
 doscalls+main+parser+dosinit+iofmt+dostty+
-expand+_file+win95+misc+env+error+cmds+screenio+batch+dispatch+dircmds+filecmds+
+expand+_file+win95+misc+env+error+cmds+screenio+batch+dircmds+filecmds+
 syscmds+doscmds+select+window+listall+lines+
 inout+dosutil+eval+bcd+keyparse+tokens+
 umbreg+compdrv+strmenc+md5c+sha1+

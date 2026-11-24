@@ -409,13 +409,13 @@ int _far BatchDebugger( void )
 }
 
 
-extern int _far BatchBattext_Cmd( LPTSTR );
+extern int _far Battext_Cmd( LPTSTR );
 
 // TEXT ... ENDTEXT
 // Print literal lines from the active batch file until ENDTEXT.
 // Advances the batch line counter; returns zero or a batch/error status.
-// pszCmdLine is the command tail supplied by the near dispatcher.
-int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
+// pszCmdLine is the command tail supplied by the parser.
+int _far Battext_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -443,14 +443,13 @@ int _far BatchBattext_Cmd( LPTSTR pszCmdLine )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
 extern int _far _fastcall BatchCommand( LPTSTR, int );
 extern int _far BatchRunCLI( void );
-extern int _far BatchGlobalCommand( LPTSTR );
 extern int _far _fastcall BatchContinueLine( LPTSTR );
-extern int _far BatchCall_Cmd( LPTSTR );
+extern int _far Call_Cmd( LPTSTR );
 
 // CALL command [arguments]
 // Execute a command with nested batch execution enabled; return its status.
 // Example: CALL CHILD.BTM arg1
-int _far BatchCall_Cmd( LPTSTR pszCmdLine )
+int _far Call_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn;
 
@@ -473,12 +472,12 @@ int _far BatchCall_Cmd( LPTSTR pszCmdLine )
 #define DOTYPE_WHILE 0x10
 
 // DO loop
-extern int _far BatchDo_Cmd( LPTSTR );
+extern int _far Do_Cmd( LPTSTR );
 
 // DO [count | WHILE condition | UNTIL condition | variable = range] ... ENDDO.
 // Example: DO 3 (with a following body and ENDDO).
 // Execute the active batch loop; return interpreter status.
-int _far BatchDo_Cmd( LPTSTR pszCmdLine )
+int _far Do_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	LONG lRepetitor = -1L;
@@ -877,12 +876,12 @@ int _far _fastcall do_parsing( register LPTSTR pszCmdName )
 #define FOR_GLOBAL_PASS2 0x40
 
 // FOR - allows iterative execution of DOS commands
-extern int _far BatchFor_Cmd( LPTSTR );
+extern int _far For_Cmd( LPTSTR );
 
 // FOR variable IN (set) DO command; iterate over values or files.
 // Example: FOR %f IN (*.TXT) DO ECHO %f
 // pszCmdLine is the mutable argument string; return command/loop status.
-int _far BatchFor_Cmd( LPTSTR pszCmdLine )
+int _far For_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszArg, *pszLine;
 	TCHAR *pszForVar, *pszArgumentSet, *pszCurrentDirectory = NULL, *pszRanges = NULLSTR;
@@ -1023,7 +1022,7 @@ for_usage_error:
 		if ( *pszRanges )
 			strins( pszCmdLine, pszRanges );
 		strins( pszCmdLine, _TEXT("/iq for ") );
-		nReturn = BatchGlobalCommand( pszCmdLine );
+		nReturn = Global_Cmd( pszCmdLine );
 
 		// restore original directory
 		if ( pszCurrentDirectory != NULL )
@@ -1390,12 +1389,12 @@ for_bye:
 
 // Call subroutine (GOSUB labelname )
 extern int _far BatchRunCLI( void );
-extern int _far BatchGosub_Cmd( LPTSTR );
+extern int _far Gosub_Cmd( LPTSTR );
 
 // GOSUB label [arguments]
 // Execute a nested batch subroutine, preserving the caller position and flags.
 // Example: GOSUB worker
-int _far BatchGosub_Cmd( LPTSTR pszCmdLine )
+int _far Gosub_Cmd( LPTSTR pszCmdLine )
 {
 	LONG lSaveFlags;
 	unsigned int uSavedLine;
@@ -1453,11 +1452,11 @@ int _far BatchGosub_Cmd( LPTSTR pszCmdLine )
 
 
 // GOTO a label in the batch file
-extern int _far BatchGoto_Cmd( LPTSTR );
+extern int _far Goto_Cmd( LPTSTR );
 
 // GOTO [/I] label
 // Seek to a batch label; /I preserves DO/IFF state. Example: GOTO done
-int _far BatchGoto_Cmd( LPTSTR pszCmdLine )
+int _far Goto_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = ABORT_LINE;
 	long fGoto;
@@ -1597,24 +1596,24 @@ static int _near _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 
 
 // conditional IF command
-extern int _far BatchIf_Cmd( LPTSTR );
+extern int _far If_Cmd( LPTSTR );
 
 // IF condition command; execute the command when true.
 // Example: IF EXIST FILE.TXT ECHO Found
 // Return conditional or command status.
-int _far BatchIf_Cmd( LPTSTR pszCmdLine )
+int _far If_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 0 ));
 }
 
 
 // conditional IFF command
-extern int _far BatchIff_Cmd( LPTSTR );
+extern int _far Iff_Cmd( LPTSTR );
 
 // IFF condition THEN ... ELSE ... ENDIFF; manage structured conditional execution.
 // Example: IFF EXIST FILE.TXT THEN
 // Return conditional or command status.
-int _far BatchIff_Cmd( LPTSTR pszCmdLine )
+int _far Iff_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 1 ));
 }
@@ -2072,13 +2071,13 @@ int _far _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 }
 
 
-extern int _far BatchLfnFor_Cmd( LPTSTR );
+extern int _far LfnFor_Cmd( LPTSTR );
 
 // LFNFOR [ON | OFF]
 // Query or change long filename handling in FOR loops.
 // Example: LFNFOR ON. Returns zero or a usage error.
-// pszCmdLine is the command tail supplied by the near dispatcher.
-int _far BatchLfnFor_Cmd( LPTSTR pszCmdLine )
+// pszCmdLine is the command tail supplied by the parser.
+int _far LfnFor_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLFNFor;
 
@@ -2098,13 +2097,13 @@ int _far BatchLfnFor_Cmd( LPTSTR pszCmdLine )
 }
 
 
-extern int _far BatchLoadbtm_Cmd( LPTSTR );
+extern int _far Loadbtm_Cmd( LPTSTR );
 
 // LOADBTM [ON | OFF]
 // Query or change in-memory batch execution. Example: LOADBTM ON.
 // Returns zero, a usage error, or the loader status.
-// pszCmdLine is the command tail supplied by the near dispatcher.
-int _far BatchLoadbtm_Cmd( LPTSTR pszCmdLine )
+// pszCmdLine is the command tail supplied by the parser.
+int _far Loadbtm_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLoad;
 
@@ -2139,13 +2138,13 @@ int _far BatchLoadbtm_Cmd( LPTSTR pszCmdLine )
 }
 
 
-extern int _far BatchOn_Cmd( LPTSTR );
+extern int _far On_Cmd( LPTSTR );
 
 // ON [BREAK | ERROR | ERRORMSG] [command]
 // Install or clear an active batch frame event handler.
 // Example: ON ERROR GOTO failed. Returns zero or a usage error.
-// pszCmdLine is the command tail supplied by the near dispatcher.
-int _far BatchOn_Cmd( LPTSTR pszCmdLine )
+// pszCmdLine is the command tail supplied by the parser.
+int _far On_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -2196,11 +2195,11 @@ int _far BatchOn_Cmd( LPTSTR pszCmdLine )
 
 
 // cancel nested batch files
-extern int _far BatchCancel_Cmd( LPTSTR );
+extern int _far Cancel_Cmd( LPTSTR );
 
 // CANCEL [errorlevel]
 // Terminate all nested batch files; return ABORT_LINE. Example: CANCEL 1
-int _far BatchCancel_Cmd( register LPTSTR pszCmdLine )
+int _far Cancel_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 1 ));
 }
@@ -2209,11 +2208,11 @@ int _far BatchCancel_Cmd( register LPTSTR pszCmdLine )
 // exit batch file
 //   NOTE: you can also use this command to set the ERRORLEVEL (even from
 //   the command line!)
-extern int _far BatchQuit_Cmd( LPTSTR );
+extern int _far Quit_Cmd( LPTSTR );
 
 // QUIT [errorlevel]
 // Terminate the current batch file; return ABORT_LINE. Example: QUIT 1
-int _far BatchQuit_Cmd( register LPTSTR pszCmdLine )
+int _far Quit_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 0 ));
 }
@@ -2248,12 +2247,12 @@ static int _near _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 
 
 // RETURN from a GOSUB
-extern int _far BatchRet_Cmd( LPTSTR );
+extern int _far Ret_Cmd( LPTSTR );
 
 // RETURN [value]
 // Set the GOSUB return value and signal the nested batch interpreter.
 // Example: RETURN 5
-int _far BatchRet_Cmd( LPTSTR pszCmdLine )
+int _far Ret_Cmd( LPTSTR pszCmdLine )
 {
 	// check for a previous GOSUB
 	if ( bframe[cv.bn].nGosubOffset <= 0 )
@@ -2272,20 +2271,20 @@ int _far BatchRet_Cmd( LPTSTR pszCmdLine )
 
 // save the current environment, alias list, and current drive/directory
 //   (restored by ENDLOCAL or end of batch file )
-extern int _far BatchSetlocal_Cmd( LPTSTR );
+extern int _far Setlocal_Cmd( LPTSTR );
 
 // Save the current batch-local environment and shell settings. Syntax: SETLOCAL. Returns zero or an error status.
-int _far BatchSetlocal_Cmd( LPTSTR pszCmdLine )
+int _far Setlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _setlocal() );
 }
 
 
 // restore the disk, directory, and environment (saved by SETLOCAL)
-extern int _far BatchEndlocal_Cmd( LPTSTR );
+extern int _far Endlocal_Cmd( LPTSTR );
 
 // Restore batch-local state, optionally exporting named variables. Syntax: ENDLOCAL [variables]. Returns restoration status.
-int _far BatchEndlocal_Cmd( LPTSTR pszCmdLine )
+int _far Endlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _endlocal( pszCmdLine ) );
 }
@@ -2437,13 +2436,13 @@ static int _near _fastcall _endlocal( LPTSTR pszCmdLine )
 }
 
 
-extern int _far BatchShift_Cmd( LPTSTR );
+extern int _far Shift_Cmd( LPTSTR );
 
 // SHIFT [n | /n]
 // Adjust the active batch argument offset or remove an argument.
 // Examples: SHIFT; SHIFT -1; SHIFT /2. Returns zero.
-// pszCmdLine is the command tail supplied by the near dispatcher.
-int _far BatchShift_Cmd( LPTSTR pszCmdLine )
+// pszCmdLine is the command tail supplied by the parser.
+int _far Shift_Cmd( LPTSTR pszCmdLine )
 {
 	int i, nShift = 1;
 
@@ -2483,12 +2482,12 @@ int _far BatchShift_Cmd( LPTSTR pszCmdLine )
 
 
 // Switch Case Statement
-extern int _far BatchSwitch_Cmd( LPTSTR );
+extern int _far Switch_Cmd( LPTSTR );
 
 // SWITCH value; scan the batch file for a matching CASE or DEFAULT.
 // Example: SWITCH %choice
 // Return success, batch return, or usage error.
-int _far BatchSwitch_Cmd( LPTSTR pszCmdLine )
+int _far Switch_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszToken, *pszTest, *pszLine;
 	int nNestingLevel = 0;
@@ -2556,11 +2555,11 @@ int _far BatchSwitch_Cmd( LPTSTR pszCmdLine )
 
 
 // found a trailing CASE or DEFAULT - skip everything until EndSwitch
-extern int _far BatchCase_Cmd( LPTSTR );
+extern int _far Case_Cmd( LPTSTR );
 
 // CASE value / DEFAULT after a selected branch; skip to ENDSWITCH.
 // Return interpreter status; advances the active batch file.
-int _far BatchCase_Cmd( LPTSTR pszCmdLine )
+int _far Case_Cmd( LPTSTR pszCmdLine )
 {
 	int nNestingLevel = 0;
 

@@ -55,7 +55,7 @@
 // Create one or more directories. /S creates missing parent directories.
 // /N suppresses updates to the fuzzy directory index.
 // Examples: MD TEMP; MD /S C:\WORK\SOURCE; MD /N TEMP.
-int _far DirMd_Cmd( LPTSTR pszCmdLine )
+int _far Md_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
 	unsigned int nArg, fUpdateFuzzy;
@@ -110,7 +110,7 @@ int _far DirMd_Cmd( LPTSTR pszCmdLine )
 // Remove matching empty directories, honoring ranges and exclusions.
 // Update the fuzzy index and remove descriptions from the parent directory.
 // Examples: RD TEMP; RD OLD1 OLD2; RD TEMP*.
-int _far DirRd_Cmd( LPTSTR pszCmdLine )
+int _far Rd_Cmd( LPTSTR pszCmdLine )
 {
 	register int nFind;
 	unsigned int nArg, nReturn;
@@ -160,7 +160,7 @@ int _far DirRd_Cmd( LPTSTR pszCmdLine )
 // Display the current directory (or that of a specified drive), or change it.
 // /N disables fuzzy matching; successful changes save the previous directory.
 // Examples: CD; CD C:; CD ..; CD /N TEMP; CD -.
-int _far DirCd_Cmd( LPTSTR pszCmdLine )
+int _far Cd_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	int fFlags = CD_SAVELASTDIR;
@@ -204,7 +204,7 @@ extern TCHAR gaPushdQueue[ DIRSTACKSIZE ];
 // Save the current drive and directory on the directory stack.
 // If a destination is supplied, change to it before saving the old path.
 // Examples: PUSHD; PUSHD D:\WORK.
-int _far DirPushd_Cmd( LPTSTR pszCmdLine )
+int _far Pushd_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszCurrentDirectory;
 	TCHAR szDirectory[MAXPATH];
@@ -229,7 +229,7 @@ int _far DirPushd_Cmd( LPTSTR pszCmdLine )
 // Restore the most recently saved drive and directory, removing its entry.
 // Remove the entry even if the directory change fails; * clears the stack.
 // Examples: POPD; POPD *.
-int _far DirPopd_Cmd( LPTSTR pszCmdLine )
+int _far Popd_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszDirectory;
 	register int nRet;
@@ -266,7 +266,7 @@ int _far DirPopd_Cmd( LPTSTR pszCmdLine )
 // DIRS
 // Display the directory stack from oldest to newest without modifying it.
 // Report an error if the stack is empty. Example: DIRS.
-int _far DirDirs_Cmd( LPTSTR pszCmdLine )
+int _far Dirs_Cmd( LPTSTR pszCmdLine )
 {
 	TCHAR _far *pszDirectory;
 
@@ -288,7 +288,7 @@ extern int _far DirExecuteCommand( LPTSTR, int );
 // /A lists current directories on ready drives C: through Z:.
 // /S builds the fuzzy index; /U updates and /D removes selected trees.
 // Examples: CDD D:\WORK; CDD -; CDD /A; CDD /S C:; CDD /U C:.
-int _far DirCdd_Cmd( LPTSTR pszCmdLine )
+int _far Cdd_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszPtr, pszArg;
 	TCHAR szDrives[128], szTreePath[MAXFILENAME], szTemp[MAXFILENAME];

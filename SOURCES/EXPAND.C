@@ -4637,14 +4637,14 @@ static int _fastcall __history( LPTSTR, int );
 #pragma alloc_text( _TEXT, History_Cmd )
 
 // print the directory history, read it from a file, or clear it
-int _near DirHistory_Cmd( LPTSTR pszCmdLine )
+int _far DirHistory_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __history( pszCmdLine, 1 ));
 }
 
 
 // print the command history, read it from a file, or clear it
-int _near History_Cmd( LPTSTR pszCmdLine )
+int _far History_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __history( pszCmdLine, 0 ));
 }

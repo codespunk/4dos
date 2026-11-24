@@ -215,9 +215,6 @@ $(OBJ)\env.obj : env.c $(headers)
 $(OBJ)\batch.obj : batch.c $(headers)
         $(COMP) /NTBATCH_TEXT batch.c
 
-$(OBJ)\dispatch.obj : dispatch.c $(headers)
-        $(COMP) /NT_TEXT dispatch.c
-
 $(OBJ)\error.obj : error.c $(headers)
         $(COMP) /NT_TEXT error.c
 
@@ -353,7 +350,6 @@ $(LINKTARG) : \
               $(OBJ)\dircmds.obj $(OBJ)\filecmds.obj $(OBJ)\syscmds.obj \
               $(OBJ)\select.obj $(OBJ)\misc.obj $(OBJ)\env.obj \
               $(OBJ)\batch.obj $(OBJ)\error.obj $(OBJ)\_file.obj \
-              $(OBJ)\dispatch.obj \
               $(OBJ)\screenio.obj $(OBJ)\window.obj $(OBJ)\listall.obj \
               $(OBJ)\lines.obj $(OBJ)\doscmds.obj $(OBJ)\iofmt.obj \
               $(OBJ)\doscalls.obj $(OBJ)\dostty.obj $(OBJ)\strmenc.obj \

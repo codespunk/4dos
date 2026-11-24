@@ -38,7 +38,7 @@ static void _near dirprint( SELECT_ARGS *, int, unsigned int, unsigned int );
 #pragma alloc_text( _TEXT, Select_Cmd )
 
 // select the files for a command
-int _near Select_Cmd( LPTSTR pszCmdLine )
+int _far Select_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	int nArg, nReturn = 0;

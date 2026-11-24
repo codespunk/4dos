@@ -1260,7 +1260,7 @@ int _far ScreenParseLine( LPTSTR pszText )
 
 
 // parse the command line into Argc, Argv format
-int _near ParseLine( LPTSTR pszCmdName, register LPTSTR pszLine, int (_near *pfnCmd)(LPTSTR), unsigned int fParse, int fSetCMDLINE )
+int _near ParseLine( LPTSTR pszCmdName, register LPTSTR pszLine, int (_far *pfnCmd)(LPTSTR), unsigned int fParse, int fSetCMDLINE )
 {
 	static int Argc;		// argument count
 	static TCHAR *Argv[ARGMAX];	// argument pointers

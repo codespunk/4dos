@@ -137,7 +137,7 @@ static int _near _fastcall SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, lon
 // ALIAS [/P] [/R file] [name[=definition]]
 // Display or define aliases; /P pauses output and /R reads definitions from files.
 // Examples: ALIAS; ALIAS /P; ALIAS ll=dir /w.
-int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
+int _far Alias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -155,7 +155,7 @@ int _far EnvAlias_Cmd( LPTSTR pszCmdLine )
 // FUNCTION [/P] [/R file] [name[=definition]]
 // Display or define user functions; /P pauses output and /R reads definitions.
 // Examples: FUNCTION; FUNCTION /P; FUNCTION twice=`%@eval[%1*2]`.
-int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
+int _far Function_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -174,7 +174,7 @@ int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
 // Display or change environment variables; an empty value removes an entry.
 // /A evaluates expressions, /M selects the master environment, /P pauses, /R reads files.
 // Examples: SET; SET TEMP=C:\TEMP; SET /A COUNT=2+3.
-int _far EnvSet_Cmd( LPTSTR pszCmdLine )
+int _far Set_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -319,7 +319,7 @@ do_it:	if (( fSet & SET_DEFAULT ) && pchList == glpMasterEnvironment && pchList 
 // UNALIAS [/Q] [/R file] name ...
 // Remove aliases by name or wildcard; /Q suppresses missing-name diagnostics.
 // /R reads removal names from files. Examples: UNALIAS ll; UNALIAS test*.
-int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
+int _far Unalias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -335,7 +335,7 @@ int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
 // UNFUNCTION [/Q] [/R file] name ...
 // Remove user functions by name or wildcard; /Q suppresses missing-name diagnostics.
 // /R reads removal names from files. Examples: UNFUNCTION twice; UNFUNCTION test*.
-int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
+int _far Unfunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -353,7 +353,7 @@ int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
 // Remove environment variables by name or wildcard; /M selects the master environment.
 // /Q suppresses missing-name diagnostics and /R reads names from files.
 // Examples: UNSET TEMP; UNSET /Q TEST*.
-int _far EnvUnset_Cmd( LPTSTR pszCmdLine )
+int _far Unset_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -461,7 +461,7 @@ int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 // Interactively edit existing definitions; /A selects aliases, /F functions, /M master variables.
 // Without a selector, search environment variables before aliases.
 // Examples: ESET PATH; ESET /A ll; ESET /F twice.
-int _far EnvEset_Cmd( LPTSTR pszCmdLine )
+int _far Eset_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszArg;
 	register int nLength;

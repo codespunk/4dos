@@ -29,7 +29,7 @@ extern void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
 // TEE [/A] filename [filename ...]
 // Copy standard input to standard output and one or more files.
 // Examples: DIR | TEE LIST.TXT; TEE /A LOG.TXT.
-int _far FileTee_Cmd( LPTSTR pszCmdLine )
+int _far Tee_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	register int i;
@@ -113,7 +113,7 @@ tee_bye:
 // DESCRIBE filename [description]
 // Read or modify descriptions attached to matching files.
 // Example: DESCRIBE REPORT.TXT "Quarterly report".
-int _far FileDescribe_Cmd( LPTSTR pszCmdLine )
+int _far Describe_Cmd( LPTSTR pszCmdLine )
 {
 	register int nFind;
 	register LPTSTR pszArg;
@@ -206,7 +206,7 @@ HaveDescription:
 // The original near TYPE command is reached through a far bridge.
 extern int _far FileYTypeBridge( LPTSTR );
 
-int _far FileY_Cmd( LPTSTR pszCmdLine )
+int _far Y_Cmd( LPTSTR pszCmdLine )
 {
 #ifdef __WATCOMC__
     extern unsigned *__io_mode;
@@ -256,7 +256,7 @@ static int _near _fastcall FileOutput( LPTSTR, int );
 // HEAD [options] [filename ...]
 // Display the beginning of files or redirected standard input.
 // Example: HEAD REPORT.TXT.
-int _far FileHead_Cmd( LPTSTR pszCmdLine )
+int _far Head_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
 
@@ -270,7 +270,7 @@ int _far FileHead_Cmd( LPTSTR pszCmdLine )
 // TAIL [options] [filename ...]
 // Display the end of files or redirected standard input.
 // Example: TAIL LOG.TXT.
-int _far FileTail_Cmd( LPTSTR pszCmdLine )
+int _far Tail_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
 
@@ -288,7 +288,7 @@ int _far FileTail_Cmd( LPTSTR pszCmdLine )
 // TYPE [options] [filename ...]
 // Display file contents, optionally numbering lines or pausing by page.
 // Example: TYPE /P README.TXT.
-int _far FileType_Cmd( LPTSTR pszCmdLine )
+int _far Type_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
 
@@ -680,7 +680,7 @@ static int _near _touch( TOUCH_STRUCT *, DATETIME * );
 // TOUCH [options] filename [filename ...]
 // Change file timestamps; optionally create files or duplicate timestamps.
 // Example: TOUCH /C LOG.TXT.
-int _far FileTouch_Cmd( LPTSTR pszCmdLine )
+int _far Touch_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg, pszTemp;
 	int nArgc, nReturn = 0, rc;
@@ -1053,7 +1053,7 @@ int _far FileAttribWorker( ATTRIB_STRUCT * );
 // ATTRIB [options] [+attribute | -attribute] [filename ...]
 // Display or change file attributes, optionally including subdirectories.
 // Examples: ATTRIB *.TXT; ATTRIB +R REPORT.TXT.
-int _far FileAttrib_Cmd( LPTSTR pszCmdLine )
+int _far Attrib_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	LPTSTR pszTrailing;
@@ -1353,7 +1353,7 @@ extern int _far FileRenCommand( LPTSTR, int );
 // REN [options] source [source ...] target
 // Rename files or directories, including wildcard target expansion.
 // Example: REN *.TXT *.BAK.
-int _far FileRen_Cmd( LPTSTR pszCmdLine )
+int _far Ren_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szSource[MAXFILENAME], szTargetName[MAXFILENAME], szTarget[MAXFILENAME];
@@ -1566,7 +1566,7 @@ static int _near _fastcall _del( DEL_STRUCT * );
 // DEL [options] filename [filename ...]
 // Delete matching files, with optional confirmation and recursion.
 // Example: DEL /P *.TMP.
-int _far FileDel_Cmd( LPTSTR pszCmdLine )
+int _far Del_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	int nArgc, nReturn = 0, i, nLength;
@@ -1900,7 +1900,7 @@ static int _near _fastcall _mv( MOVE_STRUCT *);
 // MOVE [options] source [source ...] target
 // Move files by renaming or by copying and deleting the source.
 // Example: MOVE REPORT.TXT C:\ARCHIVE\.
-int _far FileMove_Cmd( LPTSTR pszCmdLine )
+int _far Mv_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	unsigned int fTargetIsDir, fFreed;
@@ -2469,7 +2469,7 @@ static int _copy( COPY_STRUCT *);
 // COPY [options] source [source ...] [target]
 // Copy or concatenate files, honoring ASCII/binary and overwrite options.
 // Examples: COPY A.TXT B.TXT; COPY A.TXT+B.TXT ALL.TXT.
-int _far FileCopy_Cmd( LPTSTR pszCmdLine )
+int _far Copy_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szClip[MAXFILENAME], *pszTarget = NULL;

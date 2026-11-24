@@ -627,7 +627,7 @@ ExitCD:
 }
 
 // return the current volume name(s)
-int _near Volume_Cmd( LPTSTR pszCmdLine )
+int _far Volume_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0, nArg;
 	register LPTSTR pszDrive;
@@ -680,7 +680,7 @@ int _fastcall getlabel( register LPTSTR lpszVolume )
 
 
 // return or set the path in the environment
-int _near Path_Cmd( LPTSTR pszCmdLine )
+int _far Path_Cmd( LPTSTR pszCmdLine )
 {
 	TCHAR _far *lpszEnvVar;
 
@@ -700,7 +700,7 @@ int _near Path_Cmd( LPTSTR pszCmdLine )
 
 
 // set the command-line prompt
-int _near Prompt_Cmd( LPTSTR pszCmdLine )
+int _far Prompt_Cmd( LPTSTR pszCmdLine )
 {
 	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') ))
 		pszCmdLine = PROMPT_NAME;
@@ -715,7 +715,7 @@ int _near Prompt_Cmd( LPTSTR pszCmdLine )
 
 
 // set the window title
-int _near Title_Cmd( LPTSTR pszCmdLine )
+int _far Title_Cmd( LPTSTR pszCmdLine )
 {
 	if (( pszCmdLine == NULL ) || ( *pszCmdLine == _TEXT('\0') ))
 		return ( Usage( TITLE_USAGE ));
@@ -730,7 +730,7 @@ int _near Title_Cmd( LPTSTR pszCmdLine )
 
 
 // Set the screen colors (using ANSI or the BIOS)
-int _near Color_Cmd( LPTSTR pszCmdLine )
+int _far Color_Cmd( LPTSTR pszCmdLine )
 {
 	int nColors;
 
@@ -745,7 +745,7 @@ int _near Color_Cmd( LPTSTR pszCmdLine )
 
 
 // display the disk status (total size, total used, & total free)
-int _near Free_Cmd( LPTSTR pszCmdLine )
+int _far Free_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0, nArg;
 	LPTSTR pszDrive;
@@ -800,7 +800,7 @@ int _near Free_Cmd( LPTSTR pszCmdLine )
 
 
 // Display/Change the 4xxx / TCMD variables
-int _near Setdos_Cmd( LPTSTR pszCmdLine )
+int _far Setdos_Cmd( LPTSTR pszCmdLine )
 {
 	extern int fNoComma;
 
@@ -1030,7 +1030,7 @@ SetChar:
 
 
 // set/clear transient mode flag
-int _near Transient_Cmd( LPTSTR pszCmdLine )
+int _far Transient_Cmd( LPTSTR pszCmdLine )
 {
 	register int nVal = OffOn( pszCmdLine );
 	if ( nVal == -1 )
@@ -1041,7 +1041,7 @@ int _near Transient_Cmd( LPTSTR pszCmdLine )
 
 
 // enable/disable disk verify
-int _near Verify_Cmd( LPTSTR pszCmdLine )
+int _far Verify_Cmd( LPTSTR pszCmdLine )
 {
 	register int nVerify;
 
@@ -1072,7 +1072,7 @@ LPTSTR _fastcall GetLogName( int fHistFlag )
 #define LOG_NAME 4
 
 // enable/disable command logging, or rename the log file
-int _near Log_Cmd( LPTSTR pszCmdLine )
+int _far Log_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszFileName;
 	TCHAR *pszArg, szLogName[128];
@@ -1179,7 +1179,7 @@ int _fastcall _log_entry( LPTSTR pszCmd, int fHistoryFlag )
 
 
 // perform a command on the current directory & its subdirectories
-int _near Global_Cmd( LPTSTR pszCmdLine )
+int _far Global_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszTail;
 	TCHAR szSavedDirectory[MAXPATH], szCurrentDirectory[MAXPATH];
@@ -1302,7 +1302,7 @@ next_global_dir:
 
 // "except" the specified files from a command by changing their attributes
 //    to hidden, running the command, and then unhiding them
-int _near Except_Cmd( LPTSTR pszCmdLine )
+int _far Except_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszArg, *pszExceptList;
 	TCHAR szFileName[MAXFILENAME], *pszCommandList;
@@ -1391,7 +1391,7 @@ int _near Except_Cmd( LPTSTR pszCmdLine )
 #define TIMER_SPLIT_TIME 16
 
 // Stopwatch - display # of seconds between calls
-int _near Timer_Cmd( LPTSTR pszCmdLine )
+int _far Timer_Cmd( LPTSTR pszCmdLine )
 {
 	register int nTimerNumber = 0;		// timer # (1, 2, or 3 - base 0 )
 	long fTimer;
@@ -1582,7 +1582,7 @@ LPTSTR _fastcall gtime( register int nTimeFormat )
 
 
 // set new system date
-int _near Date_Cmd( LPTSTR pszCmdLine )
+int _far Date_Cmd( LPTSTR pszCmdLine )
 {
 	unsigned int uDay, uMonth, uYear;
 	TCHAR szBuf[32];
@@ -1635,7 +1635,7 @@ got_date:
 
 
 // set new system time
-int _near Time_Cmd( LPTSTR pszCmdLine )
+int _far Time_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszAmPm;
 	unsigned int uHours, uMinutes, uSeconds;
@@ -1699,7 +1699,7 @@ got_time:
 
 
 // display or set the code page (only for DOS 3.3+ & NT)
-int _near Chcp_Cmd( LPTSTR pszCmdLine )
+int _far Chcp_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
 
@@ -1719,7 +1719,7 @@ int _near Chcp_Cmd( LPTSTR pszCmdLine )
 
 
 // display or set the country code (only for DOS 3.0+ & NT)
-int _near Country_Cmd( LPTSTR pszCmdLine )
+int _far Country_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
 
@@ -1734,14 +1734,14 @@ int _near Country_Cmd( LPTSTR pszCmdLine )
 
 
 // call the external Help (4HELP.EXE)
-int _near Help_Cmd( LPTSTR pszCmdLine )
+int _far Help_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _help( pszCmdLine, NULL ));
 }
 
 
 // display command to be executed
-int _near Which_Cmd( LPTSTR pszCmdLine )
+int _far Which_Cmd( LPTSTR pszCmdLine )
 {
 	int i, nArg, fEExt = 0, nResult = 0;
 	TCHAR *pszToken, *pszCmd, *pszExt, szFile[MAXFILENAME];
@@ -1830,10 +1830,3 @@ ExecutableExtension:
 	return nResult;
 }
 
-// Far bridge to the near GLOBAL implementation; preserve direct invocation.
-extern int _far BatchGlobalCommand( LPTSTR );
-#pragma alloc_text( _TEXT, BatchGlobalCommand )
-int _far BatchGlobalCommand( LPTSTR pszCmdLine )
-{
-	return Global_Cmd( pszCmdLine );
-}

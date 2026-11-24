@@ -1728,7 +1728,7 @@ static int _near _fastcall __echo( LPTSTR, int );
 // Query or change command echoing, or print text with a newline.
 // Examples: ECHO; ECHO OFF; ECHO Hello.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenEcho_Cmd( LPTSTR pszCmdLine )
+int _far Echo_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echo( pszCmdLine, 0 ));
 }
@@ -1736,7 +1736,7 @@ int _far ScreenEcho_Cmd( LPTSTR pszCmdLine )
 // ECHOERR [text]
 // Print text to standard error with a newline. Example: ECHOERR Error.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenEchoErr_Cmd( LPTSTR pszCmdLine )
+int _far EchoErr_Cmd( LPTSTR pszCmdLine )
 {
 	if ( pszCmdLine == NULL )
 		pszCmdLine = NULLSTR;
@@ -1790,7 +1790,7 @@ static int _near _fastcall __echos( LPTSTR, int );
 // ECHOS [text]
 // Print text to stdout without a newline. Example: ECHOS Working...
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenEchos_Cmd( LPTSTR pszCmdLine )
+int _far Echos_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echos( pszCmdLine, 0 ));
 }
@@ -1798,7 +1798,7 @@ int _far ScreenEchos_Cmd( LPTSTR pszCmdLine )
 // ECHOSERR [text]
 // Print text to stderr without a newline. Example: ECHOSERR Error:
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenEchosErr_Cmd( LPTSTR pszCmdLine )
+int _far EchosErr_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echos( pszCmdLine, 1 ));
 }
@@ -1838,7 +1838,7 @@ static int _near _fastcall __input( LPTSTR, int );
 // INKEY [options] [prompt] %variable
 // Read one key into a variable. Example: INKEY Press a key: %%KEY (in a batch file).
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenInkey_Cmd( LPTSTR pszCmdLine )
+int _far Inkey_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __input( pszCmdLine, 0 ));
 }
@@ -1846,7 +1846,7 @@ int _far ScreenInkey_Cmd( LPTSTR pszCmdLine )
 // INPUT [options] [prompt] %variable
 // Read a line into a variable. Example: INPUT Name: %%NAME (in a batch file).
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenInput_Cmd( LPTSTR pszCmdLine )
+int _far Input_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __input( pszCmdLine, 1 ));
 }
@@ -2075,7 +2075,7 @@ good_key:
 // pszCmdLine supplies an optional prompt; uses stderr if stdout is redirected.
 // Returns zero after the key read.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenPause_Cmd( LPTSTR pszCmdLine )
+int _far Pause_Cmd( LPTSTR pszCmdLine )
 {
 	// make sure STDOUT hasn't been redirected
 	qprintf( ( _isatty( STDOUT ) ? STDOUT : STDERR ), FMT_STR, (( pszCmdLine == NULL ) ? PAUSE_PROMPT : pszCmdLine ));
@@ -2089,7 +2089,7 @@ int _far ScreenPause_Cmd( LPTSTR pszCmdLine )
 // Example: SCREEN 5 10 Hello. pszCmdLine supplies coordinates and text.
 // Returns zero or Usage() status; changes cursor position and screen output.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenScr_Cmd( LPTSTR pszCmdLine )
+int _far Scr_Cmd( LPTSTR pszCmdLine )
 {
 	int nRow, nColumn;
 	LPTSTR pszText;
@@ -2134,7 +2134,7 @@ extern int _far ScreenParseLine( LPTSTR );
 // VSCRPUT row column colors text
 // Write colored text vertically. Example: VSCRPUT 2 5 WHITE ON BLUE Hello.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenVScrput_Cmd( LPTSTR pszCmdLine )
+int _far VScrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __scrput( pszCmdLine, 1 ));
 }
@@ -2142,7 +2142,7 @@ int _far ScreenVScrput_Cmd( LPTSTR pszCmdLine )
 // SCRPUT row column colors text
 // Write colored text horizontally. Example: SCRPUT 2 5 WHITE ON BLUE Hello.
 // pszCmdLine is the command tail; returns the implementation status.
-int _far ScreenScrput_Cmd( LPTSTR pszCmdLine )
+int _far Scrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __scrput( pszCmdLine, 0 ));
 }

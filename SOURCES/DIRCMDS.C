@@ -96,8 +96,8 @@ static unsigned int uRecurse;		// current recursion level (for totals)
 #define DIR_LFN_BYTES 16384
 
 
-int _far DirTree_Cmd( LPTSTR );
-int _far DirList_Cmd( LPTSTR );
+int _far Tree_Cmd( LPTSTR );
+int _far Dir_Cmd( LPTSTR );
 
 
 static void _near MoveFiles( unsigned int, DIR_ENTRY _huge *, unsigned long );
@@ -473,7 +473,7 @@ static long fTree;
 // Display directory trees, optionally including files or pausing by page.
 // /C emits directory index records for CDD fuzzy searches.
 // Examples: TREE; TREE C:\DOS /F; TREE /A /P.
-int _far DirTree_Cmd( register LPTSTR pszCmdLine )
+int _far Tree_Cmd( register LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szFilename[MAXFILENAME], szSequelBuffer[MAXPATH];
@@ -703,7 +703,7 @@ static int _near DrawTree( register LPTSTR pszCurrent, LPTSTR pszSequelBuffer )
 // Enumerate matching files and directories with ranges, attributes and sorting.
 // Supports recursive searches, alternate display formats, totals and pagination.
 // Examples: DIR; DIR *.TXT /B; DIR /S /P; DIR /A:D.
-int _far DirList_Cmd( LPTSTR pszCmdLine )
+int _far Dir_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg, pszTrailingSwitch;
 	TCHAR szFileName[MAXFILENAME], szFName[MAXFILENAME];

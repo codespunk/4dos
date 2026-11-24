@@ -189,7 +189,7 @@ static char KstackScanCodes[128] = {
 
 char szAppendBlock[130] = "";
 
-int _near Closetray_Cmd( char *pszCmdLine )
+int _far Closetray_Cmd( char *pszCmdLine )
 {
 	register int i;
 	int rval = 0;
@@ -205,7 +205,7 @@ int _near Closetray_Cmd( char *pszCmdLine )
 }
 
 // Change stdin, stdout, stderr to a new device
-int _near Ctty_Cmd( register char *pszCmdLine )
+int _far Ctty_Cmd( register char *pszCmdLine )
 {
 	register int fd;
 
@@ -245,7 +245,7 @@ _asm {
 	return 0;
 }
 
-int _near Ejectmedia_Cmd( char *pszCmdLine )
+int _far Ejectmedia_Cmd( char *pszCmdLine )
 {
 	register int i;
 	int rval = 0;
@@ -262,7 +262,7 @@ int _near Ejectmedia_Cmd( char *pszCmdLine )
 
 
 // exit the current shell
-int _near Exit_Cmd( char *pszCmdLine )
+int _far Exit_Cmd( char *pszCmdLine )
 {
 	static int fExit = 0;
 	register int nRet;
@@ -288,7 +288,7 @@ int _near Exit_Cmd( char *pszCmdLine )
 
 
 // toggle the keyboard (caps lock, numlock, scroll lock)
-int _near Keybd_Cmd( char *pszCmdLine )
+int _far Keybd_Cmd( char *pszCmdLine )
 {
 	register char *arg;
 	register unsigned int uToggle;
@@ -346,7 +346,7 @@ _asm {
 
 
 // pump characters from a keyboard buffer into a program
-int _near Keystack_Cmd( char *pszCmdLine )
+int _far Keystack_Cmd( char *pszCmdLine )
 {
 	register char *arg;
 	register unsigned int *kptr;
@@ -480,7 +480,7 @@ OK:
 
 // load programs in high memory
 //   (LOADHIGH only supported in MS-DOS 5.0+, DR-DOS 5.0+ and OS/2 2.0 MVDM's)
-int _near Loadhigh_Cmd( char *pszCmdLine )
+int _far Loadhigh_Cmd( char *pszCmdLine )
 {
 	UMBREGINFO _far *pURInfo;
 	int URCount;
@@ -598,7 +598,7 @@ LockError:
 }
 
 
-int _near Lock_Cmd( char *pszCmdLine )
+int _far Lock_Cmd( char *pszCmdLine )
 {
 	register int nDisk, argc;
 	int rval = 0;
@@ -632,7 +632,7 @@ int _near Lock_Cmd( char *pszCmdLine )
 
 
 // display RAM statistics
-int _near Memory_Cmd( char *pszCmdLine )
+int _far Memory_Cmd( char *pszCmdLine )
 {
 	unsigned int nMem;
 	unsigned long ram;
@@ -687,7 +687,7 @@ int _near Memory_Cmd( char *pszCmdLine )
 
 
 // Set an INI file option
-int _near Option_Cmd( char *pszCmdLine )
+int _far Option_Cmd( char *pszCmdLine )
 {
 	static char szINI[] = "4DOS.INI";
 	int rval, nFH;
@@ -769,7 +769,7 @@ int _near Option_Cmd( char *pszCmdLine )
 
 
 // reboot the system (warm or cold boot) or turn it off
-int _near Reboot_Cmd( char *pszCmdLine )
+int _far Reboot_Cmd( char *pszCmdLine )
 {
 	char chBootType;
 	int nFH;
@@ -827,7 +827,7 @@ int _near Reboot_Cmd( char *pszCmdLine )
 
 
 // set extended error information (DOS 3.1+)
-int _near Seterror_Cmd( LPTSTR pszCmdLine )
+int _far Seterror_Cmd( LPTSTR pszCmdLine )
 {
 	if ( !pszCmdLine || *pszCmdLine == _TEXT('\0') || !isdigit( *pszCmdLine ))
 		return Usage( SETERROR_USAGE );
@@ -897,7 +897,7 @@ typedef struct _STARTDATA {
 
 // Start another job in a different OS/2 2.1 session.  If no arguments, just
 //   start another command processor
-int _near Start_Cmd( char *pszCmdLine )
+int _far Start_Cmd( char *pszCmdLine )
 {
 	register char *arg;
 	register int start_flag = 0;
@@ -1214,7 +1214,7 @@ _asm {
 
 
 // Turn 4DOS disk, EMS, or XMS swapping on or off
-int _near Swap_Cmd( char *pszCmdLine )
+int _far Swap_Cmd( char *pszCmdLine )
 {
 	register int nSwapState;
 
@@ -1253,7 +1253,7 @@ UnLockError:
 }
 
 
-int _near Unlock_Cmd( char *pszCmdLine )
+int _far Unlock_Cmd( char *pszCmdLine )
 {
 	register int nDisk, argc;
 	int rval = 0;

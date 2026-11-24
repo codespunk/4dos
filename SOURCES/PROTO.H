@@ -31,145 +31,144 @@
 
 // Prototypes for internal commands
 
-int _near Alias_Cmd( LPTSTR );
-int _near Attrib_Cmd( LPTSTR );
+int _far Alias_Cmd( LPTSTR );
+int _far Attrib_Cmd( LPTSTR );
 int _far Batch( int, TCHAR ** );
-int _near Battext_Cmd( LPTSTR );
-int _near Beep_Cmd( LPTSTR );
-int _near Break_Cmd( LPTSTR );
-int _near Call_Cmd( LPTSTR );
-int _near Cancel_Cmd( LPTSTR );
-int _near Case_Cmd( LPTSTR );
-int _near Cd_Cmd( LPTSTR );
-int _near Cdd_Cmd( LPTSTR );
+int _far Battext_Cmd( LPTSTR );
+int _far Beep_Cmd( LPTSTR );
+int _far Break_Cmd( LPTSTR );
+int _far Call_Cmd( LPTSTR );
+int _far Cancel_Cmd( LPTSTR );
+int _far Case_Cmd( LPTSTR );
+int _far Cd_Cmd( LPTSTR );
+int _far Cdd_Cmd( LPTSTR );
 
-int _near Chcp_Cmd( LPTSTR );
+int _far Chcp_Cmd( LPTSTR );
 
-int _near Closetray_Cmd( LPTSTR );
-int _near Cls_Cmd( LPTSTR );
-#pragma alloc_text( _TEXT, Cls_Cmd )
-int _near Cmds_Cmd( LPTSTR );
-int _near Color_Cmd( LPTSTR );
-int _near Copy_Cmd( LPTSTR );
-int _near Country_Cmd( LPTSTR );
+int _far Closetray_Cmd( LPTSTR );
+int _far Cls_Cmd( LPTSTR );
+int _far Cmds_Cmd( LPTSTR );
+int _far Color_Cmd( LPTSTR );
+int _far Copy_Cmd( LPTSTR );
+int _far Country_Cmd( LPTSTR );
 
-int _near Ctty_Cmd( LPTSTR );
+int _far Ctty_Cmd( LPTSTR );
 
-int _near Date_Cmd( LPTSTR );
+int _far Date_Cmd( LPTSTR );
 
-int _near Del_Cmd( LPTSTR );
-int _near Delay_Cmd( LPTSTR );
-int _near Describe_Cmd( LPTSTR );
+int _far Del_Cmd( LPTSTR );
+int _far Delay_Cmd( LPTSTR );
+int _far Describe_Cmd( LPTSTR );
 
-int _near Dir_Cmd( LPTSTR );
-int _near DirHistory_Cmd( LPTSTR );
-int _near Dirs_Cmd( LPTSTR );
-int _near Do_Cmd( LPTSTR );
-int _near Drawbox_Cmd( LPTSTR );
-int _near DrawHline_Cmd( LPTSTR );
-int _near DrawVline_Cmd( LPTSTR );
-int _near Echo_Cmd( LPTSTR );
-int _near EchoErr_Cmd( LPTSTR );
-int _near Echos_Cmd( LPTSTR );
-int _near EchosErr_Cmd( LPTSTR );
-int _near Ejectmedia_Cmd( LPTSTR );
-int _near Endlocal_Cmd( LPTSTR );
-int _near Eset_Cmd( LPTSTR );
+int _far Dir_Cmd( LPTSTR );
+int _far DirHistory_Cmd( LPTSTR );
+int _far Dirs_Cmd( LPTSTR );
+int _far Do_Cmd( LPTSTR );
+int _far Drawbox_Cmd( LPTSTR );
+int _far DrawHline_Cmd( LPTSTR );
+int _far DrawVline_Cmd( LPTSTR );
+int _far Echo_Cmd( LPTSTR );
+int _far EchoErr_Cmd( LPTSTR );
+int _far Echos_Cmd( LPTSTR );
+int _far EchosErr_Cmd( LPTSTR );
+int _far Ejectmedia_Cmd( LPTSTR );
+int _far Endlocal_Cmd( LPTSTR );
+int _far Eset_Cmd( LPTSTR );
 int _near Eventlog_Cmd( LPTSTR );
-int _near Except_Cmd( LPTSTR );
-int _near Exit_Cmd( LPTSTR );
+int _far Except_Cmd( LPTSTR );
+int _far Exit_Cmd( LPTSTR );
 #pragma alloc_text( _TEXT, Exit_Cmd )
 int _near External( LPTSTR, LPTSTR );
-int _near Ffind_Cmd( LPTSTR );
-int _near For_Cmd( LPTSTR );
-int _near Free_Cmd( LPTSTR );
+int _far Ffind_Cmd( LPTSTR );
+int _far For_Cmd( LPTSTR );
+int _far Free_Cmd( LPTSTR );
 
-int _near Function_Cmd( LPTSTR );
-int _near Global_Cmd( LPTSTR );
-int _near Gosub_Cmd( LPTSTR );
-int _near Goto_Cmd( LPTSTR );
-int _near Head_Cmd( LPTSTR );
-int _near Help_Cmd( LPTSTR );
-int _near History_Cmd( LPTSTR );
-int _near Idle_Cmd( LPTSTR );
-int _near If_Cmd( LPTSTR );
-int _near Iff_Cmd( LPTSTR );
+int _far Function_Cmd( LPTSTR );
+int _far Global_Cmd( LPTSTR );
+int _far Gosub_Cmd( LPTSTR );
+int _far Goto_Cmd( LPTSTR );
+int _far Head_Cmd( LPTSTR );
+int _far Help_Cmd( LPTSTR );
+int _far History_Cmd( LPTSTR );
+int _far Idle_Cmd( LPTSTR );
+int _far If_Cmd( LPTSTR );
+int _far Iff_Cmd( LPTSTR );
 
-int _near Inkey_Cmd( LPTSTR );
-int _near Input_Cmd( LPTSTR );
-int _near Keybd_Cmd( LPTSTR );
+int _far Inkey_Cmd( LPTSTR );
+int _far Input_Cmd( LPTSTR );
+int _far Keybd_Cmd( LPTSTR );
 
-int _near Keystack_Cmd( LPTSTR );
-int _near List_Cmd( LPTSTR );
-int _near Loadbtm_Cmd( LPTSTR );
+int _far Keystack_Cmd( LPTSTR );
+int _far List_Cmd( LPTSTR );
+int _far Loadbtm_Cmd( LPTSTR );
 
-int _near LfnFor_Cmd( LPTSTR );
-int _near Loadhigh_Cmd( LPTSTR );
-int _near Lock_Cmd( LPTSTR );
+int _far LfnFor_Cmd( LPTSTR );
+int _far Loadhigh_Cmd( LPTSTR );
+int _far Lock_Cmd( LPTSTR );
 
-int _near Log_Cmd( LPTSTR );
-int _near Md_Cmd( LPTSTR );
-int _near Memory_Cmd( LPTSTR );
+int _far Log_Cmd( LPTSTR );
+int _far Md_Cmd( LPTSTR );
+int _far Memory_Cmd( LPTSTR );
 
-int _near Mv_Cmd( LPTSTR );
-int _near On_Cmd( LPTSTR );
-int _near Option_Cmd( LPTSTR );
-int _near Path_Cmd( LPTSTR );
-int _near Pause_Cmd( LPTSTR );
+int _far Mv_Cmd( LPTSTR );
+int _far On_Cmd( LPTSTR );
+int _far Option_Cmd( LPTSTR );
+int _far Path_Cmd( LPTSTR );
+int _far Pause_Cmd( LPTSTR );
 
-int _near Popd_Cmd( LPTSTR );
+int _far Popd_Cmd( LPTSTR );
 
-int _near Prompt_Cmd( LPTSTR );
-int _near Pushd_Cmd( LPTSTR );
+int _far Prompt_Cmd( LPTSTR );
+int _far Pushd_Cmd( LPTSTR );
 
-int _near Quit_Cmd( LPTSTR );
-int _near Rd_Cmd( LPTSTR );
-int _near Reboot_Cmd( LPTSTR );
+int _far Quit_Cmd( LPTSTR );
+int _far Rd_Cmd( LPTSTR );
+int _far Reboot_Cmd( LPTSTR );
 int _near Recycle_Cmd( LPTSTR );
-int _near Remark_Cmd( LPTSTR );
-int _near Ren_Cmd( LPTSTR );
-int _near Ret_Cmd( LPTSTR );
+int _far Remark_Cmd( LPTSTR );
+int _far Ren_Cmd( LPTSTR );
+int _far Ret_Cmd( LPTSTR );
 
-int _near Scr_Cmd( LPTSTR );
-int _near Scrput_Cmd( LPTSTR );
-int _near Set_Cmd( LPTSTR );
-int _near Seterror_Cmd( LPTSTR );
-int _near Select_Cmd( LPTSTR );
+int _far Scr_Cmd( LPTSTR );
+int _far Scrput_Cmd( LPTSTR );
+int _far Set_Cmd( LPTSTR );
+int _far Seterror_Cmd( LPTSTR );
+int _far Select_Cmd( LPTSTR );
 
-int _near Setdos_Cmd( LPTSTR );
-int _near Setlocal_Cmd( LPTSTR );
-int _near Shift_Cmd( LPTSTR );
+int _far Setdos_Cmd( LPTSTR );
+int _far Setlocal_Cmd( LPTSTR );
+int _far Shift_Cmd( LPTSTR );
 
-int _near Start_Cmd( LPTSTR );
+int _far Start_Cmd( LPTSTR );
 
-int _near Swap_Cmd( LPTSTR );
+int _far Swap_Cmd( LPTSTR );
 
-int _near Switch_Cmd( LPTSTR );
-int _near Tail_Cmd( LPTSTR );
+int _far Switch_Cmd( LPTSTR );
+int _far Tail_Cmd( LPTSTR );
 
-int _near Tee_Cmd( LPTSTR );
-int _near Time_Cmd( LPTSTR );
-int _near Timer_Cmd( LPTSTR );
-int _near Title_Cmd( LPTSTR );
+int _far Tee_Cmd( LPTSTR );
+int _far Time_Cmd( LPTSTR );
+int _far Timer_Cmd( LPTSTR );
+int _far Title_Cmd( LPTSTR );
 
-int _near Touch_Cmd( LPTSTR );
-int _near Transient_Cmd( LPTSTR );
-int _near Tree_Cmd( LPTSTR );
-int _near Truename_Cmd( LPTSTR );
-int _near Type_Cmd( LPTSTR );
+int _far Touch_Cmd( LPTSTR );
+int _far Transient_Cmd( LPTSTR );
+int _far Tree_Cmd( LPTSTR );
+int _far Truename_Cmd( LPTSTR );
+int _far Type_Cmd( LPTSTR );
 
-int _near Unlock_Cmd( LPTSTR );
+int _far Unlock_Cmd( LPTSTR );
 
-int _near Unalias_Cmd( LPTSTR );
-int _near Unfunction_Cmd( LPTSTR );
-int _near Unset_Cmd( LPTSTR );
-int _near Ver_Cmd( LPTSTR );
-int _near Verify_Cmd( LPTSTR );
-int _near Volume_Cmd( LPTSTR );
-int _near VScrput_Cmd( LPTSTR );
-int _near Which_Cmd( LPTSTR );
+int _far Unalias_Cmd( LPTSTR );
+int _far Unfunction_Cmd( LPTSTR );
+int _far Unset_Cmd( LPTSTR );
+int _far Ver_Cmd( LPTSTR );
+int _far Verify_Cmd( LPTSTR );
+int _far Volume_Cmd( LPTSTR );
+int _far VScrput_Cmd( LPTSTR );
+int _far Which_Cmd( LPTSTR );
 
-int _near Y_Cmd( LPTSTR );
+int _far Y_Cmd( LPTSTR );
 
 
 // Support routines in all versions
@@ -369,7 +368,7 @@ int PASCAL getline( int, LPTSTR, int, int );
 int _near _fastcall command( LPTSTR, int );
 #pragma alloc_text( _TEXT, command )
 extern int _near _fastcall ContinueLine( LPTSTR );
-int _near ParseLine( LPTSTR, LPTSTR, int (_near *)(LPTSTR), unsigned int, int );
+int _near ParseLine( LPTSTR, LPTSTR, int (_far *)(LPTSTR), unsigned int, int );
 #pragma alloc_text( _TEXT, ParseLine )
 LPTSTR PASCAL searchpaths( LPTSTR, LPTSTR, int, int * );
 void ShowPrompt( void );
