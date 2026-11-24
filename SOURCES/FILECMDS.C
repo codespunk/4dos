@@ -59,9 +59,9 @@ extern unsigned *__io_mode;
 
 extern void UpdateFuzzyTree( LPTSTR , LPTSTR , int );
 
-static void wildname( LPTSTR , LPTSTR , LPTSTR );
+void _far wildname( LPTSTR , LPTSTR , LPTSTR );
 
-static int FileCopy( LPTSTR , LPTSTR , unsigned long, long *, FILESEARCH * );
+int _far FileCopy( LPTSTR , LPTSTR , unsigned long, long *, FILESEARCH * );
 
 
 static int _near delete_fcb( unsigned int );
@@ -95,12 +95,6 @@ int _far FileMoveDiskFull( void )
 	return fDiskFull;
 }
 
-// Far bridge to the shared FileCopy routine in MISC_TEXT.
-// Forward target, source, copy flags, append offset, and search metadata.
-int _far FileMoveCopyBridge( LPTSTR target, LPTSTR source, unsigned long flags, long *offset, FILESEARCH *dir )
-{
-	return FileCopy( target, source, flags, offset, dir );
-}
 
 #pragma alloc_text( MISC_TEXT, FileCopy )
 
@@ -111,7 +105,7 @@ int _far FileMoveCopyBridge( LPTSTR target, LPTSTR source, unsigned long flags, 
 //   szInputName = source file name
 //   fFlags = create/append, device & ASCII/binary flags
 //   lAppendOffset = current end offset in append file
-static int FileCopy( LPTSTR szOutputName, LPTSTR szInputName, unsigned long fFlags, long *lAppendOffset, FILESEARCH *dir )
+int _far FileCopy( LPTSTR szOutputName, LPTSTR szInputName, unsigned long fFlags, long *lAppendOffset, FILESEARCH *dir )
 
 {
 
@@ -437,7 +431,7 @@ FileCopyExit:
 
 
 // expand a wildcard name
-static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTemplate )
+void _far wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTemplate )
 {
 	register LPTSTR pszArg;
 	TCHAR szString[MAXFILENAME+1];
@@ -514,12 +508,6 @@ static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTem
 	*pszTarget = _TEXT('\0');
 }
 
-// Far bridge to wildcard target-name expansion in wildname().
-// Forward the target buffer, source pattern, and template filename.
-void _far FileRenWildname( LPTSTR target, LPTSTR source, LPTSTR templateName )
-{
-	wildname( target, source, templateName );
-}
 
 // Far bridge to the near command parser.
 // Forward the command line and execution options unchanged.
@@ -528,11 +516,6 @@ int _far FileRenCommand( LPTSTR pszLine, int fOptions )
 	return command( pszLine, fOptions );
 }
 
-// Far bridge to show_atts() for formatting file attribute bits.
-LPTSTR _far FileAttribShowBridge( int nAttribute )
-{
-	return show_atts( nAttribute );
-}
 
 
 #pragma alloc_text( SCREENIO_TEXT, show_atts )
@@ -557,8 +540,3 @@ LPTSTR _fastcall show_atts( register int nAttribute )
 	return szAttributes;
 } 
 
-// Far bridge to the near TYPE dispatcher for Y.
-int _far FileYTypeBridge( LPTSTR pszCmdLine )
-{
-	return Type_Cmd( pszCmdLine );
-}

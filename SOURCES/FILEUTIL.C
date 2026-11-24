@@ -203,8 +203,7 @@ HaveDescription:
 
 // Y [filename ...]
 // Copy standard input to standard output, then TYPE any named files.
-// The original near TYPE command is reached through a far bridge.
-extern int _far FileYTypeBridge( LPTSTR );
+// TYPE is a far command handler in FILE_TEXT.
 
 int _far Y_Cmd( LPTSTR pszCmdLine )
 {
@@ -237,7 +236,7 @@ int _far Y_Cmd( LPTSTR pszCmdLine )
     _osfile[STDIN] &= ~( FEOFLAG | FCRLF );
 #endif
 
-    return ((( pszCmdLine ) && ( *pszCmdLine )) ? FileYTypeBridge( pszCmdLine ) : 0 );
+    return ((( pszCmdLine ) && ( *pszCmdLine )) ? Type_Cmd( pszCmdLine ) : 0 );
 }
 
 
@@ -1045,8 +1044,6 @@ typedef struct
 } ATTRIB_STRUCT;
 
 
-extern LPTSTR _far FileAttribShowBridge( int );
-
 // ATTRIB command parser in FILE_TEXT; preserve the original command behavior.
 int _far FileAttribWorker( ATTRIB_STRUCT * );
 
@@ -1279,11 +1276,11 @@ int _far FileAttribWorker( register ATTRIB_STRUCT *Attrib )
 		// if attributes were changed, show new ones
 		if (( Attrib->fFlags & ATTRIB_QUIET ) == 0 ) {
 
-			qputs( FileAttribShowBridge( uOldAttribute ));
+			qputs( show_atts( uOldAttribute ));
 
 			if (( Attrib->cAnd != 0x37 ) || ( Attrib->cOr != 0 )) {
 
-				printf( _TEXT(" -> %s"), FileAttribShowBridge( dir.attrib ));
+				printf( _TEXT(" -> %s"), show_atts( dir.attrib ));
 			}
 
 			printf( _TEXT("  %s"), Attrib->szTarget );
@@ -1340,7 +1337,6 @@ int _far FileAttribWorker( register ATTRIB_STRUCT *Attrib )
 }
 
 // REN command implementation in FILE_TEXT.
-extern void _far FileRenWildname( LPTSTR, LPTSTR, LPTSTR );
 extern int _far FileRenCommand( LPTSTR, int );
 #define REN_BY_ATTRIBUTES 1
 #define REN_NOERRORS 2
@@ -1412,7 +1408,7 @@ int _far Ren_Cmd( LPTSTR pszCmdLine )
 
 			CheckForBreak();
 
-			FileRenWildname( szTargetName, szTarget, szSource );
+			wildname( szTargetName, szTarget, szSource );
 
 			if ( mkfname( szSource, 0 ) == NULL )
 				return ERROR_EXIT;
@@ -1853,10 +1849,9 @@ Del_Next:
 	return nReturn;
 }
 
-// MOVE uses far bridges for helpers and state shared with COPY.
+// MOVE shares the copy implementation and accesses its state through helpers.
 extern void _far FileMoveResetState( void );
 extern int _far FileMoveDiskFull( void );
-extern int _far FileMoveCopyBridge( LPTSTR, LPTSTR, unsigned long, long *, FILESEARCH * );
 
 #define MOVE_BY_ATTRIBUTES 1
 #define MOVE_CHANGED 2
@@ -2164,7 +2159,7 @@ static int _near _fastcall _mv(register MOVE_STRUCT *Move)
 			continue;
 
 		// make the target name
-		FileRenWildname( Move->szTargetName, Move->szTarget, Move->szSourceName );
+		wildname( Move->szTargetName, Move->szTarget, Move->szSourceName );
 
 		// clear the EXISTS flag
 		Move->fFlags &= ~MOVE_EXISTS;
@@ -2251,7 +2246,7 @@ static int _near _fastcall _mv(register MOVE_STRUCT *Move)
 					fCopyFlags |= COPY_RESTARTABLE;
 
 				// rename didn't work; try a destructive copy
-				if ((( nReturn = FileMoveCopyBridge( Move->szTargetName, Move->szSourceName, fCopyFlags, &lAppendOffset, &dir )) == CTRLC ) || ( setjmp( cv.env ) == -1 )) {
+				if ((( nReturn = FileCopy( Move->szTargetName, Move->szSourceName, fCopyFlags, &lAppendOffset, &dir )) == CTRLC ) || ( setjmp( cv.env ) == -1 )) {
 
 					// reset the directory search handle
 					FindClose( dir.hdir );
@@ -2415,8 +2410,6 @@ Move_Status:
 // COPY implementation in FILE_TEXT. FileCopy stays in MISC_TEXT for MOVE.
 extern int fDiskFull;
 extern int fClip;
-extern void _far FileRenWildname( LPTSTR, LPTSTR, LPTSTR );
-extern int _far FileMoveCopyBridge( LPTSTR, LPTSTR, unsigned long, long *, FILESEARCH * );
 
 // COPY_OPTIONS
 #define COPY_BY_ATTRIBUTES 1
@@ -2855,7 +2848,7 @@ static int _copy( register COPY_STRUCT *Copy )
 			continue;
 
 		// build the target name
-		FileRenWildname( Copy->szTargetName, Copy->szTarget, Copy->szSourceName );
+		wildname( Copy->szTargetName, Copy->szTarget, Copy->szSourceName );
 
 		// if changed (/C), only copy source if target is older
 		// if update (/U), only copy the source if the target is
@@ -2924,7 +2917,7 @@ static int _copy( register COPY_STRUCT *Copy )
 			if ( Copy->fOptions & COPY_OVERWRITE_RDONLY )
 				SetFileMode( Copy->szTargetName, 0 );
 
-			if ((( nReturn = FileMoveCopyBridge( Copy->szTargetName, Copy->szSourceName, Copy->fFlags, &( Copy->lAppendOffset ), &dir )) == CTRLC ) || ( cv.fException ) || ( setjmp( cv.env ) == -1 )) {
+			if ((( nReturn = FileCopy( Copy->szTargetName, Copy->szSourceName, Copy->fFlags, &( Copy->lAppendOffset ), &dir )) == CTRLC ) || ( cv.fException ) || ( setjmp( cv.env ) == -1 )) {
 				// reset the directory search handles
 				FindClose( dir.hdir );
 				return CTRLC;

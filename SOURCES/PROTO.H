@@ -250,8 +250,10 @@ TCHAR _far * _fastcall next_hist( TCHAR _far * );
 
 
 // FILECMDS.C
+int _far FileCopy( LPTSTR, LPTSTR, unsigned long, long *, FILESEARCH * );
 void _fastcall FilesProcessed( LPTSTR, long );
 LPTSTR _fastcall show_atts( int );
+void _far wildname( LPTSTR, LPTSTR, LPTSTR );
 
 
 // IOFMT.C
