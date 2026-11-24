@@ -65,8 +65,9 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, __Set, __Unset, get_alias, add_list, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, __Unset, get_alias, add_list, next_env, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
+#pragma alloc_text( ENV_TEXT, __Set )
 
 
 
@@ -192,7 +193,10 @@ int _near Set_Cmd( LPTSTR pszCmdLine )
 
 
 
-// create or display environment variables or aliases
+// Display, define, or remove entries in the selected environment, alias, or function list.
+// pszCmdLine contains arguments and switches; pchList selects the list.
+// Handle arithmetic, master environment, pagination, file input, and wildcard queries.
+// Return zero, a list/usage error, or the underlying operation status.
 static int _fastcall __Set( LPTSTR pszCmdLine, TCHAR _far * pchList )
 {
 	LPTSTR pszArg;
