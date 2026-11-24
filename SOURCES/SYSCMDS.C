@@ -820,78 +820,25 @@ int _near Md_Cmd( LPTSTR pszCmdLine )
 }
 
 // save the current directory & change to new one
+extern int _far DirPushd_Cmd( LPTSTR );
 int _near Pushd_Cmd( LPTSTR pszCmdLine )
 {
-	LPTSTR pszCurrentDirectory;
-	TCHAR szDirectory[MAXPATH];
-
-	if (( pszCurrentDirectory = gcdir( NULL, 0 )) == NULL )	// get current directory
-		return ERROR_EXIT;
-
-	strcpy( szDirectory, pszCurrentDirectory );
-
-	// change disk and/or directory
-	//   (if no arguments, just save the current directory)
-	if (( pszCmdLine ) && ( *pszCmdLine ) && ( __cd( pszCmdLine, CD_CHANGEDRIVE | CD_SAVELASTDIR ) != 0 ))
-		return ERROR_EXIT;
-
-	// save the previous disk & directory
-	SaveDirectory( gaPushdQueue, szDirectory );
-
-	return 0;
+	return DirPushd_Cmd( pszCmdLine );
 }
-
 
 // POP a PUSHD directory
+extern int _far DirPopd_Cmd( LPTSTR );
 int _near Popd_Cmd( LPTSTR pszCmdLine )
 {
-	LPTSTR pszDirectory;
-	register int nRet;
-
-	if (( pszCmdLine ) && ( *pszCmdLine )) {
-
-		if ( *pszCmdLine == _TEXT('*') ) {
-			// clear directory stack
-			gaPushdQueue[0] = _TEXT('\0');
-			gaPushdQueue[1] = _TEXT('\0');
-			return 0;
-		}
-
-		return ( Usage( POPD_USAGE ));
-	}
-
-	if ( gaPushdQueue[0] == _TEXT('\0') )
-		return ( error( ERROR_4DOS_DIR_STACK_EMPTY, NULL ));
-
-	// get last (newest) entry in queue
-	for ( pszDirectory = (char *)(long)( end_of_env( gaPushdQueue ) - 1 ); (( pszDirectory > gaPushdQueue ) && ( pszDirectory[-1] != _TEXT('\0') )); pszDirectory-- )
-		;
-
-	// change drive and directory
-	nRet = __cd( pszDirectory, CD_CHANGEDRIVE | CD_SAVELASTDIR );
-
-	// remove most recent entry from DIRSTACK
-	pszDirectory[0] = _TEXT('\0');
-	pszDirectory[1] = _TEXT('\0');
-
-	return nRet;
+	return DirPopd_Cmd( pszCmdLine );
 }
-
 
 // Display the directory stack created by PUSHD
+extern int _far DirDirs_Cmd( LPTSTR );
 int _near Dirs_Cmd( LPTSTR pszCmdLine )
 {
-	TCHAR _far *pszDirectory;
-
-	if ( gaPushdQueue[0] == _TEXT('\0') )
-		return (error( ERROR_4DOS_DIR_STACK_EMPTY, NULL ));
-
-	for ( pszDirectory = gaPushdQueue; ( *pszDirectory != _TEXT('\0') ); pszDirectory = next_env( pszDirectory ))
-		printf( FMT_FAR_STR_CRLF, pszDirectory );
-
-	return 0;
+	return DirDirs_Cmd( pszCmdLine );
 }
-
 
 // remove directory
 extern int _far DirRd_Cmd( LPTSTR );

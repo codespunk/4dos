@@ -197,3 +197,84 @@ int _far DirCd_Cmd( LPTSTR pszCmdLine )
 
 	return ( __cd( pszCmdLine, fFlags ));
 }
+
+extern TCHAR gaPushdQueue[ DIRSTACKSIZE ];
+
+// PUSHD [directory]
+// Save the current drive and directory on the directory stack.
+// If a destination is supplied, change to it before saving the old path.
+// Examples: PUSHD; PUSHD D:\WORK.
+int _far DirPushd_Cmd( LPTSTR pszCmdLine )
+{
+	LPTSTR pszCurrentDirectory;
+	TCHAR szDirectory[MAXPATH];
+
+	if (( pszCurrentDirectory = gcdir( NULL, 0 )) == NULL )	// get current directory
+		return ERROR_EXIT;
+
+	strcpy( szDirectory, pszCurrentDirectory );
+
+	// change disk and/or directory
+	//   (if no arguments, just save the current directory)
+	if (( pszCmdLine ) && ( *pszCmdLine ) && ( __cd( pszCmdLine, CD_CHANGEDRIVE | CD_SAVELASTDIR ) != 0 ))
+		return ERROR_EXIT;
+
+	// save the previous disk & directory
+	SaveDirectory( gaPushdQueue, szDirectory );
+
+	return 0;
+}
+
+// POPD [*]
+// Restore the most recently saved drive and directory, removing its entry.
+// Remove the entry even if the directory change fails; * clears the stack.
+// Examples: POPD; POPD *.
+int _far DirPopd_Cmd( LPTSTR pszCmdLine )
+{
+	LPTSTR pszDirectory;
+	register int nRet;
+
+	if (( pszCmdLine ) && ( *pszCmdLine )) {
+
+		if ( *pszCmdLine == _TEXT('*') ) {
+			// clear directory stack
+			gaPushdQueue[0] = _TEXT('\0');
+			gaPushdQueue[1] = _TEXT('\0');
+			return 0;
+		}
+
+		return ( Usage( POPD_USAGE ));
+	}
+
+	if ( gaPushdQueue[0] == _TEXT('\0') )
+		return ( error( ERROR_4DOS_DIR_STACK_EMPTY, NULL ));
+
+	// get last (newest) entry in queue
+	for ( pszDirectory = (char *)(long)( end_of_env( gaPushdQueue ) - 1 ); (( pszDirectory > gaPushdQueue ) && ( pszDirectory[-1] != _TEXT('\0') )); pszDirectory-- )
+		;
+
+	// change drive and directory
+	nRet = __cd( pszDirectory, CD_CHANGEDRIVE | CD_SAVELASTDIR );
+
+	// remove most recent entry from DIRSTACK
+	pszDirectory[0] = _TEXT('\0');
+	pszDirectory[1] = _TEXT('\0');
+
+	return nRet;
+}
+
+// DIRS
+// Display the directory stack from oldest to newest without modifying it.
+// Report an error if the stack is empty. Example: DIRS.
+int _far DirDirs_Cmd( LPTSTR pszCmdLine )
+{
+	TCHAR _far *pszDirectory;
+
+	if ( gaPushdQueue[0] == _TEXT('\0') )
+		return (error( ERROR_4DOS_DIR_STACK_EMPTY, NULL ));
+
+	for ( pszDirectory = gaPushdQueue; ( *pszDirectory != _TEXT('\0') ); pszDirectory = next_env( pszDirectory ))
+		printf( FMT_FAR_STR_CRLF, pszDirectory );
+
+	return 0;
+}
