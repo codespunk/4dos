@@ -74,6 +74,39 @@ static int nInverse;
 static char szInvalidChars[] = "  , |<> \t;,`+=";
 
 
+// Shared output pagination state and routines.
+unsigned int uDirRow;
+
+// Reset the shared output row counter and disable pagination until enabled.
+void init_page_size( void )
+{
+	uDirRow = gnPageLength = 0;
+}
+
+
+// Advance the shared output row count and pause at the configured page length.
+// Reset the count at the page boundary; never prompt on redirected stdout.
+// Read a key without echo, clear the prompt, and abort on Escape.
+void _page_break( void )
+{
+	if ( ++uDirRow == gnPageLength ) {
+
+		unsigned key;
+		uDirRow = 0;
+
+		// make sure STDOUT hasn't been redirected
+		if ( QueryIsConsole( STDOUT ) == 0 )
+			return;
+
+		qputs( PAUSE_PAGE_PROMPT );
+		key = GetKeystroke( EDIT_NO_ECHO | EDIT_SCROLL_CONSOLE );
+		qputs( PAUSE_PAGE_CLEAR );
+		if (key == ESC )
+			BreakOut();
+	}
+}
+
+
 // get string from STDIN, with full line editing
 //	pszStr       = input string
 //	nMaxLength = max entry length

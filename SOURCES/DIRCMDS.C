@@ -77,7 +77,7 @@ static unsigned int uScreenRows;			// screen size in rows (base 0 )
 static unsigned long ulTreeFiles, ulTreeDirs;
 static t_int64 ulTreeSize;		// size of all files in tree
 static t_int64 ulTreeAlloc; 	// allocated size of all files in tree
-static unsigned int uDirRow;			// current row number
+extern unsigned int uDirRow;			// current row number
 static unsigned long ulDirMode;			// search attribute
 static unsigned int uDirColumns;		// number of columns (varies by screen size )
 static unsigned int uScreenColumns; 	// screen size in columns (base 1)
@@ -364,11 +364,6 @@ void init_dir( void )
 }
 
 
-// initialize page size variables
-void init_page_size( void )
-{
-	uDirRow = gnPageLength = 0;
-}
 
 
 // retrieve files based on specified attributes
@@ -1635,25 +1630,6 @@ CCDone:
 }
 
 
-// pause if we're at the end of a page & /P was specified
-void _page_break( void )
-{
-	if ( ++uDirRow == gnPageLength ) {
-		
-		unsigned key;
-		uDirRow = 0;
-
-		// make sure STDOUT hasn't been redirected
-		if ( QueryIsConsole( STDOUT ) == 0 )
-			return;
-		
-		qputs( PAUSE_PAGE_PROMPT );
-		key = GetKeystroke( EDIT_NO_ECHO | EDIT_SCROLL_CONSOLE );
-		qputs( PAUSE_PAGE_CLEAR );
-		if (key == ESC )
-			BreakOut();
-	}
-}
 
 
 
