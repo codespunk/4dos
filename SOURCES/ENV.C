@@ -65,12 +65,13 @@ static int _fastcall __Set( LPTSTR, TCHAR _far * );
 int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 
-#pragma alloc_text( MISC_TEXT, next_env, end_of_env )
+#pragma alloc_text( MISC_TEXT, end_of_env )
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
 #pragma alloc_text( ENV_TEXT, get_alias )
 #pragma alloc_text( ENV_TEXT, add_list )
+#pragma alloc_text( ENV_TEXT, next_env )
 
 
 
@@ -737,7 +738,8 @@ add_bye:
 }
 
 
-// return a pointer to the next entry in list
+// Advance pchEnv to the next NUL-terminated entry in a packed list.
+// Return the same pointer when already at the terminating empty entry.
 TCHAR _far * PASCAL next_env( TCHAR _far *pchEnv )
 {
 	register int i;
