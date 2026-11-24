@@ -69,6 +69,7 @@ static int _far EnvAlias_Cmd( LPTSTR );
 static int _far EnvFunction_Cmd( LPTSTR );
 static int _far EnvSet_Cmd( LPTSTR );
 static int _far EnvUnalias_Cmd( LPTSTR );
+static int _far EnvUnfunction_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -83,6 +84,7 @@ static int _far EnvUnalias_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, EnvFunction_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvSet_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvUnalias_Cmd )
+#pragma alloc_text( ENV_TEXT, EnvUnfunction_Cmd )
 
 
 
@@ -385,8 +387,17 @@ static int _far EnvUnalias_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// create or display user functions
+// Near UNFUNCTION dispatcher; forward to the ENV_TEXT implementation.
 int _near Unfunction_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvUnfunction_Cmd( pszCmdLine );
+}
+
+
+// UNFUNCTION [/Q] [/R file] name ...
+// Remove user functions by name or wildcard; /Q suppresses missing-name diagnostics.
+// /R reads removal names from files. Examples: UNFUNCTION twice; UNFUNCTION test*.
+static int _far EnvUnfunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
