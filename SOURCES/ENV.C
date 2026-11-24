@@ -67,6 +67,7 @@ int _fastcall __Unset( LPTSTR, TCHAR _far * );
 
 static int _far EnvAlias_Cmd( LPTSTR );
 static int _far EnvFunction_Cmd( LPTSTR );
+static int _far EnvSet_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, SetFromFile )
 #pragma alloc_text( ENV_TEXT, __Set )
 #pragma alloc_text( ENV_TEXT, __Unset )
@@ -79,6 +80,7 @@ static int _far EnvFunction_Cmd( LPTSTR );
 #pragma alloc_text( ENV_TEXT, add_variable )
 #pragma alloc_text( ENV_TEXT, EnvAlias_Cmd )
 #pragma alloc_text( ENV_TEXT, EnvFunction_Cmd )
+#pragma alloc_text( ENV_TEXT, EnvSet_Cmd )
 
 
 
@@ -204,8 +206,18 @@ static int _far EnvFunction_Cmd( LPTSTR pszCmdLine )
 }
 
 
-// create or display environment variables
+// Near SET dispatcher; forward to the ENV_TEXT implementation.
 int _near Set_Cmd( LPTSTR pszCmdLine )
+{
+	return EnvSet_Cmd( pszCmdLine );
+}
+
+
+// SET [/A] [/M] [/P] [/R file] [name[=value]]
+// Display or change environment variables; an empty value removes an entry.
+// /A evaluates expressions, /M selects the master environment, /P pauses, /R reads files.
+// Examples: SET; SET TEMP=C:\TEMP; SET /A COUNT=2+3.
+static int _far EnvSet_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
