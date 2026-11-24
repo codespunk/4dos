@@ -17,6 +17,7 @@
 :
 :     Start processing, initialize variables etc.
 :
+@echo off
 timer /1 ON
 setlocal
 alias error = `set _err=%& %+ goto error`

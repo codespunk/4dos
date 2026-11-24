@@ -6,6 +6,11 @@ goto args
 :args
   if "%1"=="" goto check_tools
   if "%1"=="clean" goto clean
+  if "%1"=="apprel" goto check_tools
+  if "%1"=="4dos" goto check_tools
+  if "%1"=="batcomp" goto check_tools
+  if "%1"=="kstack" goto check_tools
+  if "%1"=="all" goto check_tools
   if "%1"=="-h" goto help
   if "%1"=="--help" goto help
   echo Unknown argument: %1
@@ -15,17 +20,22 @@ goto args
 :help
   echo 4DOS Build Script
   echo.
-  echo Usage: BUILD [clean]
+  echo Usage: BUILD [4dos, batcomp, kstack, apprel, all, clean]
   echo.
-  echo Builds 4DOS using MKDOS.BTM.
-  echo By default, performs an incremental build without deleting files.
+  echo By default, builds only 4DOS.COM.
+  echo All build targets are incremental and don't delete any files.
   echo.
   echo Commands:
-  echo   clean       Delete files in SOURCES\DOS and exit
-  echo   -h, --help  Display this help and exit
+  echo   all         Build all targets
+  echo   4dos        Build 4DOS.COM
+  echo   batcomp     Build BATCOMP.EXE
+  echo   kstack      Build KSTACK.COM
+  echo   apprel      Build APPREL.EXE
+  echo   clean       Delete build artifacts
+  echo   -h, --help  Display this help
   echo.
   quit
-   
+
 :clean
   4dos /c del /y /e %=
     DOS\*.BAK %=
@@ -47,6 +57,10 @@ goto args
     BUILD.DSR %=
     BUILD.W16 %=
     BUILD.H
+  4dos /c del /y /e %=
+    APPREL.MAP %=
+    APPREL.OBJ %=
+    MSVC.PDB
   quit
 
 :check_tools
@@ -66,6 +80,10 @@ goto args
     echo ERROR: ML.EXE not found in "%MASM%\BIN"
     quit
   endiff
+  if "%1"=="apprel" goto apprel
+  if "%1"=="all" goto all
+  if "%1"=="batcomp" goto batcomp
+  if "%1"=="kstack" goto kstack
   goto build
 
 :no_intver
@@ -105,5 +123,32 @@ goto args
 
 :build
   if not exist INTVER.ASM gosub set_intver
-  4dos /e:2048 /c mkdos.btm
-  quit
+  if not exist DOS\NUL md DOS
+  4dos /e:2048 /c mkproc.btm 4dos 4dos.com msvc dos bp NONE
+  quit %?
+
+:batcomp
+  if not exist DOS\NUL md DOS
+  call MSVC.BTM
+  4dos /e:2048 /c mkproc.btm batcomp batcomp.exe msvc dos bp NONE
+  quit %?
+
+:kstack
+  if not exist DOS\NUL md DOS
+  4dos /e:2048 /c mkproc.btm kstack kstack.com msvc dos bp NONE
+  quit %?
+
+:apprel
+  call MSVC.BTM
+  nmake /nologo /f APPREL.MAK
+  quit %?
+
+:all
+  4dos /e:2048 /c build.btm apprel
+  if errorlevel 1 quit %?
+  4dos /e:2048 /c build.btm 4dos
+  if errorlevel 1 quit %?
+  4dos /e:2048 /c build.btm batcomp
+  if errorlevel 1 quit %?
+  4dos /e:2048 /c build.btm kstack
+  quit %?
