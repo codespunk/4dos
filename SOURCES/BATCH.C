@@ -49,7 +49,6 @@
 #include "strmenc.h"
 
 
-static int _fastcall __echos( LPTSTR, int );
 static int _fastcall __if( LPTSTR, int );
 static int _fastcall __input( LPTSTR, int );
 static int LoadBTM( void );
@@ -879,35 +878,23 @@ int _near EchoErr_Cmd( LPTSTR pszCmdLine )
 
 
 
-// echo arguments to the screen (stdout) without a trailing CR/LF
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenEchos_Cmd( LPTSTR );
 int _near Echos_Cmd( LPTSTR pszCmdLine )
 {
-	return ( __echos( pszCmdLine, 0 ));
+	return ScreenEchos_Cmd( pszCmdLine );
 }
 
 
-// echo arguments to the screen (stdout) without a trailing CR/LF
+// Near dispatcher for the command table; implementation resides in SCREENIO_TEXT.
+extern int _far ScreenEchosErr_Cmd( LPTSTR );
 int _near EchosErr_Cmd( LPTSTR pszCmdLine )
 {
-	return ( __echos( pszCmdLine, 1 ));
+	return ScreenEchosErr_Cmd( pszCmdLine );
 }
 
 
-// echo arguments to the screen (stdout) without a trailing CR/LF
-static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
-{
-	register int fStd;
 
-	if (( pszCmdLine ) && ( *pszCmdLine )) {
-
-		fStd = (( fErr ) ? 2 : 1 );
-
-		if ( setjmp( cv.env ) != -1 )
-			qprintf( fStd, FMT_STR, pszCmdLine+1 );
-	}
-
-	return 0;
-}
 
 
 #define FOR_ATTRIBUTES 1

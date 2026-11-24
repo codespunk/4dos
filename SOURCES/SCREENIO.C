@@ -1784,3 +1784,39 @@ EchoErr:
 
 	return 0;
 }
+
+static int _fastcall __echos( LPTSTR, int );
+
+// ECHOS [text]
+// Print text to stdout without a newline. Example: ECHOS Working...
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenEchos_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __echos( pszCmdLine, 0 ));
+}
+
+// ECHOSERR [text]
+// Print text to stderr without a newline. Example: ECHOSERR Error:
+// pszCmdLine is the command tail; returns the implementation status.
+int _far ScreenEchosErr_Cmd( LPTSTR pszCmdLine )
+{
+	return ( __echos( pszCmdLine, 1 ));
+}
+
+// Shared no-newline output helper. pszCmdLine is the command tail;
+// fErr selects stderr instead of stdout. Returns zero.
+// Establishes the existing Ctrl+C recovery point in cv.env.
+static int _fastcall __echos( LPTSTR pszCmdLine, int fErr )
+{
+	register int fStd;
+
+	if (( pszCmdLine ) && ( *pszCmdLine )) {
+
+		fStd = (( fErr ) ? 2 : 1 );
+
+		if ( setjmp( cv.env ) != -1 )
+			qprintf( fStd, FMT_STR, pszCmdLine+1 );
+	}
+
+	return 0;
+}
