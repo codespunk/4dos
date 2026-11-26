@@ -381,10 +381,12 @@ __exit  proc near
         mov     dx,cs                   ; . . .
 
         public  __do_exit_with_msg__
+        public  __do_exit_with_msg_
 
 ; input: DX:AX - far pointer to message to print
 ;        BX    - exit code
 
+__do_exit_with_msg_:
 __do_exit_with_msg__:
         mov     sp,ss:_STACKTOP         ; use loader-established stack
         push    bx                      ; save return code
