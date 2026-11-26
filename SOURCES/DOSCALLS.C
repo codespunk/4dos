@@ -871,6 +871,7 @@ int _fastcall SetFileDateTime( char *pszFilename, int fd, DATETIME *sysDateTime,
 {
 	int nFunction = 0x5701;
 	unsigned int uTime, uDate;
+	int nError = 0;
 
 	_doserrno = 0;
 	if (( fd > 0 ) || (( fd = _sopen( pszFilename, (_O_WRONLY | _O_BINARY), _SH_DENYNO )) >= 0 )) {
@@ -897,9 +898,11 @@ _asm {
 		int	21h
 		pop	si
 		jnc	NoError
-		mov	_doserrno, ax
+		mov	nError, ax
 NoError:
 }
+		if ( nError )
+			_doserrno = nError;
 		if ( pszFilename != NULL )
 			_close( fd );
 		EnableSignals();
