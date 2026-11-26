@@ -1529,8 +1529,7 @@ int UniqueFileName( char *szFname )
 	}
 
 	if ( fd >= 0 ) {
-		_close( fd );
-		if (errno == 0 ) {
+		if ( _close( fd ) == 0 ) {
 			strcpy( szFname, buffer );
 			return 0;
 		}
