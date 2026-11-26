@@ -89,9 +89,9 @@
 
                            /* size of read / write buffer */
 #define BUF_SIZE 16384
-                           /* maximum number of segments in reloc table */
+                           /* maximum number of relocation groups */
 #define MAX_SEGS 16
-                           /* maximum number of entries per segment */
+                           /* maximum number of entries per group */
 #define MAX_SEG_RELOCS 2000
                            /* maximum number of segments to ignore */
 #define MAX_IGNORE 16
@@ -141,8 +141,8 @@ const char *errmsg[] = {
    "New EXE file rename error",              /* 14 */
    "Too many ignored segments",              /* 15 */
    "Relocation table too large",             /* 16 */
-   "Too many segments in table",             /* 17 */
-   "Too many relocations in segment",        /* 18 */
+   "Too many relocation groups",             /* 17 */
+   "Too many relocations in group",        /* 18 */
    "Missing, duplicate or invalid relocation metadata", /* 19 */
    "Relocation reservation differs from payload; measure and relink", /* 20 */
    "Cannot write relocation size include",   /* 21 */
@@ -160,13 +160,13 @@ static const unsigned char meta_sig[META_SIG_SIZE] = {
 };
 static unsigned char metadata[META_SIZE];
 static long meta_pos;
-unsigned int reloc_segs[MAX_SEGS];        /* segments in relocation table */
+unsigned int reloc_segs[MAX_SEGS];        /* segment of each relocation group */
 unsigned int reloc_counts[MAX_SEGS];      /* entry counts for each segment */
 unsigned int new_reloc[MAX_SEGS][MAX_SEG_RELOCS];  /* reorganized relocation table */
 unsigned int ignore_segs[MAX_IGNORE];     /* segments to ignore */
 int in,                                   /* input exe file handle */
     out;                                  /* output exe file handle */
-unsigned int seg_cnt = 0,                 /* segments in relocation table */
+unsigned int seg_cnt = 0,                 /* segment of each relocation group */
     ignore_cnt = 0,                       /* segments to ignore */
     new_reloc_cnt = 0,                    /* entries in new reloc table */
     new_reloc_bytes;                      /* bytes in new reloc table */
@@ -314,13 +314,16 @@ main(int argc, char **argv)
       // if we aren't ignoring this entry, add it to the new table
       if (ign_flag == 0) {
 
-         // scan the segment list and see if the segment is there
+         // Find a group for this segment that still has room.
+         // Reloc processes groups independently, so a segment may appear
+         // more than once without changing the serialized format.
          for (scnt = 0; scnt < seg_cnt; scnt++) {
-            if (rtptr[1] == reloc_segs[scnt])
+            if (rtptr[1] == reloc_segs[scnt] &&
+                reloc_counts[scnt] < MAX_SEG_RELOCS)
                break;
          }
 
-         // if we need to add this segment to the list, do so
+         // Start another group if the segment is new or all its groups are full.
          if (scnt == seg_cnt) {
 // printf("NEW segment %d -- ", scnt);
             if (seg_cnt >= MAX_SEGS)
@@ -329,7 +332,7 @@ main(int argc, char **argv)
          }
 // else printf("old segment %d -- ", scnt);
 
-         // now add this entry to the list for the segment
+         // now add this entry to the group
          if (reloc_counts[scnt] >= MAX_SEG_RELOCS) {
             printf("\nError on segment %.04X", reloc_segs[scnt]);
             error(ERR_SEG_RELOCS);
