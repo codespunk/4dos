@@ -34,8 +34,6 @@
 ;    ENDLOG
 */
 
-#include	<portab.h>
-
 #define	IDLE_COMMAND	0x0001
 #define	IDLE_DOSFUNC	0x0002
 #define IDLE_ON		0x4000
