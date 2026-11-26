@@ -22,7 +22,7 @@
  *		SHA-512		64 byte / 512 bit
  */
 
-#ifdef __WATCOMC__
+#if defined(__WATCOMC__) && (__WATCOMC__ >= 1280)
 #include <stdint.h>
 /*
  * If you do not have the ISO standard stdint.h header file, then you
