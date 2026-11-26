@@ -57,6 +57,7 @@ else
         extrn   __FiniRtns              : near
         extrn   __fatal_runtime_error_  : near
 endif
+        extrn   WatcomRuntimeExit       : far
         extrn   _edata                  : byte  ; end of DATA (start of BSS)
         extrn   _end                    : byte  ; end of BSS (start of STACK)
 
@@ -385,7 +386,7 @@ __exit  proc near
 ;        BX    - exit code
 
 __do_exit_with_msg__:
-        mov     sp,offset DGROUP:_end+80h; set a good stack pointer
+        mov     sp,ss:_STACKTOP         ; use loader-established stack
         push    bx                      ; save return code
         push    ax                      ; save address of msg
         push    dx                      ; . . .
@@ -427,8 +428,7 @@ endif
         mov     dx,FINI_PRIORITY_EXIT-1 ; less than exit
         call    __FiniRtns              ; do finalization
         pop     ax                      ; restore return code
-        mov     ah,04cH                 ; DOS call to exit with return code
-        int     021h                    ; back to DOS
+        jmp     WatcomRuntimeExit       ; restore 4DOS state and exit
 __exit  endp
 
 

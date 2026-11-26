@@ -1521,6 +1521,27 @@ PSPRest:  mov       es,SrvPSP           ;point to low segment = PSP
           retf                          ;branch to INT 21 and exit
           ;
 DoQuit    endp
+
+          ifdef __WATCOM__
+          ; Called after loader initialization, including before ServInit.
+          ; AL is the runtime exit code.  Do not return.
+WatcomRuntimeExit proc far
+          public WatcomRuntimeExit
+          push ax
+          call SrvClean
+          pop ax
+          test SrvFlags,ROOTFLAG
+          jnz WatcomFatalRoot
+          call DoQuit
+WatcomFatalRoot:
+          mov dx,offset FatalMsg
+          calldos MESSAGE
+WatcomFatalStop:
+          sti
+          jmp short WatcomFatalStop
+WatcomRuntimeExit endp
+          endif
+
           ;
           ;
           ; Include interrupt cleanup routines
