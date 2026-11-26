@@ -330,11 +330,7 @@ nopgmname:                              ; endif
         mov     __no87,bp               ; set state of "NO87" environment var
         mov     _STACKLOW,di            ; save low address of stack
 
-        mov     cx,offset DGROUP:_end   ; end of _BSS segment (start of STACK)
-        mov     di,offset DGROUP:_edata ; start of _BSS segment
-        sub     cx,di                   ; calc # of bytes in _BSS segment
-        mov     al,0                    ; zero the _BSS segment
-        rep     stosb                   ; . . .
+        ; Loader already cleared BSS.
 
         cmp     word ptr __get_ovl_stack,0 ; if program not overlayed
         jne     _is_ovl                 ; then
