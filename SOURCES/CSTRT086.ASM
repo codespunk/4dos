@@ -71,7 +71,7 @@ endif
         extrn   "C",_STACKTOP           : word
         extrn   "C",_cbyte              : word
         extrn   "C",_child              : word
-        extrn   __no87                  : word
+        extrn   __no87                  : byte
         extrn   "C",__FPE_handler       : dword
         extrn   "C",_LpCmdLine          : word
         extrn   "C",_LpPgmName          : word
@@ -288,6 +288,7 @@ noparm: sub     al,al
         mov     es:_osmajor,al
         mov     es:_osminor,ah
         mov     cx,di                   ; remember address of pgm name
+        xor     bp,bp                   ; assume NO87 not present
         cmp     al,3                    ; if DOS version 3 or higher
         jb      nopgmname               ; then
 ;
@@ -295,7 +296,6 @@ noparm: sub     al,al
 ;
         mov     ds,ds:2ch               ; get segment addr of environment area
         sub     si,si                   ; offset 0
-        xor     bp,bp                   ; no87 not present!
 L0:     mov     ax,[si]                 ; get first part of environment var
         or      ax,2020H                ; lower case
         cmp     ax,"on"                 ; if first part is 'NO'
@@ -303,7 +303,7 @@ L0:     mov     ax,[si]                 ; get first part of environment var
         mov     ax,2[si]                ; - get second part
         cmp     ax,"78"                 ; - if second part is '87'
         jne     L1                      ; - then
-        inc     bp                      ; - - set bp to indicate NO87
+        mov     bp,1                    ; - - set bp to indicate NO87
 L1:     cmp     byte ptr [si],0         ; end of string ?
         lodsb
         jne     L1                      ; until end of string
@@ -328,7 +328,10 @@ nopgmname:                              ; endif
         mov     dx,DGROUP
         mov     ds,dx
         mov     es,dx
-        mov     __no87,bp               ; set state of "NO87" environment var
+        ; The CRT tests NO87 as a byte. Do not overwrite the next
+        ; runtime variable, which immediately follows it in Watcom 2.0.
+        mov     ax,bp
+        mov     __no87,al               ; set state of "NO87" environment var
         mov     _STACKLOW,di            ; save low address of stack
 
         ; Loader already cleared BSS.
