@@ -3775,7 +3775,7 @@ APMInstalled:
 			break;
 
 		case VAR_CMDSPEC:
-			sprintf( lpszVar, FMT_FAR_STR, _pgmptr );
+			sprintf( lpszVar, FMT_FAR_STR, FAR_PGMPTR );
 			break;
 
 		case VAR_CO:

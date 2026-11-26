@@ -229,7 +229,7 @@ _asm {
 
 	if ( fWin95 || ( gpIniptr->ShellLevel == 0 )) {
 		// set COMSPEC
-		sprintf( gszFindDesc, COMSPEC_DOS, COMSPEC, _pgmptr );
+		sprintf( gszFindDesc, COMSPEC_DOS, COMSPEC, FAR_PGMPTR );
 		add_variable( gszFindDesc );
 	}
 

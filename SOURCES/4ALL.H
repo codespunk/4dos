@@ -47,6 +47,11 @@ typedef struct {
 
 #define wcmemset memset
 
+// Ensure the program pathname is passed as a four-byte far
+// pointer, as required by the 4DOS variadic formatter,
+// regardless of the compiler's native _pgmptr declaration.
+#define FAR_PGMPTR ((char _far *)_pgmptr)
+
 #define STDIN 0			// standard input, output, error, aux, & prn
 #define STDOUT 1
 #define STDERR 2

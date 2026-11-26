@@ -92,7 +92,7 @@ LPTSTR _near _fastcall find_4files( LPTSTR lpszFileName, BOOL fInstaller )
 
 	if ( fInstaller ) {
 		// try to find _4INST.BTM in the 4DOS directory
-		sprintf( gszCmdline, FMT_FAR_STR, _pgmptr );
+		sprintf( gszCmdline, FMT_FAR_STR, FAR_PGMPTR );
 		insert_path( gszCmdline, lpszFileName, gszCmdline );
 		goto find_it;
 	}
