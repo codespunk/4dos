@@ -92,8 +92,10 @@ fd	ends
          extrn fWin95LFN:word
 
 ifdef __WATCOM__
+ifndef LEGACY_WATCOM
 	 extrn __NFiles:word
 	 extrn __io_mode:byte
+endif
 else
 	 extrn _umaskval:word
 	 extrn _nfile:word
@@ -444,6 +446,11 @@ _rmdir	 endp
 
 ;    Open flags (from fcntl.h):
 
+; Legacy Watcom C calls the CRT open/sopen entry points, not the
+; Microsoft-decorated wrappers below. Its private I/O mode array is
+; not exported. Do not emit the unused wrappers for this configuration.
+ifndef LEGACY_WATCOM
+
 _O_RDONLY      equ 0000h
 _O_WRONLY      equ 0001h
 _O_RDWR        equ 0002h
@@ -718,6 +725,8 @@ endif
 	 ret			  ; return to caller
 
 _cXENIXtoDOSmode endp
+
+endif ; LEGACY_WATCOM
 
 
 ;------------------------------------------------------------------------------

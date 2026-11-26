@@ -40,7 +40,12 @@
 #include <dos.h>
 
 #ifdef __WATCOMC__
+#if (__WATCOMC__ < 1280)
+extern unsigned __GetIOMode( int );
+extern void __SetIOMode( int, unsigned );
+#else
 extern unsigned *__io_mode;
+#endif
 #else
 #include <msdos.h>
 #endif
@@ -3269,7 +3274,11 @@ int _far Y_Cmd( LPTSTR pszCmdLine )
 
 	// clear EOF flag
 #ifdef __WATCOMC__
+#if (__WATCOMC__ < 1280)
+	__SetIOMode( STDIN, __GetIOMode( STDIN ) & ~( _EOF | _BINARY ));
+#else
 	__io_mode[STDIN] &= ~( _EOF | _BINARY );
+#endif
 #else
 	_osfile[STDIN] &= ~( FEOFLAG | FCRLF );
 #endif
