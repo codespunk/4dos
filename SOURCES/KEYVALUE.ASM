@@ -302,4 +302,3 @@ K_AltF12  equ       8Ch + SCAN          ; AltF12
           ;
 .LIST
 
-

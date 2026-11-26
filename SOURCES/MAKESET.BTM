@@ -21,4 +21,3 @@ set os2sdk=d:\toolkit
 
 :: Set up MASM386 directory
 set masm386=d:\mstools\bin
-

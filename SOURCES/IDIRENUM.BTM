@@ -37,4 +37,3 @@ set dummy=%@fileclose[%outf]
 move inidlg.h *.ho
 ren inidlg.hn *.h
 endlocal
-

@@ -555,4 +555,3 @@ SumPart:  lodsw                         ;load a word
           ;
           end
 
-

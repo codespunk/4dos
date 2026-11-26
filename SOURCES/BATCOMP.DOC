@@ -39,4 +39,3 @@ Compression is not effective for very small files.  If you try to use it
 the file will be "compressed", but you will be warned that you didn't gain
 anything!
 
-

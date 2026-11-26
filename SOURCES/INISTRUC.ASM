@@ -651,4 +651,3 @@ NPStd	dw	?		;standard keystroke value
 NPSecond	dw	?		;Ctrl or Shift value
 NPKVals	ends			;end NPKVals
 
-
