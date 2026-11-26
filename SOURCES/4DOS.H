@@ -62,12 +62,6 @@ typedef const char * LPCTSTR;
 #define _stprintf sprintf
 #define _stscanf sscanf
 
-#ifdef __WATCOMC__
-	#define _SH_DENYNO SH_DENYNO
-	#define _SH_DENYWR SH_DENYWR
-	#define _SH_COMPAT SH_COMPAT
-#endif
-
 typedef unsigned char UCHAR;
 typedef unsigned short USHORT;
 typedef unsigned short WORD;

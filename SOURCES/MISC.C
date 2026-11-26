@@ -80,7 +80,7 @@ LPTSTR LCS( LPTSTR string1, LPTSTR string2 )
 	BYTE (_far *cost)[MAXSIZE+1], (_far *backPtr)[MAXSIZE+1];
 	BYTE LCSlength, i, j, k;
 	BYTE length1 = (BYTE)strlen(string1), length2 = (BYTE)strlen(string2);
-	WORD bufsize = BUFSIZE;
+	unsigned int bufsize = BUFSIZE;	// AllocMem takes unsigned int *
 
 	if ( length1 > MAXSIZE || length2 > MAXSIZE || (cost = AllocMem(&bufsize)) == NULL || bufsize < BUFSIZE || (backPtr = AllocMem(&bufsize)) == NULL || bufsize < BUFSIZE ) {
 		LCSstring[0] = _TEXT('\0');
@@ -245,7 +245,10 @@ error:		error( _doserrno, pszFileName );
 error1:		_close( nFH );
 		goto error;
 	}
-	fSHA ? SHA1Reset( &context1 ) : MD5Init( &context );
+	if ( fSHA )
+		SHA1Reset( &context1 );
+	else
+		MD5Init( &context );
 	do {
 		if ( FileRead( nFH, lpszBuffer, uReadSize, &uBytesRead )) {
 			FreeMem( lpszBuffer );
@@ -256,7 +259,10 @@ error1:		_close( nFH );
 		else
 			MD5Update( &context, lpszBuffer, uBytesRead );
 	} while ( uBytesRead );
-	fSHA ? SHA1Result( &context1, ucDigest ) : MD5Final( ucDigest, &context );
+	if ( fSHA )
+		SHA1Result( &context1, ucDigest );
+	else
+		MD5Final( ucDigest, &context );
 	_close( nFH );
 	FreeMem( lpszBuffer );
 	return 0;
@@ -1479,20 +1485,21 @@ int MakeDateFromDays( long lDays, unsigned int *puYear, register unsigned int *p
 
 // return the ISO 8601 week number
 // (Calendar FAQ v2.9, section 7.8. "How can I calculate the week number?")
-int _near ISOweekDOY( int *day, int month, int *year, int *doy )
+unsigned int _near ISOweekDOY( unsigned int *day, unsigned int month, unsigned int *year, unsigned int *doy )
 {
 	int a, b, c, d, e, f, g, n, s;
 
-	a = month < 3 ? *year-1 : *year;
+	// Keep calendar arithmetic signed: n can be negative in early January.
+	a = month < 3 ? (int)*year-1 : (int)*year;
 	b = a / 4 - a / 100 + a / 400;
 	c = (a - 1) / 4 - (a - 1) / 100 + (a - 1) / 400;
 	s = b - c;
 	if ( month < 3 ) {
 		e = 0;
-		f = *day - 1 + 31 * (month - 1);
+		f = (int)*day - 1 + 31 * ((int)month - 1);
 	} else {
 		e = s + 1;
-		f = *day + (153 * (month - 3) + 2) / 5 + 58 + s;
+		f = (int)*day + (153 * ((int)month - 3) + 2) / 5 + 58 + s;
 	}
 	g = (a + b) % 7;
 	d = (f + g - e) % 7;
@@ -2490,10 +2497,10 @@ int _fastcall ExcludeFiles( LPTSTR pszFiles, LPTSTR pszFilename )
 //	5 - yyyy-Www-d (ISO week date)
 //	6 - yyyy-ddd (ISO ordinal date)
 //	0x100 - use 4-digit year
-LPTSTR FormatDate( int nMonth, int nDay, int nYear, int nFormat )
+LPTSTR FormatDate( unsigned int nMonth, unsigned int nDay, unsigned int nYear, int nFormat )
 {
 	static TCHAR szDate[24];
-	int i, n;
+	unsigned int i, n;
 
 	if ( nFormat & 0x100 ) {
 		if ( nYear < 79 )

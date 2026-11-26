@@ -59,9 +59,7 @@
 #include "inifile.h"
 
 extern TCHAR gaPushdQueue[];
-#ifndef __WATCOMC__
 extern int __dst_adjust;
-#endif
 extern struct tm *_gmtime( const time_t *, struct tm * );
 
 static int nExecStrRet = 0;
@@ -1260,7 +1258,7 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 	static TCHAR szNumeric[] = _TEXT("%[, 0123456789]");
 	LPTSTR pszVar, pszFileName;
 	int nLength, nOffset = 0, i = 0, n = 0, nEditFlags = EDIT_DATA, nFH;
-	unsigned int uDay, uMonth, uYear, fClip = 0;
+	unsigned int uDay, uMonth, uYear, uDOY, fClip = 0;
 	unsigned long ulTemp = 0L;
 	long lOffset = 0L;
 	TCHAR _far *lpPtr;
@@ -1635,8 +1633,8 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 				return ERROR_4DOS_INVALID_DATE;
 
 			if ( nOffset == FUNC_DOY ) {
-				ISOweekDOY( &uDay, uMonth, &uYear, &n );
-				IntToAscii( n, pszVar );
+				ISOweekDOY( &uDay, uMonth, &uYear, &uDOY );
+				IntToAscii( uDOY, pszVar );
 			} else if ( nOffset == FUNC_DAY )
 				IntToAscii( uDay, pszVar );
 			else if ( nOffset == FUNC_MONTH )
@@ -1647,7 +1645,7 @@ static int _near _fastcall VariableFunctions( LPTSTR lpszFunction, LPTSTR szBuff
 				else
 					return ERROR_4DOS_INVALID_DATE;
 			} else if ( nOffset == FUNC_ISOWEEK || nOffset == FUNC_ISOWYEAR ) {
-				n = ISOweekDOY( &uDay, uMonth, &uYear, &i );
+				n = ISOweekDOY( &uDay, uMonth, &uYear, &uDOY );
 				IntToAscii( nOffset == FUNC_ISOWEEK ? n : uYear, pszVar );
 			} else	// year needs to be at least 2 digits, with leading 0 if necessary
 				sprintf( pszVar, _TEXT("%02d"), uYear );
@@ -3562,6 +3560,7 @@ static LPTSTR _near _fastcall var_internal( LPTSTR lpszVar )
 	static TCHAR szBrandString[48];
 	TCHAR *ptr;
 	int i = 0, n, nOffset;
+	unsigned int uDay, uYear, uDOY;
 	DATETIME sysDateTime;
 	ULONG ulUnixTime;
 	t_int64 lla, llb;
@@ -3972,16 +3971,16 @@ APMInstalled:
 
 			// return the day (1-366) or the week (0-53) of the year
 			QueryDateTime( &sysDateTime );
-			n = sysDateTime.day;
-			n = ISOweekDOY( &n, sysDateTime.month, &sysDateTime.year, &i );
+			uDay = sysDateTime.day;
+			uYear = sysDateTime.year;
+			uDay = ISOweekDOY( &uDay, sysDateTime.month, &uYear, &uDOY );
 
-			// at this point, n = ISO week number, i = day of year
+			// at this point, uDay = ISO week number, uDOY = day of year
 			if ( nOffset == VAR_DOY )
-				n = i;
+				uDay = uDOY;
 			else if ( nOffset == VAR_ISOWYEAR )
-				n = sysDateTime.year;
-			// else ( nOffset == VAR_ISOWEEK ) use n;
-			IntToAscii( n, lpszVar );
+				uDay = uYear;
+			IntToAscii( uDay, lpszVar );
 			break;
 
 		case VAR_DPMI:
