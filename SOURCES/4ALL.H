@@ -52,6 +52,25 @@ typedef struct {
 // regardless of the compiler's native _pgmptr declaration.
 #define FAR_PGMPTR ((char _far *)_pgmptr)
 
+// Older Watcom headers use unprefixed sharing and permission constants.
+#ifdef __WATCOMC__
+#include <share.h>
+#include <sys/stat.h>
+#ifndef _SH_COMPAT
+#define _SH_COMPAT SH_COMPAT
+#define _SH_DENYRW SH_DENYRW
+#define _SH_DENYWR SH_DENYWR
+#define _SH_DENYRD SH_DENYRD
+#define _SH_DENYNO SH_DENYNO
+#endif
+#ifndef _S_IREAD
+#define _S_IREAD S_IREAD
+#endif
+#ifndef _S_IWRITE
+#define _S_IWRITE S_IWRITE
+#endif
+#endif
+
 #define STDIN 0			// standard input, output, error, aux, & prn
 #define STDOUT 1
 #define STDERR 2
