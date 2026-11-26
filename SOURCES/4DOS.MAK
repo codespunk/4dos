@@ -124,9 +124,6 @@ $(OBJ)\decout.obj : decout.asm
 $(OBJ)\srchenv.obj : srchenv.asm
         $(LASM)
 
-$(OBJ)\parspath.obj : parspath.asm
-        $(LASM)
-
 $(OBJ)\findems.obj : findems.asm
         $(LASM)
 
@@ -314,9 +311,6 @@ $(OBJ)\tzset.obj : tzset.c variety.h rtdata.h timedata.h exitwmsg.h _time.h
 #---------------------------------------------------------------------------
 # end of Open Watcom RTL files
 
-$(OBJ)\batdcomp.obj : batdcomp.asm
-        $(TASM)
-
 $(OBJ)\win95.obj : win95.asm
    $(ASM) win95.asm
 
@@ -324,7 +318,7 @@ $(LINKTARG) : \
 #       initialization (LOAD_TEXT segment)
               $(OBJ)\initerrs.obj $(OBJ)\4dlinit.obj $(OBJ)\fname.obj \
               $(OBJ)\ldosumb.obj $(OBJ)\decout.obj $(OBJ)\srchenv.obj \
-              $(OBJ)\parspath.obj $(OBJ)\findems.obj $(OBJ)\findureg.obj \
+              $(OBJ)\findems.obj $(OBJ)\findureg.obj \
               $(OBJ)\iniparse.obj $(OBJ)\lreloc.obj $(OBJ)\hexout.obj \
 #       resident (LOAD_TEXT segment)
               $(OBJ)\4dos.obj $(OBJ)\lerrmsg.obj $(OBJ)\modules.obj \

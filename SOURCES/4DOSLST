@@ -10,8 +10,6 @@ kstack
 4dlstruc.asm
 4dos.asm
 4dostart.asm
-asmutil.asm
-batdcomp.asm
 bcd.asm
 branddat.asm
 brandprm.asm
@@ -35,10 +33,8 @@ intver.asm
 keyvalue.asm
 kstack.asm
 loaddata.asm
-memsrch.asm
 mkbrand.asm
 modules.asm
-parspath.asm
 product.asm
 relocate.asm
 reshigh.asm
