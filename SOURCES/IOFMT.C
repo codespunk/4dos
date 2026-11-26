@@ -41,8 +41,15 @@
 
 #include "4all.h"
 
-extern int _pascal _fmtout(int, char _far *, const char _near *, va_list);
-extern int _pascal _fmtin(const char _far *, const char _near *, va_list);
+extern int _pascal _fmtout(int, char _far *, const char _near *, char *);
+extern int _pascal _fmtin(const char _far *, const char _near *, char *);
+
+// Watcom 1.x stores va_list in a one-element array.
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1300)
+#define ARG_POINTER(args) ((args)[0])
+#else
+#define ARG_POINTER(args) (args)
+#endif
 
 
 // replace the RTL sscanf()
@@ -51,7 +58,7 @@ int sscanf( const char *source, const char *fmt, ... )
 	va_list arglist;
 
 	va_start( arglist, fmt );
-	return ( _fmtin( source, fmt, arglist ));
+	return ( _fmtin( source, fmt, ARG_POINTER(arglist) ));
 }
 
 
@@ -61,7 +68,7 @@ int _cdecl sscanf_far( const char _far *source, const char *fmt, ... )
 	va_list arglist;
 
 	va_start( arglist, fmt );
-	return (_fmtin( source, fmt, arglist ));
+	return (_fmtin( source, fmt, ARG_POINTER(arglist) ));
 }
 
 
@@ -71,7 +78,7 @@ int sprintf( char *dest, const char *fmt, ... )
 	va_list arglist;
 
 	va_start( arglist, fmt );
-	return (_fmtout( -1, dest, fmt, arglist ));
+	return (_fmtout( -1, dest, fmt, ARG_POINTER(arglist) ));
 }
 
 
@@ -83,7 +90,7 @@ int _cdecl sprintf_far( char _far *dest, const char *fmt, ... )
 	va_list arglist;
 
 	va_start( arglist, fmt );
-	return ( _fmtout( -1, dest, fmt, arglist ));
+	return ( _fmtout( -1, dest, fmt, ARG_POINTER(arglist) ));
 }
 
 
@@ -100,7 +107,7 @@ int _cdecl qprintf( int handle, const char *format, ... )
 	va_list arglist;
 
 	va_start( arglist, format );
-	return ( _fmtout( handle, 0L, format, arglist ));
+	return ( _fmtout( handle, 0L, format, ARG_POINTER(arglist) ));
 }
 
 
@@ -110,7 +117,7 @@ int printf(const char *format, ...)
 	va_list arglist;
 
 	va_start( arglist, format );
-	return ( _fmtout( STDOUT, 0L, format, arglist ));
+	return ( _fmtout( STDOUT, 0L, format, ARG_POINTER(arglist) ));
 }
 
 
@@ -128,7 +135,7 @@ int _cdecl color_printf( int attrib, const char *format, ... )
 
 	if ( attrib != -1 ) {
 
-		length = _fmtout( -1, dest, format, arglist );
+		length = _fmtout( -1, dest, format, ARG_POINTER(arglist) );
 
 		// get current cursor position
 		GetCurPos( &row, &column );
@@ -138,7 +145,7 @@ int _cdecl color_printf( int attrib, const char *format, ... )
 
 		SetCurPos( row, column+length );
 	} else
-		length =_fmtout( STDOUT, 0L, format, arglist );
+		length =_fmtout( STDOUT, 0L, format, ARG_POINTER(arglist) );
 
 	return length;
 }

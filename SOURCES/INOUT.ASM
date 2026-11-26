@@ -897,15 +897,8 @@ RHDone:   dec       si                  ;back up to last digit
           entry     GetArg,noframe,,local  ;start GetArg
           ;
           mov       bx,ArgList          ;get next argument pointer
-ifdef __WATCOM__
-          mov       bx,ss:[bx]          ;get actual argument pointer
-          mov       ax,ss:[bx]          ;get argument
-          mov       bx,ArgList          ;get argument pointer again
-          add       wptr ss:[bx],2      ;and move pointer
-else
           mov       ax,ss:[bx]          ;get argument
           add       wptr ArgList,2      ;and move pointer
-endif
           ;
           exit                          ;all done
           ;
@@ -954,9 +947,6 @@ GIDone:   exit                          ;all done
           loadseg   es,ss               ;default to data segment (ASSUMES
                                         ;   small model)
           mov       bx,InArgs           ;get next argument pointer
-ifdef __WATCOM__
-          mov       bx,ss:[bx]          ;dereference another level
-endif
           mov       di,ss:[bx]          ;get argument offset
           add       bx,2                ;and move pointer
           cmp       bptr InFar,0        ;is it far?
@@ -964,15 +954,7 @@ endif
           mov       es,ss:[bx]          ;get argument segment
           add       bx,2                ;and move pointer
 GPDone:
-ifdef __WATCOM__
-          push      ax
-          mov       ax,bx
-          mov       bx,InArgs
-          mov       ss:[bx],ax
-          pop       ax
-else
           mov       InArgs,bx           ;put back new pointer
-endif
           pop       bx                  ;restore BX
           ;
           if        (_DOS ne 0) and (_WIN eq 0)  ;in DOS ...
