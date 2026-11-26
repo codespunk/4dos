@@ -344,6 +344,15 @@ INIKeys   dw        K_CtlBS             ;Ctrl-Backspace for delete word right
 RelocMrk  db        "ENDP"              ;mark before relocation table
 RlMrkLen  equ       $ - RelocMrk        ;length of mark
           ;
+          ; APPREL patches this record in the linked MZ load image.
+          ; Address is normalized and relative to the original DOS load base.
+          ; The size excludes ENDP and the leading payload-length word.
+RelocMeta db        "4DOSRELOC",1,0A5h,05Ah
+RelocOff  dw        0                   ;load-relative offset (0..15)
+RelocPara dw        0                   ;load-relative paragraph
+RelocBytes dw       0                   ;exact serialized payload bytes
+          dw        RELOCSIZE           ;linked reservation, checked by APPREL
+          ;
 ShPath    db        "x:\"               ;path for default Netware COMSPEC
 ShName    db        "4DOS.COM"          ;name to look for in SHELL=
 ShNameL   equ       $ - ShName          ;length of above
@@ -3134,18 +3143,39 @@ TADone:   exit                          ;that's all
           entry     GetReloc,noframe,,local  ;get relocation table
           assume    ds:@curseg          ;fix assumes
           ;
-          ; Find the relocation table.  The relocation table is appended
-          ; to the executable file and is therefore found at the end of
-          ; the data area, marked by the label _edata.
+          ; APPREL supplies the table address and exact payload size.
+          ; LOAD_TEXT is the original load base, as used by DoReloc.
+          ; Validate the source extent before dereferencing the address.
           ;
           Status    1,'PR'              ;(Process reloc table)
-          mov       di,offset DGROUP:_edata  ;get end of data
-          loadseg   es,DGROUP,ax        ;get DGROUP segment
+          mov       ax,LOAD_TEXT        ;original image base (before slide)
+          add       ax,RelocPara
+          errc      RELOC
+          mov       di,RelocOff
+          cmp       di,15
+          erra      RELOC
+          mov       bx,RelocBytes
+          cmp       bx,RELOCSIZE
+          errne     RLSIZE
+          add       bx,di
+          errc      RLSIZE
+          add       bx,RlMrkLen+2+15    ;mark, length word, paragraph rounding
+          errc      RLSIZE
+          shrn      bx,4,cl
+          add       bx,ax
+          errc      RELOC
+          cmp       bx,ds:[PSP_MEND]
+          erra      RELOC
+          mov       es,ax
           mov       si,offset RelocMrk  ;get mark offset
           mov       cx,RlMrkLen         ;get reloc table mark length
           cld                           ;go forward
           repe      cmpsb               ;see if the table is there
           errne     RELOC               ;if not give up big-time
+          mov       cx,es:[di]          ;get total byte count
+          cmp       cx,RELOCSIZE        ;must match the exact reservation
+          errne     RLSIZE
+          add       di,2                ;skip length word
           push      ds                  ;save DS
           loadseg   ds,es               ;get segment for table as source
           assume    ds:nothing          ;fix assumes
@@ -3153,11 +3183,6 @@ TADone:   exit                          ;that's all
           mov       si,di               ;get current offset
           mov       di,offset RelocTab  ;point to local table
           xor       dx,dx               ;clear counter
-          lodsw                         ;get total byte count
-          mov       cx,ax               ;copy
-           jcxz     RLDone              ;go on if nothing there
-          cmp       cx,RELOCMAX         ;check against maximum
-          erra      RLSIZE              ;holler if too big
           rep       movsb               ;move the table
           ;
 RLDone:   loadseg   ds,cs               ;restore data segment

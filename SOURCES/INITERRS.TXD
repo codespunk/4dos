@@ -51,7 +51,7 @@ InitErrs  label     byte
 #E_NOMEM Zu wenig Speicher
 #E_MODFIT Unzureichender Ladespeicher
 #E_RELOC Adressentabelle fehlt         
-#E_RLSIZE Adressentabelle zu gro·      
+#E_RLSIZE UngÅltige Grî·e der Relokationstabelle
         ;
           db        0FFh, 0             ;end of table
           ;

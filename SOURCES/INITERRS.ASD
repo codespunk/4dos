@@ -42,37 +42,40 @@ InitErrs  label     byte
           ;
           ; Translation table
           ;
-          db        065h, 020h, 068h, 072h, 061h, 069h, 06Ch, 06Eh
-          db        073h, 063h, 064h, 067h, 070h, 074h, 053h, 062h
-          db        066h, 075h, 077h, 041h, 07Ah, 03Bh, 046h, 04Ch
-          db        055h, 05Ah, 06Fh, 0E1h, 000h, 000h
+          db        0DEh
+          db        065h, 020h, 068h, 069h, 06Ch, 072h, 061h, 06Eh
+          db        063h, 067h, 073h, 064h, 074h, 070h, 053h, 062h
+          db        066h, 075h, 077h, 055h, 06Fh, 041h, 046h, 047h
+          db        04Ch, 052h, 05Ah, 06Bh, 07Ah, 081h
           ;
           ; #E_SWSEEK Swapdatei suchen fehlgeschlagen
-          db        E_SWSEEK, 023h, 010h, 014h, 06Eh, 0C6h, 0F2h, 073h, 0A1h
-          db        03Bh, 042h, 093h, 012h, 024h, 08Dh, 02Ah, 0B4h
-          db        086h, 0D2h, 090h
+          db        E_SWSEEK, 023h, 000h, 010h, 014h, 08Fh, 0D8h, 0E2h, 053h
+          db        0C1h, 03Ah, 042h, 093h, 012h, 024h, 06Bh, 02Ch
+          db        0A4h, 068h, 0B2h, 090h
           ; #E_SWWRIT Swapdatei speichern fehlgeschlagen
-          db        E_SWWRIT, 025h, 010h, 014h, 06Eh, 0C6h, 0F2h, 073h, 0AEh
-          db        027h, 0B4h, 025h, 093h, 012h, 024h, 08Dh, 02Ah
-          db        0B4h, 086h, 0D2h, 090h
+          db        E_SWWRIT, 025h, 000h, 010h, 014h, 08Fh, 0D8h, 0E2h, 053h
+          db        0CFh, 025h, 0A4h, 027h, 093h, 012h, 024h, 06Bh
+          db        02Ch, 0A4h, 068h, 0B2h, 090h
           ;
           ; #E_MEMDA Fehler bei der Speicherfreigabe
-          db        E_MEMDA, 024h, 018h, 024h, 082h, 053h, 011h, 027h, 03Ch
-          db        025h, 031h, 00Eh, 027h, 0B4h, 025h, 012h, 052h
-          db        07Dh, 061h, 012h
+          db        E_MEMDA, 024h, 000h, 018h, 024h, 062h, 073h, 011h, 025h
+          db        03Dh, 027h, 031h, 00Fh, 025h, 0A4h, 027h, 012h
+          db        072h, 05Bh, 081h, 012h
           ; #E_NOMEM Zu wenig Speicher
-          db        E_NOMEM, 015h, 01Bh, 013h, 031h, 042h, 097h, 0D3h, 010h
-          db        0E2h, 07Bh, 042h, 050h
+          db        E_NOMEM, 015h, 000h, 01Ch, 013h, 031h, 042h, 095h, 0B3h
+          db        010h, 0F2h, 05Ah, 042h, 070h
           ; #E_MODFIT Unzureichender Ladespeicher
-          db        E_MODFIT, 01Fh, 01Ah, 091h, 061h, 035h, 027h, 0B4h, 029h
-          db        0C2h, 053h, 019h, 06Ch, 02Ah, 0E2h, 07Bh, 042h
-          db        050h
+          db        E_MODFIT, 01Fh, 000h, 015h, 091h, 0E1h, 037h, 025h, 0A4h
+          db        029h, 0D2h, 073h, 01Ah, 08Dh, 02Ch, 0F2h, 05Ah
+          db        042h, 070h
           ; #E_RELOC Adressentabelle fehlt
-          db        E_RELOC, 018h, 015h, 0C5h, 02Ah, 0A2h, 09Fh, 061h, 012h
-          db        088h, 023h, 012h, 024h, 08Fh
-          ; #E_RLSIZE Adressentabelle zu gro·
-          db        E_RLSIZE, 01Dh, 015h, 0C5h, 02Ah, 0A2h, 09Fh, 061h, 012h
-          db        088h, 023h, 016h, 013h, 03Dh, 051h, 0C1h, 0D0h
+          db        E_RELOC, 018h, 000h, 017h, 0D7h, 02Ch, 0C2h, 09Eh, 081h
+          db        012h, 066h, 023h, 012h, 024h, 06Eh
+          ; #E_RLSIZE UngÅltige Grî·e der Relokationstabelle
+          db        E_RLSIZE, 032h, 000h, 015h, 09Bh, 01Fh, 06Eh, 05Bh, 023h
+          db        019h, 070h, 049h, 001h, 0E2h, 03Dh, 027h, 031h
+          db        0B2h, 061h, 061h, 0D8h, 0E5h, 016h, 09Ch, 0E8h
+          db        011h, 026h, 062h
         ;
           db        0FFh, 0             ;end of table
           ;

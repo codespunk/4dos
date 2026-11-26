@@ -31,8 +31,8 @@
 /**************************************************************************
 
    APPREL - Finds relocation table, sorts and compresses it, appends it to
-            the end of an EXE file, removes the original table, and adjusts
-            the header accordingly
+            the end of an EXE file, preserves the original table, and adjusts
+            the header and relocation metadata accordingly
 
    Copyright 1991-1993, J.P. Software Inc., Arlington, MA, USA.  All Rights
    Reserved.
@@ -41,9 +41,12 @@
             Substantial mods, 7/93
 
    Usage:
-      APPREL [filename]
+      APPREL [filename] [ignored segments] [-s sizefile]
 
       filename    name of file to append relocation table to
+      -s sizefile measure the relocation payload and generate an assembly
+                  include; do not modify the executable.  Relink using
+                  the generated size before running APPREL normally.
 
       If the filename is not given APPREL will prompt for it. An EXE
       extension is assumed unless otherwise specified.
@@ -71,6 +74,13 @@
 #define HEADER_SIZE (unsigned int)sizeof(header)
                            /* size of relocation table elements */
 #define MARK_SIZE 4
+                           /* loader metadata, serialized little-endian */
+#define META_SIG_SIZE 12
+#define META_SIZE 20
+#define META_OFFSET 12
+#define META_PARA 14
+#define META_BYTES 16
+#define META_CAPACITY 18
 #define NB_SIZE (sizeof new_reloc_bytes)
 #define SC_SIZE (sizeof seg_cnt)
 #define RS_SIZE (sizeof reloc_segs[0])
@@ -108,8 +118,11 @@
 #define ERR_RELOC_SIZE 16
 #define ERR_SEG_CNT 17
 #define ERR_SEG_RELOCS 18
-#define ERR_MAX 18
-#define ERR_UNKNOWN 19
+#define ERR_METADATA 19
+#define ERR_CAPACITY 20
+#define ERR_SIZEFILE 21
+#define ERR_MAX 21
+#define ERR_UNKNOWN 22
 
 const char *errmsg[] = {
    "Input file open error",                  /* 1 */
@@ -130,7 +143,10 @@ const char *errmsg[] = {
    "Relocation table too large",             /* 16 */
    "Too many segments in table",             /* 17 */
    "Too many relocations in segment",        /* 18 */
-   "Unknown internal error"                  /* 19 */
+   "Missing, duplicate or invalid relocation metadata", /* 19 */
+   "Relocation reservation differs from payload; measure and relink", /* 20 */
+   "Cannot write relocation size include",   /* 21 */
+   "Unknown internal error"                  /* 22 */
 };
 
    /* variables */
@@ -139,6 +155,11 @@ char filename[80],                        /* input file name */
      outname[80],                         /* output file name */
      backname[80];                        /* backup file name */
 char mark[MARK_SIZE + 1] = "ENDP";        /* marker for relocation table */
+static const unsigned char meta_sig[META_SIG_SIZE] = {
+   '4', 'D', 'O', 'S', 'R', 'E', 'L', 'O', 'C', 1, 0xA5, 0x5A
+};
+static unsigned char metadata[META_SIZE];
+static long meta_pos;
 unsigned int reloc_segs[MAX_SEGS];        /* segments in relocation table */
 unsigned int reloc_counts[MAX_SEGS];      /* entry counts for each segment */
 unsigned int new_reloc[MAX_SEGS][MAX_SEG_RELOCS];  /* reorganized relocation table */
@@ -175,6 +196,10 @@ struct exe_head {                         /* exe file header */
 void copy_part(unsigned long start_offset, long count);
 void write_part(void *buf, int count);
 void error(unsigned int errnum);
+static void find_metadata(long image_start);
+static unsigned int get_word(const unsigned char *p);
+static void put_word(unsigned char *p, unsigned int value);
+static void write_sizefile(const char *name);
 
 
 main(int argc, char **argv)
@@ -184,6 +209,9 @@ main(int argc, char **argv)
    unsigned int ign_seg, rcnt, scnt;
    unsigned int chunk_entries, chunk_bytes;
    int ign_flag;
+   const char *sizefile = NULL;
+   long image_start, image_offset;
+   unsigned long payload;
 
    // sign on and parse command line
 
@@ -199,7 +227,14 @@ main(int argc, char **argv)
 
    // scan for segments to ignore
    while (--argc > 0) {
-      if (sscanf(*(++argv), "%x", &ign_seg) != 1)
+      ++argv;
+      if (strcmp(*argv, "-s") == 0) {
+         if (sizefile != NULL || --argc <= 0)
+            error(ERR_SIZEFILE);
+         sizefile = *(++argv);
+         continue;
+      }
+      if (sscanf(*argv, "%x", &ign_seg) != 1)
          break;
       if (ignore_cnt >= MAX_IGNORE)
          error(ERR_IGN_OVER);
@@ -223,6 +258,19 @@ main(int argc, char **argv)
    if (read(in, (char *)&header, HEADER_SIZE) != HEADER_SIZE)
       error(ERR_READ_HEAD);
    if (header.sigM != 'M' || header.sigZ != 'Z')
+      error(ERR_BAD_EXE);
+
+   // Determine the declared executable extent, excluding overlays/debug data.
+   if ((original_end = lseek(in, 0L, SEEK_END)) == -1L)
+      error(ERR_SEEK);
+   if (header.file_pages == 0 || header.last_page_len >= 512)
+      error(ERR_BAD_EXE);
+   exe_len = ((long)header.file_pages * 512L) -
+      (long)((header.last_page_len == 0) ? 0 : (512 - header.last_page_len));
+   image_start = (long)header.head_para_cnt * 16L;
+   if (image_start < HEADER_SIZE || image_start > exe_len ||
+       exe_len > original_end || header.reloc_start < HEADER_SIZE ||
+       (long)header.reloc_start + (long)header.reloc_cnt * RELOC_SIZE > image_start)
       error(ERR_BAD_EXE);
 
    // check count
@@ -300,11 +348,37 @@ main(int argc, char **argv)
    printf("%u relocation entries copied\n", new_reloc_cnt);
 
    // calculate length of all elements of new table
-   new_reloc_bytes = SC_SIZE + (seg_cnt * RS_SIZE) + (seg_cnt * RC_SIZE);
+   payload = SC_SIZE + (unsigned long)seg_cnt * (RS_SIZE + RC_SIZE);
    for (scnt = 0; scnt < seg_cnt; scnt++) {
-      new_reloc_bytes += (reloc_counts[scnt] * NR_SIZE);
+      payload += (unsigned long)reloc_counts[scnt] * NR_SIZE;
    }
-   new_reloc_len = (long)(MARK_SIZE + NB_SIZE + new_reloc_bytes);
+   // A normalized far pointer can begin at offset 15.  Keep the entire
+   // serialized table in one 64 KiB window, including ENDP and length.
+   if (payload > 65536UL - 15UL - MARK_SIZE - NB_SIZE)
+      error(ERR_RELOC_SIZE);
+   new_reloc_bytes = (unsigned int)payload;
+   new_reloc_len = (long)MARK_SIZE + NB_SIZE + new_reloc_bytes;
+
+   find_metadata(image_start);
+   printf("%u relocation bytes required\n", new_reloc_bytes);
+   if (sizefile != NULL) {
+      write_sizefile(sizefile);
+      if (close(in) < 0)
+         error(ERR_CLOSE_IN);
+      return 0;
+   }
+   if (get_word(metadata + META_CAPACITY) != new_reloc_bytes) {
+      printf("Linked reservation: %u bytes\n", get_word(metadata + META_CAPACITY));
+      error(ERR_CAPACITY);
+   }
+
+   // Encode the normalized load-relative address (excluding MZ header).
+   image_offset = exe_len - image_start;
+   if (image_offset + new_reloc_len > 0xFFFF0L)
+      error(ERR_RELOC_SIZE);
+   put_word(metadata + META_OFFSET, (unsigned int)(image_offset & 15L));
+   put_word(metadata + META_PARA, (unsigned int)(image_offset >> 4));
+   put_word(metadata + META_BYTES, new_reloc_bytes);
 
 //    printf("%d total segments \n\n", seg_cnt);
 //    for (scnt = 0; scnt < seg_cnt; scnt++) {
@@ -324,13 +398,6 @@ main(int argc, char **argv)
          (S_IREAD | S_IWRITE))) < 0)
       error(ERR_OPEN_OUT);
 
-   // Get EOF and calculate length of true EXE portion (there may be debugger
-   // info beyond this length)
-
-   if ((original_end = lseek(in, 0L, SEEK_END)) == -1L)
-      error(ERR_SEEK);
-   exe_len = ((long)header.file_pages * 512L) - (long)((header.last_page_len == 0) ? 0 : (512 - header.last_page_len));
-
    // Adjust header lengths for relocation table info removed at start of
    // file, and new relocation table added to end of file.  This gets the
    // header adjusted before we write it, avoiding a rewrite.
@@ -347,7 +414,11 @@ main(int argc, char **argv)
    if (write(out, (char *)&header, HEADER_SIZE) != HEADER_SIZE)
       error(ERR_WRITE);
 //   copy_part(((unsigned long)HEADER_SIZE + reloc_len), exe_len - HEADER_SIZE - reloc_len);
-   copy_part((unsigned long)HEADER_SIZE, exe_len - HEADER_SIZE);
+   // Patch the record while copying the image; do not modify the input.
+   copy_part((unsigned long)HEADER_SIZE, meta_pos - HEADER_SIZE);
+   write_part(metadata, META_SIZE);
+   copy_part((unsigned long)(meta_pos + META_SIZE),
+      exe_len - meta_pos - META_SIZE);
 
    // Write the mark, the total and segment counts, and the segments, counts,
    // and data for the new relocation table
@@ -380,6 +451,60 @@ main(int argc, char **argv)
    return 0;                              /* all done */
 }
 
+
+// Read and write the metadata words explicitly, independent of packing.
+static unsigned int get_word(const unsigned char *p) {
+   return (unsigned int)p[0] | ((unsigned int)p[1] << 8);
+}
+
+static void put_word(unsigned char *p, unsigned int value) {
+   p[0] = (unsigned char)value;
+   p[1] = (unsigned char)(value >> 8);
+}
+
+// Scan only the declared load image, overlapping blocks so that records
+// crossing a buffer boundary are not missed.  A processed image is rejected.
+static void find_metadata(long image_start) {
+   long pos = image_start;
+   unsigned int count, i;
+
+   meta_pos = -1L;
+   while (exe_len - pos >= META_SIZE) {
+      count = (exe_len - pos > BUF_SIZE) ? BUF_SIZE :
+         (unsigned int)(exe_len - pos);
+      if (lseek(in, pos, SEEK_SET) == -1L)
+         error(ERR_SEEK);
+      if (read(in, buffer, count) != (int)count)
+         error(ERR_READ_CNT);
+      for (i = 0; i <= count - META_SIZE; i++) {
+         if (memcmp(buffer + i, meta_sig, META_SIG_SIZE) == 0) {
+            if (meta_pos != -1L)
+               error(ERR_METADATA);
+            meta_pos = pos + i;
+            memcpy(metadata, buffer + i, META_SIZE);
+         }
+      }
+      pos += count - META_SIZE + 1;
+   }
+   if (meta_pos == -1L || get_word(metadata + META_OFFSET) != 0 ||
+       get_word(metadata + META_PARA) != 0 ||
+       get_word(metadata + META_BYTES) != 0 ||
+       get_word(metadata + META_CAPACITY) < SC_SIZE)
+      error(ERR_METADATA);
+}
+
+// Generate the exact reservation for both copies of SERVDATA.ASM.
+static void write_sizefile(const char *name) {
+   FILE *fp;
+   int failed;
+
+   if ((fp = fopen(name, "w")) == NULL)
+      error(ERR_SIZEFILE);
+   failed = (fprintf(fp, "; Generated by APPREL -s; do not edit.\n"
+      "RELOCSIZE equ %u\n", new_reloc_bytes) < 0);
+   if (fclose(fp) != 0 || failed)
+      error(ERR_SIZEFILE);
+}
 
 // Copy part of the input file to the output file, beginning at location
 // start_offset in the input file and at the current position in the

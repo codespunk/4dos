@@ -1,4 +1,4 @@
-CFLAGS=/c /AL /J /Gs /Od /W3 /Zp1 /Zi /Zd
+CFLAGS=/c /AL /J /Gs /Od /W3 /Zp1
 
 #
 # Force NMAKE to assemble everything

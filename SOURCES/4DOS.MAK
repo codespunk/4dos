@@ -31,11 +31,7 @@ BASM=$(ASM) /D_MODEL=SMALL /DTEXTLEN=160 %s
 CASM=$(ASM) /D__MEDIUM__ /DTEXT_SEG=SHARE_TEXT %s
 LINKCMD=$(LINK) @..\$(LNKNAME)
 
-#!IF "$(_LANGUAGE)" == "ENGLISH"
-#POSTLINKCMD=..\apprel $(LINKTARG) 0
-#!ELSE
 POSTLINKCMD=..\apprel $(EXENAME) 0
-#!ENDIF
 
 # Define ALL: target
 ALL : setenv $(LINKTARG)
@@ -44,6 +40,11 @@ ALL : setenv $(LINKTARG)
 setenv :
      set CL=$(CFLAGS_ENV)
      set ML=$(AFLAGS_ENV)
+
+# Create the provisional relocation size only when the generated file is absent.
+# APPREL -s replaces this value with the measured size before the final link.
+relocsz.inc :
+        echo RELOCSIZE equ 2 ; provisional >RELOCSZ.INC
 
 # Build the 4DOSTART library to hold the code that moves the loader down,
 # and simultaneously show where the end of the loader is
@@ -110,7 +111,7 @@ $(OBJ)\initerrs.obj : initerrs.$(TXT_ASM)
         $(LASM)
 
 $(OBJ)\4dlinit.obj : 4dlinit.asm 4dlparms.asm 4dlstruc.asm inistruc.asm \
-              servdata.asm 4dlmsg.$(TXT_ASM) intclean.asm \
+              servdata.asm relocsz.inc 4dlmsg.$(TXT_ASM) intclean.asm \
               criterrs.$(TXT_ASM) parserrs.$(TXT_ASM) intver.asm
         $(LASM)
 
@@ -151,7 +152,7 @@ $(OBJ)\hexout.obj : hexout.asm
 # ------------------------------------------------------------------------
 
 $(OBJ)\server.obj : server.asm 4dlparms.asm 4dlstruc.asm inistruc.asm \
-             servdata.asm loaddata.asm 4dlmsg.$(TXT_ASM) \
+             servdata.asm relocsz.inc loaddata.asm 4dlmsg.$(TXT_ASM) \
              intclean.asm
         $(SASM)
 
@@ -349,6 +350,17 @@ $(LINKTARG) : \
               $(OBJ)\mktime.obj $(OBJ)\timeutil.obj $(OBJ)\tzset.obj \
 #       other
               4dostart.lib startupm.lib 4dos.mak $(LNKNAME) build.txt \
-              setup.mak dolink.mak
-!INCLUDE DOLINK.MAK        
+              setup.mak apprel.exe
+# First link: measure the relocation table.  Second link: use the exact size.
+# Reassemble both copies of SERVDATA explicitly; DOS timestamps may be equal.
+        cd $(OBJ)
+        $(LINKCMD)
+        $(POSTLINKCMD) -s ..\RELOCSZ.INC
+        cd ..
+        $(ANAME) /Fo$(OBJ)\4dlinit.obj /D_CSEG=LOAD /D_PREFIX=L_ /D_MODEL=TINY 4dlinit.asm
+        $(ANAME) /Fo$(OBJ)\server.obj /D_CSEG=SERV /D_MODEL=SMALL server.asm
+        cd $(OBJ)
+        $(LINKCMD)
+        $(POSTLINKCMD)
+        cd ..
 

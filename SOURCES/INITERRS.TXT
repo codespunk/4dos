@@ -53,7 +53,7 @@ InitErrs  label     byte
 #E_NOMEM Out of memory
 #E_MODFIT Insufficient load space
 #E_RELOC Address table missing
-#E_RLSIZE Address table too large
+#E_RLSIZE Invalid relocation table size
         ;
           db        0FFh, 0             ;end of table
           ;

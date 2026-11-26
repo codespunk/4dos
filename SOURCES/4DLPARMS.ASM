@@ -112,7 +112,6 @@ MAXLR     equ       5                   ;maximum number of low memory blocks
                                         ;  we can reserve (master env, global
                                         ;  aliases, global functions, global cmd 
 					;  history, global dir history)
-RELOCMAX  equ       7400                ;maximum relocation table bytes
 INISMAX   equ       1536                ;maximum length of INI file strings
 INIKMAX   equ       64                  ;maximum INI file key substitutions
 ERRMAX    equ       80                  ;maximum error message length
@@ -354,5 +353,5 @@ E_MEMDA   equ       22                  ;can't reduce or deallocate memory
 E_NOMEM   equ       23                  ;no memory to load
 E_MODFIT  equ       24                  ;loadable modules don't fit
 E_RELOC   equ       25                  ;can't find relocation table
-E_RLSIZE  equ       26                  ;relocation table too big
+E_RLSIZE  equ       26                  ;invalid relocation table size
 

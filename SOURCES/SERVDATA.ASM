@@ -124,7 +124,8 @@ InStart   db        0                   ;swap in start block
 InCnt     db        0                   ;swap in block count
 RelocCnt  dw        0                   ;number of relocation items
 OldRBase  dw        0                   ;old relocation base
-RelocTab  db        RELOCMAX dup (0)    ;relocation table
+          include   RELOCSZ.INC         ;exact payload size from APPREL -s
+RelocTab  db        RELOCSIZE dup (0)   ;relocation table
 SDataLen  equ       $ - SDStart         ;server data length (bytes)
 
 

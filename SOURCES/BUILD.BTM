@@ -52,6 +52,7 @@ goto args
     SERVERRS.ASM
   4dos /c del /y /e %=
     INTVER.ASM %=
+    RELOCSZ.INC %=
     BUILD.TXT %=
     BUILD.DOS %=
     BUILD.DSR %=
