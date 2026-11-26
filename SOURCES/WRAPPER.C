@@ -18,7 +18,7 @@ int __cdecl _write( int handle, const void *buf, int len )
 
 
 extern int __cdecl lfn_rename( const char *, const char * );
-#pragma aux lfn_rename "_rename";
+#pragma aux (__cdecl) lfn_rename "_rename";
 
 _WCRTLINK int rename( const char *oldname, const char *newname )
 {
@@ -27,7 +27,7 @@ _WCRTLINK int rename( const char *oldname, const char *newname )
 
 
 extern int __cdecl lfn_mkdir( const char * );
-#pragma aux lfn_mkdir "__mkdir";
+#pragma aux (__cdecl) lfn_mkdir "__mkdir";
 
 _WCRTLINK int mkdir( const char *path )
 {
@@ -36,7 +36,7 @@ _WCRTLINK int mkdir( const char *path )
 
 
 extern int __cdecl lfn_rmdir( const char * );
-#pragma aux lfn_rmdir "__rmdir";
+#pragma aux (__cdecl) lfn_rmdir "__rmdir";
 
 _WCRTLINK int rmdir( const char *path )
 {
@@ -45,7 +45,7 @@ _WCRTLINK int rmdir( const char *path )
 
 
 extern int __cdecl lfn_chdir( const char * );
-#pragma aux lfn_chdir "__chdir";
+#pragma aux (__cdecl) lfn_chdir "__chdir";
 
 _WCRTLINK int chdir( const char *path )
 {
@@ -54,7 +54,7 @@ _WCRTLINK int chdir( const char *path )
 
 
 extern int __cdecl lfn_remove( const char * );
-#pragma aux lfn_remove "_remove";
+#pragma aux (__cdecl) lfn_remove "_remove";
 
 _WCRTLINK int remove( const char *path )
 {
@@ -63,7 +63,7 @@ _WCRTLINK int remove( const char *path )
 
 
 extern unsigned __cdecl lfn_dgfa( const char *, unsigned * );
-#pragma aux lfn_dgfa "__dos_getfileattr";
+#pragma aux (__cdecl) lfn_dgfa "__dos_getfileattr";
 
 _WCRTLINK unsigned _dos_getfileattr( const char *path, unsigned *attr )
 {
@@ -72,7 +72,7 @@ _WCRTLINK unsigned _dos_getfileattr( const char *path, unsigned *attr )
 
 
 extern unsigned __cdecl lfn_sgfa( const char *, unsigned );
-#pragma aux lfn_sgfa "__dos_setfileattr";
+#pragma aux (__cdecl) lfn_sgfa "__dos_setfileattr";
 
 _WCRTLINK unsigned _dos_setfileattr( const char *path, unsigned attr )
 {
