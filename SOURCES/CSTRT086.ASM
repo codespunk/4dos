@@ -213,8 +213,9 @@ around: sti                             ; enable interrupts
 ;   AX = DGROUP size
 ;   SP = adjusted stack pointer we should not modify
 ;
-; DGROUP contains initialized data + BSS, ending at _end. That is also the
-; bottom of the stack. The top of the stack can be calculated from sp.
+; DGROUP contains initialized data + BSS, ending at _end, followed by
+; INI data and local alias, function, and history storage.
+; The loader sets the bottom of the stack; its top is calculated from sp.
 ; Between the top of stack and the size passed in ax is pre-allocated heap.
 ;
 
@@ -222,10 +223,8 @@ around: sti                             ; enable interrupts
 
         assume  ds:DGROUP
 
-        mov     bx,offset DGROUP:_end   ; get bottom of stack
-        add     bx,0Fh                  ; ...
-        and     bl,0F0h                 ; ...
-        mov     _STACKLOW,bx            ; ...
+        ; Preserve _STACKLOW initialized by 4DLINIT.ASM above the INI
+        ; data and local storage; _end is not the bottom of the stack.
         mov     _psp,es                 ; save segment address of PSP
 
         mov     bx,sp                   ; calculate top address for stack
