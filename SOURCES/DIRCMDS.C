@@ -2443,7 +2443,7 @@ DIR_ENTRY * GetDescriptions( unsigned int uEntries, DIR_ENTRY *files, LPTSTR psz
 
 ReadAgain:
 
-	while ( getline( hFH, szLine, 1023, nEditFlags ) > 0 ) {
+	while ( get_line( hFH, szLine, 1023, nEditFlags ) > 0 ) {
 		
 		pszDescription = scan( szLine, _TEXT(" \t,"), _TEXT("\"") );
 		if (( pszDescription != BADQUOTES) && ( *pszDescription )) {

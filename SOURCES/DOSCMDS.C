@@ -475,7 +475,7 @@ Keystack_Usage:
 			return ( error( _doserrno, arg ));
 
 		// read a line from the file
-		getline( fd, pszCmdLine, MAXLINESIZ-1, EDIT_DATA );
+		get_line( fd, pszCmdLine, MAXLINESIZ-1, EDIT_DATA );
 		_close( fd );
 	}
 
@@ -1070,7 +1070,7 @@ set_dos_environment:
 				stdata.Environment = AllocMem(&size);
 				stdata.Environment[0] = stdata.Environment[1] = '\0';
 
-				while ((rval == 0 ) && (getline(nFH,buffer,255,EDIT_DATA) > 0 )) {
+				while ((rval == 0 ) && (get_line(nFH,buffer,255,EDIT_DATA) > 0 )) {
 
 					// skip blank lines, leading whitespace, & comments
 					arg = skipspace( buffer );

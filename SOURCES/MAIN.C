@@ -88,7 +88,7 @@ _asm {
 				gszCmdline[0] = '\0';
 
 				// get command line from STDIN
-				argc = getline( STDIN, gszCmdline, MAXLINESIZ-1, EDIT_COMMAND );
+				argc = get_line( STDIN, gszCmdline, MAXLINESIZ-1, EDIT_COMMAND );
 
 				// do an INT 2F to signal that input is complete
 _asm {

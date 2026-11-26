@@ -3172,7 +3172,7 @@ static int _fastcall FileOutput( LPTSTR pszCmdLine, int fOp )
 					}
 
 
-						for ( ; (( lLines > 0 ) && ( getline( nFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) > 0 )); lLines-- )
+						for ( ; (( lLines > 0 ) && ( get_line( nFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) > 0 )); lLines-- )
 							more_page( gszCmdline, 0 );
 
 					// close the file / pipe
@@ -3181,7 +3181,7 @@ static int _fastcall FileOutput( LPTSTR pszCmdLine, int fOp )
 				} else if ( fFlags & ( FO_NUMBERING | FO_PAUSE ) || _isatty( STDOUT )) {
 
 					// TYPE /L or /P, or neither flag if not redirected
-					for ( lRow = 1; ( getline( nFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) > 0 ); lRow++ ) {
+					for ( lRow = 1; ( get_line( nFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) > 0 ); lRow++ ) {
 						if ( fFlags & FO_NUMBERING )
 							printf( _TEXT("%4lu : "), lRow );
 						more_page( gszCmdline, nColumn );
@@ -3251,7 +3251,7 @@ int _far Y_Cmd( LPTSTR pszCmdLine )
 	int nBytesRead, fEof;
 	TCHAR *pszTemp, szYBuf[514];
 
-	for ( fEof = 0; (( fEof == 0 ) && ( getline( STDIN, szYBuf, 512, EDIT_DATA ) > 0 )); ) {
+	for ( fEof = 0; (( fEof == 0 ) && ( get_line( STDIN, szYBuf, 512, EDIT_DATA ) > 0 )); ) {
 
 		// look for ^Z
 		if (( pszTemp = strchr( szYBuf, EoF )) != NULL ) {
@@ -3323,7 +3323,7 @@ int _far Tee_Cmd( LPTSTR pszCmdLine )
 				fTeeClip = naFH[nFiles];
 		}
 
-		for ( fEof = 0; (( fEof == 0 ) && ( getline( STDIN, szTeeBuffer, CMDBUFSIZ, EDIT_DATA ) > 0 )); ) {
+		for ( fEof = 0; (( fEof == 0 ) && ( get_line( STDIN, szTeeBuffer, CMDBUFSIZ, EDIT_DATA ) > 0 )); ) {
 
 			// look for ^Z
 			if (( pszTemp = strchr( szTeeBuffer, EoF )) != NULL ) {

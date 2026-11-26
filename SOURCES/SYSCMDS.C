@@ -249,7 +249,7 @@ static void _fastcall GetFuzzyDir( LPTSTR pszDir )
 
 static void _near ReadAndWriteFiles( int nInput, int nOutput, TCHAR *pszLine, int nLength, int nEditFlags )
 {
-	while ( getline( nInput, pszLine, nLength, nEditFlags ) > 0 ) {
+	while ( get_line( nInput, pszLine, nLength, nEditFlags ) > 0 ) {
 
 		// skip blank lines
 		if ( *pszLine == _TEXT('\0') )
@@ -303,7 +303,7 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 	for ( ; ; ) {
 
 		lReadOffset = (LONG)_lseek( nFH, 0L, SEEK_CUR );
-		if ( getline( nFH, szLine, sizeof(szLine) / sizeof(TCHAR), nEditFlags ) <= 0 )
+		if ( get_line( nFH, szLine, sizeof(szLine) / sizeof(TCHAR), nEditFlags ) <= 0 )
 			break;
 
 		if ( szLine[0] == _TEXT('\0') )
@@ -336,7 +336,7 @@ void UpdateFuzzyTree( LPTSTR pszDirectory, LPTSTR pszInsertFile, int fDelete )
 
 			do {
 				lWriteOffset = (LONG)_lseek( nFH, 0L, SEEK_CUR );
-				if ( getline( nFH, szLine, sizeof(szLine) / sizeof(TCHAR), nEditFlags ) <= 0 )
+				if ( get_line( nFH, szLine, sizeof(szLine) / sizeof(TCHAR), nEditFlags ) <= 0 )
 					break;
 			} while ( _strnicmp( szPath, szLine, i ) == 0 );
 
@@ -673,7 +673,7 @@ ChangeDirectory:
 		// rewind the file
 		RewindFile( nFH );
 
-		while ( getline( nFH, szDirectory, MAXPATH, nEditFlags ) > 0 ) {
+		while ( get_line( nFH, szDirectory, MAXPATH, nEditFlags ) > 0 ) {
 
 			if ( szDirectory[0] == _TEXT('\0') )
 				continue;
@@ -1093,7 +1093,7 @@ HaveDescription:
 				else if ( uMaxLength > 511 )
 					uMaxLength = 511;
 
-				if ( getline( STDIN, szNewDescription, uMaxLength, EDIT_ECHO | EDIT_SCROLL_CONSOLE ) == 0 ) {
+				if ( get_line( STDIN, szNewDescription, uMaxLength, EDIT_ECHO | EDIT_SCROLL_CONSOLE ) == 0 ) {
 					if ( _isatty( STDIN ) == 0 )
 						return nReturn;
 				}

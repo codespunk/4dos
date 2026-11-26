@@ -148,7 +148,7 @@ const char *aszErrorMsgs[] = {
 #define USAGEMSG "\nUsage:  %s [/Ekkkk /K /O /Q] input_file [output_file]\n    /E encryption key    /K remove comments\n    /O overwrite file\n    /Q quiet\n"
 #define COMPWARN "Warning:  %s is not effective at compressing small files!\n"
 
-int _fastcall getline(char *);
+int _fastcall get_line(char *);
 void _fastcall strip_trailing(char *);
 void _fastcall nibble_out(char);
 void data_out( char *, unsigned int, int, int);
@@ -350,7 +350,7 @@ int main(int argc, register char **argv)
 		if (lseek(in, 0L, SEEK_SET) == -1L)
 			error(ERR_INPUT_SEEK);
 
-		while (getline(szInputBuffer) > 0) {
+		while (get_line(szInputBuffer) > 0) {
 
 			// scan or translate line
 
@@ -503,7 +503,7 @@ int main(int argc, register char **argv)
 }
 
 
-int _fastcall getline(register char *line)
+int _fastcall get_line(register char *line)
 {
 	register int maxsize;
 

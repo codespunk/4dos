@@ -232,7 +232,7 @@ char *IniReadWrite( int fWrite, char *pszIniFile, char *pszSection, char *pszNam
 		HoldSignals();
 
 		// read file for section names
-		while ( getline( fh, szBuf, 511, 0 ) > 0 ) {
+		while ( get_line( fh, szBuf, 511, 0 ) > 0 ) {
 
 			trim( szBuf, WHITESPACE );
 
@@ -248,7 +248,7 @@ char *IniReadWrite( int fWrite, char *pszIniFile, char *pszSection, char *pszNam
 				for ( ; ; ) {
 
 					lReadOffset = _lseek( fh, 0L, SEEK_CUR );
-					if ( getline( fh, szBuf, 511, 0 ) <= 0 )
+					if ( get_line( fh, szBuf, 511, 0 ) <= 0 )
 						break;
 
 					trim( szBuf, WHITESPACE );

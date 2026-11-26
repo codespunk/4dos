@@ -2096,7 +2096,7 @@ Eval:
 				return ERROR_INVALID_PARAMETER;
 
 			if ( n == 0 ) {
-				if ( getline( i, pszVar, MAXLINESIZ-1, nEditFlags ) <= 0 )
+				if ( get_line( i, pszVar, MAXLINESIZ-1, nEditFlags ) <= 0 )
 					pszVar = END_OF_FILE_STR;
 			} else {
 
@@ -2161,7 +2161,7 @@ Eval:
 			nEditFlags = EDIT_DATA | EDIT_NO_PIPES;
 
 			for ( ; ( lOffset > 0L ); lOffset-- ) {
-				if ( getline( i, pszVar, MAXLINESIZ-1, nEditFlags ) <= 0 )
+				if ( get_line( i, pszVar, MAXLINESIZ-1, nEditFlags ) <= 0 )
 					break;
 			}
 			sprintf( pszVar, FMT_LONG, _lseek( i, 0L, SEEK_CUR ));
@@ -2697,7 +2697,7 @@ GetFirstLine:
 					n = (( GetClipboardLine( i, pszVar, MAXLINESIZ-1 ) == 0 ) ? 1 : 0 );
 					i++;
 				} else
-					n = getline( nFH, pszVar, MAXLINESIZ-1, nEditFlags );
+					n = get_line( nFH, pszVar, MAXLINESIZ-1, nEditFlags );
 
 				if ( n <= 0 ) {
 					if ( nOffset == FUNC_LINE )
@@ -3027,7 +3027,7 @@ GetFirstLine:
 							lppList[0] = lpPtr;
 					}
 
-					if ( getline( n, szBuffer, MAXLINESIZ-1, nEditFlags ) <= 0 )
+					if ( get_line( n, szBuffer, MAXLINESIZ-1, nEditFlags ) <= 0 )
 						break;
 
 					nLength = strlen( szBuffer ) + 1;
@@ -4718,7 +4718,7 @@ static int _fastcall __history( LPTSTR pszCmdLine, int fDirHistory )
 		}
 
 		// add the line to the history
-		for ( pszArg = gszCmdline, glpHptr = 0L; ( getline( nFH, pszArg, MAXLINESIZ - ((int)( pszArg - gszCmdline ) + 1 ), nEditFlags ) > 0 ); ) {
+		for ( pszArg = gszCmdline, glpHptr = 0L; ( get_line( nFH, pszArg, MAXLINESIZ - ((int)( pszArg - gszCmdline ) + 1 ), nEditFlags ) > 0 ); ) {
 
 			// if last char is escape character, append
 			//   the next line

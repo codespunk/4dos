@@ -390,7 +390,7 @@ _asm {
 
 		if (( fd = _sopen( szMSDOS, (_O_RDONLY | _O_BINARY), _SH_DENYWR )) > 0 ) {
 
-			while ( getline( fd, gszCmdline, CMDBUFSIZ-1, EDIT_COMMAND ) > 0 ) {
+			while ( get_line( fd, gszCmdline, CMDBUFSIZ-1, EDIT_COMMAND ) > 0 ) {
 
 				arg = skipspace( gszCmdline );
 				if ( strnicmp( arg, "BootGUI", 7 ) == 0 ) {

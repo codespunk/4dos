@@ -98,7 +98,7 @@ static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
             return CTRLC;
 		}
 
-		for ( pszArg = szBuffer; (( nError == 0 ) && ( getline( nFH, pszArg, CMDBUFSIZ - (UINT)(( pszArg - szBuffer ) + 1 ), nEditFlags ) > 0 )); ) {
+		for ( pszArg = szBuffer; (( nError == 0 ) && ( get_line( nFH, pszArg, CMDBUFSIZ - (UINT)(( pszArg - szBuffer ) + 1 ), nEditFlags ) > 0 )); ) {
 
 			// remove leading white space
 			strip_leading( pszArg, WHITESPACE );

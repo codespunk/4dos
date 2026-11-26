@@ -270,7 +270,7 @@ int _near BatchCLI( void )
 
 		// get file input
 
-		if ( getline( bframe[cv.bn].bfd, gszCmdline, MAXLINESIZ-1, EDIT_COMMAND ) == 0 )
+		if ( get_line( bframe[cv.bn].bfd, gszCmdline, MAXLINESIZ-1, EDIT_COMMAND ) == 0 )
 			break;
 
 		bframe[cv.bn].uBatchLine++;
@@ -355,7 +355,7 @@ void close_batch_file( void )
 
 
 // get command line from console or file
-int PASCAL getline( int nFH, LPTSTR pszLine, int nMaxSize, int nEditFlag )
+int PASCAL get_line( int nFH, LPTSTR pszLine, int nMaxSize, int nEditFlag )
 {
 	int i;
 
@@ -1145,7 +1145,7 @@ static int _near _fastcall CommandGroups( LPTSTR pszStartLine, int fRemoveParens
 			if (( fRuntime == 0 ) && ( cv.bn < 0 )) {
 
 				printf( COMMAND_GROUP_MORE );
-				nReturn = getline( STDIN, pszGroup, nReturn, EDIT_COMMAND | EDIT_SCROLL_CONSOLE );
+				nReturn = get_line( STDIN, pszGroup, nReturn, EDIT_COMMAND | EDIT_SCROLL_CONSOLE );
 
 				// add it to history list
 				addhist( pszGroup );
@@ -1160,7 +1160,7 @@ static int _near _fastcall CommandGroups( LPTSTR pszStartLine, int fRemoveParens
 				if ( open_batch_file() == 0 )
 					return BATCH_RETURN;
 
-				nReturn = getline( bframe[ cv.bn ].bfd, pszGroup, nReturn, EDIT_COMMAND );
+				nReturn = get_line( bframe[ cv.bn ].bfd, pszGroup, nReturn, EDIT_COMMAND );
 				bframe[cv.bn].uBatchLine++;
 			}
 
@@ -1236,13 +1236,13 @@ int _near _fastcall ContinueLine( register LPTSTR pszStartLine )
 			if (( fRuntime == 0 ) && ( cv.bn < 0 )) {
 
 				printf( COMMAND_GROUP_MORE );
-				getline( STDIN, pszStartLine, nLength, EDIT_COMMAND | EDIT_SCROLL_CONSOLE );
+				get_line( STDIN, pszStartLine, nLength, EDIT_COMMAND | EDIT_SCROLL_CONSOLE );
 
 				// add it to history list
 				addhist( pszStartLine );
 
 			} else if ( cv.bn >= 0 ) {
-				getline( bframe[cv.bn].bfd, pszStartLine, nLength, EDIT_COMMAND );
+				get_line( bframe[cv.bn].bfd, pszStartLine, nLength, EDIT_COMMAND );
 				bframe[cv.bn].uBatchLine++;
 			}
 		}

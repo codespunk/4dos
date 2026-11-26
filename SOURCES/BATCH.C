@@ -440,7 +440,7 @@ int _near BatchDebugger( void )
 
 	HoldSignals();
 
-	for ( i = 0, lpszArg = lpBuf; (( nLength = getline( nFH, szLine, MAXLINESIZ-1, nEditMode )) > 0 ); ) {
+	for ( i = 0, lpszArg = lpBuf; (( nLength = get_line( nFH, szLine, MAXLINESIZ-1, nEditMode )) > 0 ); ) {
 		_fstrcpy( lpszArg, szLine );
 
 		// allocate memory for 256 lines at a time
@@ -487,7 +487,7 @@ int _far Battext_Cmd( LPTSTR pszCmdLine )
 		return BATCH_RETURN;
 
 	// scan the batch file until we find an ENDTEXT
-	while ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
+	while ( get_line( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
 
 		bframe[cv.bn].uBatchLine++;
 
@@ -785,7 +785,7 @@ do_usage:
 
 				}
 
-				if (( hFH >= 0 ) && ( getline( hFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) <= 0 )) {
+				if (( hFH >= 0 ) && ( get_line( hFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) <= 0 )) {
 					// end of file - close & get next arg
 					if ( hFH != STDIN )
 						_close( hFH );
@@ -1436,7 +1436,7 @@ GetFileTokens:
 				    }
 				}
 
-				if ( getline( hFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) <= 0 ) {
+				if ( get_line( hFH, gszCmdline, CMDBUFSIZ-1, nEditFlags ) <= 0 ) {
 					// end of file - close & get next arg
 					if ( hFH != STDIN )
 						_close( hFH );
@@ -1712,7 +1712,7 @@ static int _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 
 
 	// scan for the label
-	while ( getline( bframe[cv.bn].bfd, szLine, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
+	while ( get_line( bframe[cv.bn].bfd, szLine, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
 
 		bframe[cv.bn].uBatchLine++;
 
@@ -2393,7 +2393,7 @@ continue_wait:
 
 	// get the variable
 	if ( fInput )
-		getline( STDIN, gszCmdline + nLength, nMaxLength, nEditFlag );
+		get_line( STDIN, gszCmdline + nLength, nMaxLength, nEditFlag );
 	else {
 
 		for ( ; ; ) {
@@ -2976,7 +2976,7 @@ int _far Switch_Cmd( LPTSTR pszCmdLine )
 	pszTest = strcpy( (LPTSTR)_alloca( ( strlen( pszCmdLine ) + 1) * sizeof(TCHAR) ), pszCmdLine );
 
 	// scan for a matching Case, Default, or the EndSwitch line
-	while ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
+	while ( get_line( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
 
 		bframe[cv.bn].uBatchLine++;
 
@@ -3039,7 +3039,7 @@ int _far Case_Cmd( LPTSTR pszCmdLine )
 		return BATCH_RETURN;
 
 	// scan for the EndSwitch line
-	while ( getline( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
+	while ( get_line( bframe[cv.bn].bfd, gszCmdline, CMDBUFSIZ-1, EDIT_DATA ) > 0 ) {
 
 		bframe[cv.bn].uBatchLine++;
 

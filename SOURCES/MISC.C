@@ -297,7 +297,7 @@ int PASCAL GetFileLine( TCHAR *pszFileName, long *plOffset, TCHAR *pszLine )
 		_lseek( nFH, *plOffset, SEEK_SET );
 	}
 
-	i = getline( nFH, pszLine, MAXFILENAME, nEditFlags );
+	i = get_line( nFH, pszLine, MAXFILENAME, nEditFlags );
 	if ( nFH != STDIN )
 		_close( nFH );
 	*plOffset += i;

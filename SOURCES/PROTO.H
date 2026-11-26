@@ -363,7 +363,7 @@ int _near BatchCLI( void );
 int open_batch_file( void );
 void close_batch_file( void );
 
-int PASCAL getline( int, LPTSTR, int, int );
+int PASCAL get_line( int, LPTSTR, int, int );
 int _far _fastcall command( LPTSTR, int );
 #pragma alloc_text( _TEXT, command )
 extern int _near _fastcall ContinueLine( LPTSTR );
