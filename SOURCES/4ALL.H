@@ -77,6 +77,26 @@ extern char _far *glpProgramPath;
 #endif
 #endif
 
+// The legacy Watcom CRT exports these routines without a leading underscore.
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
+#include <conio.h>
+#include <direct.h>
+#include <io.h>
+#include <malloc.h>
+#define _sopen sopen
+#define _read read
+#define _write write
+#define _stackavail stackavail
+#define _kbhit kbhit
+#define _isatty isatty
+#define _dup2 dup2
+#define _setmode setmode
+#define _filelength filelength
+#define _eof eof
+#define _chdir chdir
+#define _rmdir rmdir
+#endif
+
 #define STDIN 0			// standard input, output, error, aux, & prn
 #define STDOUT 1
 #define STDERR 2
