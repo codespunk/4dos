@@ -1609,7 +1609,7 @@ static void _nxtrow( void )
 			
 			// kludge for ^C / ^BREAK check
 			_asm {
-				mov 	ah, 01h
+				mov 	ah, 1h
 					int 	16h
 					jz		NoCtrlC
 					or		ax, ax

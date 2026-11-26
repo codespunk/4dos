@@ -166,7 +166,7 @@ setenv:
 	if ( fWin95 ) {
 _asm {
 		mov	bx, 0
-		mov	ax, 0160Ah
+		mov	ax, 160Ah
 		int	2Fh
 		mov	fWin98, bx
 		mov	fWinME, bx
@@ -334,7 +334,7 @@ args_done:
 	//   the DOS box has been completely loaded
 	if ( fMSDOS7 ) {
 _asm {
-		mov	ax, 05D09h
+		mov	ax, 5D09h
 		int	21h
 }
 	}

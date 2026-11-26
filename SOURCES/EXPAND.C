@@ -3991,7 +3991,7 @@ APMInstalled:
 						push	di
 						xor	dx, dx
 						mov	ax, 1687h
-						int	02Fh
+						int	2Fh
 						pop	di
 						pop	si
 						mov	i, ax		; if AX != 0, DPMI not present

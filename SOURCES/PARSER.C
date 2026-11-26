@@ -302,12 +302,12 @@ int open_batch_file( void )
 
 		int nFH = bframe[ cv.bn ].bfd;
 _asm {
-		mov	ax, 04400h	; get device/file information
+		mov	ax, 4400h	; get device/file information
 		mov	bx, nFH
 		int	21h
 		jc	handle_err
 
-		and	dx, 080h	; check bit 7 - 1 indicates a device
+		and	dx, 80h	; check bit 7 - 1 indicates a device
 		jz	not_device
 		and	dx, 3		; check bits 0 & 1
 		jz	not_device	;  (0 = STDIN, 1 = STDOUT)

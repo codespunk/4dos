@@ -134,7 +134,7 @@ _asm {
 ;In Win95 CH may need to be 0
 	mov	ch,0FFh			; CX = 0FFh + length of command args
 	mov	dx,0FFFFh		; DX always 0FFFFh for some reason
-	int	02Fh
+	int	2Fh
 
 	pop	si
 	pop	di
@@ -175,7 +175,7 @@ _asm {
 		xor	ch, ch
 		mov	cl, byte ptr [cmd + 0]
 		mov	dx, 0FFFFh
-		int	02Fh
+		int	2Fh
 
 		pop	si
 		pop	di
@@ -973,7 +973,7 @@ int QueryCodePage( void )
 
 		// set bx & dx to 0xffff for DR-DOS bug
 _asm {
-		mov	ax,06601h
+		mov	ax,6601h
 		mov	bx,0ffffh
 		mov	dx,0ffffh
 		int	21h
@@ -1061,7 +1061,7 @@ char * QueryVolumeInfo( register char *arg, register char *volume_name, unsigned
 _asm {
 	cmp	_osmajor, 4
 	jb	dos_3		; @TODO!! for __WATCOMC__
-	mov	ax, 06900h	; int 21h 440Dh 66 call doesn't work in OS/2!
+	mov	ax, 6900h	; int 21h 440Dh 66 call doesn't work in OS/2!
 	xor	bh, bh
 	mov	bl, byte ptr szVolName[0]
 	sub	bl, 64
@@ -1245,7 +1245,7 @@ _asm {
 	push	ds
 	pop	es
 	mov	dx, di
-	mov	ax, 06000h
+	mov	ax, 6000h
 	int	21h		; call true name function
 	jnc	true_bye	; @TODO!! for __WATCOMC__
 }
@@ -1310,7 +1310,7 @@ _asm {
 
 	mov	ax, 7160h	  ; kludge for Win95 "feature" of returning
 	mov	cl, 1		  ;   the shortname!
-	mov	ch, 080h
+	mov	ch, 80h
 	push	ds
 	pop	es
 	mov	si, uSourceOffset  ; source path
@@ -1331,9 +1331,9 @@ void QueryCountryInfo( void )
 {
 	if (gnOsVersion >= 330 && ( gnOSFlags & DOS_OEM_ID ) >> 3 != 0xFC ) {
 _asm {
-		mov	ax, 06501h		; get international info
+		mov	ax, 6501h		; get international info
 		mov	bx, -1
-		mov	cx, 029h		; sizeof(gaCountryInfo)
+		mov	cx, 29h		; sizeof(gaCountryInfo)
 		mov	dx, -1			; default country
 		push	ds
 		pop	es
@@ -1344,7 +1344,7 @@ _asm {
 	} else {
 _asm {
 old_func:
-		mov	ax,03800h
+		mov	ax,3800h
 		lea	dx,gaCountryInfo
 		add	dx,7		; skip extended info
 		int	21h

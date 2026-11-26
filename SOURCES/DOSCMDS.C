@@ -197,7 +197,7 @@ int _far Break_Cmd( register char *pszCmdLine )
 		// inquiring about break status
 
 _asm {
-		mov	ax,03300h
+		mov	ax,3300h
 		int	21h
 		xor	dh,dh
 		mov	argc,dx
@@ -209,7 +209,7 @@ _asm {
 		if (( argc = OffOn( pszCmdLine )) == -1 )
 			return ( Usage( BREAK_USAGE ));
 _asm {
-		mov	ax,03301h
+		mov	ax,3301h
 		mov	dx,argc
 		int	21h
 }
@@ -304,15 +304,15 @@ int _far Ctty_Cmd( register char *pszCmdLine )
 	_dup2( STDOUT, STDERR );
 
 _asm {
-	mov	ax,04401h
+	mov	ax,4401h
 	mov	bx,0
 	mov	dx,10000011b
 	int	21h
-	mov	ax,04401h
+	mov	ax,4401h
 	mov	bx,1
 	mov	dx,10000011b
 	int	21h
-	mov	ax,04401h
+	mov	ax,4401h
 	mov	bx,2
 	mov	dx,10000011b
 	int	21h
@@ -689,9 +689,9 @@ int _far Loadhigh_Cmd( char *pszCmdLine )
 static int _near _lock( int nDisk )
 {
 _asm {
-	mov	ax, 0440Dh
+	mov	ax, 440Dh
 	mov	bx, nDisk
-	mov	cx, 084Ah
+	mov	cx, 84Ah
 	mov	dx, 0
 	int	21h
 	jc	LockError
@@ -1300,9 +1300,9 @@ bad_parm:
 _asm {
 	    push   di
 	    push   si
-	    mov    ax, 06400h
-	    mov    bx, 025h		; Dos32StartSession ordinal
-	    mov    cx, 0636Ch
+	    mov    ax, 6400h
+	    mov    bx, 25h		; Dos32StartSession ordinal
+	    mov    cx, 636Ch
 	    lea    si, stdata
 	    int    21h
 	    mov    rval, ax
@@ -1363,9 +1363,9 @@ int _far Truename_Cmd( char *pszCmdLine )
 static int _near _unlock( int nDisk )
 {
 _asm {
-	mov	ax, 0440Dh
+	mov	ax, 440Dh
 	mov	bx, nDisk
-	mov	cx, 086Ah
+	mov	cx, 86Ah
 	int	21h
 	jc	UnLockError
 	xor	ax,ax

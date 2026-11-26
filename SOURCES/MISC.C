@@ -1649,7 +1649,7 @@ LPTSTR _fastcall gcdir( LPTSTR pszDrive, int fNoError )
 			jne	error_exit	  ; skip if so
 
 gcd_old:
-		mov	ah,047h		  ; reissue as 8.3 call
+		mov	ah,47h		  ; reissue as 8.3 call
 			int	21h
 			jc	error_exit
 success:
