@@ -188,6 +188,13 @@ STACK   ends
 
         assume  cs:_TEXT
 
+; Legacy compilers can emit an implicit _cstart_ external even with -zl.
+; Satisfy it here without importing the original CRT startup module.
+ifdef DUMMY_CSTART
+        public  _cstart_
+_cstart_ label near
+endif
+
  __astart proc near
         jmp     around
 
