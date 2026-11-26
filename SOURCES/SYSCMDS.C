@@ -49,6 +49,20 @@
 #include "4all.h"
 
 
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
+// The legacy CRT does not provide _chdrive().
+static int _near LegacyChangeDrive( unsigned uDrive )
+{
+	unsigned uDrives;
+
+	if ( uDrive == 0 || uDrive > 26 )
+		return -1;
+	_dos_setdrive( uDrive, &uDrives );
+	return ( _getdrive() == uDrive ) ? 0 : -1;
+}
+#define _chdrive LegacyChangeDrive
+#endif
+
 static void _fastcall GetFuzzyDir( LPTSTR );
 void UpdateFuzzyTree( LPTSTR, LPTSTR, int );
 static int _near _global( unsigned long, long, LPTSTR, LPTSTR );
