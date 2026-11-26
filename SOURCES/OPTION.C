@@ -1168,5 +1168,3 @@ static void _TestControls(void) {
 	}
 }  // End _TestControls
 #endif  //DEBUG
-
-

@@ -70,5 +70,3 @@ FILE2 _iob2[ _NFILE_ ] = {
     ,
 #endif
 };
-
-

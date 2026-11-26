@@ -158,5 +158,3 @@ void pascal intout(char *name, unsigned int intval) {
 void pascal bytout(char *name, unsigned char byteval){
   printf("%s = %d\n", name, (unsigned int)byteval);
 }
-
-

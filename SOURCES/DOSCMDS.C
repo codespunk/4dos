@@ -1440,4 +1440,3 @@ int _near Ver_Cmd( char *pszCmdLine )
 
 	return 0;
 }
-

@@ -146,5 +146,3 @@ typedef struct { /* mfe */
 //       in code that manipulates MDFATENTRYs.
 
 #define cbMDFATENTRY   4
-
-

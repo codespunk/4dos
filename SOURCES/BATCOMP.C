@@ -612,4 +612,3 @@ int nullcheck(void)
 {
 	return 0;
 }
-

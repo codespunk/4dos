@@ -427,5 +427,3 @@ void error(unsigned int errnum) {
    printf("\nAPPREL failed:  %s\n", errmsg[errnum - 1]);
    exit(1);
 }
-
-

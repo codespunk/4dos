@@ -572,4 +572,3 @@ static void ini_error( LPTSTR errmsg, INIFILE *InitData, LPTSTR fname, unsigned 
 }
 
 #endif  // Not 4DOS OPTION
-

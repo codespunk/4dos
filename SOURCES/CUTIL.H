@@ -59,5 +59,3 @@
   APIRET _System GetDateTime (PDATETIME, PCHAR, PCHAR);
 
 #endif /* __CUTIL__ */
-
-

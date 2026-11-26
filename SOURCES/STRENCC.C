@@ -261,5 +261,3 @@ void error(char *szErrText) {
 	printf("\nSTRENCC failed -- %s\n", szErrText);
 	exit(1);
 }
-
-

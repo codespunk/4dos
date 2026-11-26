@@ -507,5 +507,3 @@ void _fastcall qputc( int nFH, char cChar )
 {
 	_write( nFH, &cChar, 1 );
 }
-
-

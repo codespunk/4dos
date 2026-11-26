@@ -433,4 +433,3 @@ void DisplayCopyright( void )
 	printf( DecodeMsg( SEC_COPYRIGHT, MsgBuf ));		// copyright
 	crlf();
 }
-

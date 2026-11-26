@@ -2009,4 +2009,3 @@ void SetWin95Flags( void )
 	if ((( fWin95 ) && ( gpIniptr->Win95SFN == 2 )) || ( gpIniptr->Win95SFN == 1 ))
 		fWin95SFN = 1;
 }
-

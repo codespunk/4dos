@@ -169,4 +169,3 @@ void _fastcall qputc( int handle, unsigned char c )
 {
 	_write( handle, &c, 1 );
 }
-
