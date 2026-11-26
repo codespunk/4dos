@@ -105,7 +105,7 @@ _asm {
 
 		// get line marking keys
 _asm {
-		mov	ah, 02h
+		mov	ah, 2h
 		mov	al, 0
 		int	16h
 		mov	nButton, ax
@@ -172,10 +172,10 @@ unsigned int GetScrRows( void )
 
 _asm {
         push    bx
-        mov     ax,01A00h		; function 1A returns active adapter
+        mov     ax,1A00h		; function 1A returns active adapter
         int     10h			; al will return as 1a if supported
 	mov	cx,24			; default to 24 (based 0)
-        cmp     al,01ah
+        cmp     al,1ah
         jnz     not_vga
 
 	cmp	bl,4			; is it an EGA or VGA?
@@ -183,7 +183,7 @@ _asm {
 	xor	ax,ax
 	mov	es,ax
 	xor	ch,ch
-	mov	cl,es:[0484h]		; yes, so get rows from BIOS data area
+	mov	cl,es:[484h]		; yes, so get rows from BIOS data area
 not_vga:
 #ifdef __WATCOMC__
 	mov	rc,cx
@@ -218,7 +218,7 @@ unsigned int GetScrCols( void )
 _asm {
 	xor	ax,ax
 	mov	es,ax
-	mov	ax,es:[044Ah]
+	mov	ax,es:[44Ah]
 	or	ax,ax
 	jnz	not_ti_pro
 	mov	ax,80
@@ -255,7 +255,7 @@ void PASCAL SetCurSize( void )
 		uShape = GetCellSize( uType );
 	    }
 _asm {
-	    mov    ax, 0100h
+	    mov    ax, 100h
 	    mov    cx, uShape
 	    push   bp		; for PC1 bug
 	    int    10h		; set the cursor shape
@@ -282,8 +282,8 @@ void SetBrightBG( void )
 _asm {
 	xor	ax,ax
 	mov	es,ax
-	mov	ax,es:[0465h]		; look for 3x8 register status word
-	and	ax,020h			; bit 5 = bright or blink bit
+	mov	ax,es:[465h]		; look for 3x8 register status word
+	and	ax,20h			; bit 5 = bright or blink bit
 	mov	cl,5			; bug in MSC requires us to do this
 	shr	al,cl			;   in two steps
 	cmp	ax,uBright		; if already the same, do not
@@ -340,7 +340,7 @@ int MouseReset( void )
 	else {
 _asm {
 		mov	ax, 0
-		int	033h
+		int	33h
 		mov	fMousePresent, ax
 	}
 }
@@ -354,7 +354,7 @@ void MouseCursorOn( void )
 	if ( fMousePresent ) {
 _asm {
 		mov	ax, 1
-		int	033h
+		int	33h
 }
 	}
 }
@@ -366,7 +366,7 @@ void MouseCursorOff( void )
 	if ( fMousePresent ) {
 _asm {
 		mov	ax, 2
-		int	033h
+		int	33h
 }
 	}
 }
@@ -381,7 +381,7 @@ _asm {
 		push	si
 		push	bx
 		mov	ax, 3
-		int	033h
+		int	33h
 		mov	si, nRow
 		mov	[si], dx
 		mov	si, nCol
@@ -408,7 +408,7 @@ _asm {
 		mov	ax, 4
 		mov	cx, nCol
 		mov	dx, nRow
-		int	033h
+		int	33h
 }
 	}
 }
