@@ -110,7 +110,7 @@ LPTSTR _far _fastcall find_4files( LPTSTR lpszFileName, BOOL fInstaller )
 
 		// look in the COMSPEC directory
 		if (( lpszComspec = get_variable( COMSPEC )) == 0L )
-			lpszComspec = _pgmptr;
+			lpszComspec = PROGRAM_PATH;
 
 		// remove "4xxx.xxx" & replace w/ 4START or 4EXIT
 		sprintf( gszCmdline, FMT_FAR_PREC_STR, MAXFILENAME-1, lpszComspec );

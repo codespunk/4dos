@@ -806,9 +806,9 @@ int _far Option_Cmd( char *pszCmdLine )
 
 		// create the file?
 
-		_fstrcpy( szOptName, _pgmptr );
+		_fstrcpy( szOptName, PROGRAM_PATH );
 		if (( path_part( szOptName ) != NULL ) || (( lpszComspec = get_variable( COMSPEC )) == 0L ))
-			lpszComspec = _pgmptr;
+			lpszComspec = PROGRAM_PATH;
 
 		// remove "4dos.com" & replace w/ 4DOS.INI
 		sprintf( szOptName, FMT_FAR_PREC_STR, MAXFILENAME-1, lpszComspec );

@@ -44,6 +44,11 @@
 
 #include "4all.h"
 
+// Older Watcom CRTs do not expose _pgmptr.
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
+char _far *glpProgramPath;
+#endif
+
 int fWin98 = 0;
 int fWinME = 0;
 static int fWarp = 0;
@@ -224,8 +229,8 @@ _asm {
 	else
 		sprintf( gszFindDesc, FMT_PATH, gpIniptr->BootDrive, DOS_NAME );
 
-	// save _pgmptr
-	_pgmptr = (char _far *)strdup( gszFindDesc );
+	// save the executable pathname
+	PROGRAM_PATH = (char _far *)strdup( gszFindDesc );
 
 	if ( fWin95 || ( gpIniptr->ShellLevel == 0 )) {
 		// set COMSPEC

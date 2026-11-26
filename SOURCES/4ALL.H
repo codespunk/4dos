@@ -50,7 +50,13 @@ typedef struct {
 // Ensure the program pathname is passed as a four-byte far
 // pointer, as required by the 4DOS variadic formatter,
 // regardless of the compiler's native _pgmptr declaration.
-#define FAR_PGMPTR ((char _far *)_pgmptr)
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
+extern char _far *glpProgramPath;
+#define PROGRAM_PATH glpProgramPath
+#else
+#define PROGRAM_PATH _pgmptr
+#endif
+#define FAR_PGMPTR ((char _far *)PROGRAM_PATH)
 
 // Older Watcom headers use unprefixed sharing and permission constants.
 #ifdef __WATCOMC__
