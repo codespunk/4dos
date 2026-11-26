@@ -79,16 +79,6 @@ _WCRTLINK unsigned _dos_setfileattr( const char *path, unsigned attr )
     return( lfn_sgfa( path, attr ) );
 }
 
-#if 0
-/* The open() and sopen() functions take a variable number of arguments.
- * As a consequence, the Watcom library routines already use a stack calling
- * convention very much like __cdecl. Just generate linker aliases for those.
- *
- * Unfortunately, the open flags are *different*, so this doesn't work!
- * It may be possible to use _open_osfhandle() to solve this.
+/* Watcom file opens are adapted in DOSCALLS.C using native flags and
+ * _open_osfhandle(); do not alias them to the Microsoft assembly wrappers.
  */
- 
-#pragma alias( "_sopen_", "__sopen" )
-#pragma alias( "_open_", "__open" )
-#pragma alias( "open_", "__open" )
-#endif

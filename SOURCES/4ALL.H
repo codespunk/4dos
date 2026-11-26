@@ -83,7 +83,6 @@ extern char _far *glpProgramPath;
 #include <direct.h>
 #include <io.h>
 #include <malloc.h>
-#define _sopen sopen
 #define _read read
 #define _write write
 #define _stackavail stackavail
@@ -95,6 +94,14 @@ extern char _far *glpProgramPath;
 #define _eof eof
 #define _chdir chdir
 #define _rmdir rmdir
+#endif
+
+#ifdef __WATCOMC__
+// Redirect only the shell's shared file-open calls to the LFN adapter.
+#include <fcntl.h>
+#include <io.h>
+int _far WatcomSopen( const char *, int, int, ... );
+#define _sopen WatcomSopen
 #endif
 
 #define STDIN 0			// standard input, output, error, aux, & prn

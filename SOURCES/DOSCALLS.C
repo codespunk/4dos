@@ -49,6 +49,98 @@
 #include "4all.h"
 
 
+#ifdef __WATCOMC__
+#include <stdarg.h>
+
+/* DOS 716Ch: DS:SI pathname, BX access/share, CX attributes, DX action.
+ * Return DX:AX with DX=0 on success and DX=1 on DOS error. Preserve
+ * the data, extra and frame registers across the interrupt. */
+extern unsigned long RawLfnOpen( const char *, unsigned, unsigned, unsigned );
+#pragma aux RawLfnOpen = \
+    "push bp" \
+    "push ds" \
+    "push es" \
+    "mov ax,716ch" \
+    "stc" \
+    "int 21h" \
+    "mov dx,0" \
+    "adc dx,0" \
+    "pop es" \
+    "pop ds" \
+    "pop bp" \
+    parm [si] [bx] [cx] [dx] value [dx ax] modify [bx cx si di];
+// Match the DOS 3+ Watcom CRT error translation without private CRT calls.
+// Preserve the raw DOS error even for an unrecognized error number.
+static int OpenError( unsigned error )
+{
+    static const signed char errors[] = {
+        0, EINVAL, ENOENT, ENOENT, EMFILE, EACCES, EBADF,
+        ENOMEM, ENOMEM, ENOMEM, E2BIG, ENOEXEC, -1, ERANGE,
+        EEXIST, ENODEV, EACCES, EXDEV, ENOENT
+    };
+    _doserrno = error;
+    if ( error < sizeof( errors ) )
+        errno = errors[error];
+    else if ( error == 32 || error == 33 )
+        errno = EACCES;
+    else if ( error == 80 )
+        errno = EEXIST;
+    else
+        errno = -1;
+    return -1;
+}
+int _far WatcomSopen( const char *path, int flags, int share, ... )
+{
+    unsigned long result;
+    va_list args;
+    int pmode = 0, mask, fd, saved_errno, saved_doserrno;
+    unsigned mode, action, attr = 0, handle;
+    if ( flags & O_CREAT ) {
+        va_start( args, share );
+        pmode = va_arg( args, int );
+        va_end( args );
+    }
+    if ( fWin95LFN == 0 )
+        return sopen( path, flags, share, pmode );
+    while ( *path == ' ' )
+        ++path;
+    mode = (flags & (3 | O_NOINHERIT)) | share;
+    if ( (flags & 3) == 3 || (share != SH_COMPAT && share != SH_DENYRW &&
+         share != SH_DENYWR && share != SH_DENYRD && share != SH_DENYNO) )
+        return OpenError( 12 );
+    action = ((flags & 3) != O_RDONLY && (flags & O_TRUNC)) ? 2 : 1;
+    if ( flags & O_CREAT ) {
+        action |= 0x10;
+        if ( flags & O_EXCL )
+            action = 0x10;
+        if ( pmode == 0 )
+            pmode = S_IREAD | S_IWRITE;
+        mask = umask( 0 );
+        umask( mask );
+        if ( (pmode & ~mask & S_IWRITE) == 0 )
+            attr = 1;
+    }
+    result = RawLfnOpen( path, mode, attr, action );
+    handle = (unsigned)result;
+    if ( result >> 16 ) {
+        if ( handle == 0x7100 )
+            return sopen( path, flags, share, pmode );
+        return OpenError( handle );
+    }
+    if ( (flags & (O_TEXT | O_BINARY)) == 0 )
+        flags |= (_fmode & O_BINARY) ? O_BINARY : O_TEXT;
+    fd = _open_osfhandle( (long)handle, flags );
+    if ( fd < 0 ) {
+        saved_errno = errno;
+        saved_doserrno = _doserrno;
+        _dos_close( handle );
+        errno = saved_errno;
+        _doserrno = saved_doserrno;
+    }
+    return fd;
+}
+#endif
+
 #pragma alloc_text( _TEXT, BreakHandler, BreakOut )
 
 // ^C / ^BREAK handler
