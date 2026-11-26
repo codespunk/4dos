@@ -3617,19 +3617,21 @@ static LPTSTR _near _fastcall var_internal( LPTSTR lpszVar )
 		case VAR_APMLIFE:	// get remaining battery life
 			{
 				char chAC, chBattery, chLife;
+				int apmError;
 				_asm {
-					mov	ax,5300h
-						xor	bx,bx
-						int	15h
-						jnc	APMInstalled	; @TODO!! for __WATCOMC__
+					mov ax, 5300h
+					xor bx, bx
+					int 15h
+					sbb ax, ax	; -1 if carry set (APM unavailable)
+					mov apmError, ax
 				}
-				// APM not installed!
-				*lpszVar = _TEXT('\0');
-				break;
-
+				// APM is not installed.
+				if ( apmError ) {
+					*lpszVar = _TEXT('\0');
+					break;
+				}
 				// get power status
 				_asm {
-APMInstalled:
 					mov	ax, 530Ah
 						mov	bx, 1
 						int	15h

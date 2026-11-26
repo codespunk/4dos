@@ -574,12 +574,11 @@ Keystack_Usage:
 		sub	cx,dx
 		shr	cx,1		; cx = ( (char *)kptr - gszCmdline ) / 2
 		int	2Fh
-		or	ax,ax
-		jz	OK		; @TODO!! for __WATCOMC__
+		mov fd, ax	; retain KSTACK status in an ordinary C local
 	}
+	if ( fd == 0 )
+		return 0;
 	return ( error( ERROR_4DOS_NO_KEYSTACK, NULL ));
-OK:
-	return 0;
 }
 
 

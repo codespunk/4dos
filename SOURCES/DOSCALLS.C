@@ -1015,11 +1015,11 @@ int QueryDeviceCodePage( LPTSTR device )
 
 	parblk.codepage = 0;
 	if ( gnOsVersion >= 330 ) {
-		if ( QueryIsCON( device ))
-			_asm	mov	ch,3
-		else if ( QueryIsPRN( device ))
-			_asm	mov	ch,5
-		else
+		if ( QueryIsCON( device )) {
+			_asm { mov ch, 3 }
+		} else if ( QueryIsPRN( device )) {
+			_asm { mov ch, 5 }
+		} else
 			return -1;
 		if (( nFH = _sopen( device, (_O_RDONLY | _O_BINARY), _SH_DENYNO )) >= 0 ) {
 			_asm {
@@ -1055,23 +1055,22 @@ char * QueryVolumeInfo( register char *arg, register char *volume_name, unsigned
 	szVolName[0] = _ctoupper( *arg );
 
 	// get the serial number (local drives, DOS 4+ & OS/2 2.0 VDMs only)
-	if ( QueryDriveRemote( szVolName[0] - 64 ))
-		goto dos_3;
-
-_asm {
-	cmp	_osmajor, 4
-	jb	dos_3		; @TODO!! for __WATCOMC__
-	mov	ax, 06900h	; int 21h 440Dh 66 call doesn't work in OS/2!
-	xor	bh, bh
-	mov	bl, byte ptr szVolName[0]
-	sub	bl, 64
-	xor	cx, cx
-	lea	dx, word ptr bpb
-	int	21h		; return serial # & volume info
-	jc	dos_3		; @TODO!! for __WATCOMC__
-}
-	*ulSerial = bpb.disk_serial_number;
-dos_3:
+	if ( !QueryDriveRemote( szVolName[0] - 64 ) && _osmajor >= 4 ) {
+		int serialError;
+		_asm {
+			mov ax, 06900h	; int 21h 440Dh 66 call doesn't work in OS/2!
+			xor bh, bh
+			mov bl, byte ptr szVolName[0]
+			sub bl, 64
+			xor cx, cx
+			lea dx, word ptr bpb
+			int 21h
+			sbb ax, ax	; -1 if DOS could not return the serial number
+			mov serialError, ax
+		}
+		if ( !serialError )
+			*ulSerial = bpb.disk_serial_number;
+	}
 
 	// get disk label (don't use the one in the BPB because it may not
 	//   be the same as the one in the root directory!)
@@ -1227,6 +1226,7 @@ int PASCAL QueryIsDevice( register char *fname )
 char * true_name( char *source, char *target )
 {
 	char szFilename[MAXFILENAME+1];
+	int trueNameError;
 
 	// if no arg, or only a disk spec, return TRUEPATH of current directory
 	if ((( source == NULL ) || (( source[1] == ':' ) && ( source[2] == '\0' ))) && (( source = gcdir( source, 0 )) == NULL ))
@@ -1247,10 +1247,12 @@ _asm {
 	mov	dx, di
 	mov	ax, 06000h
 	int	21h		; call true name function
-	jnc	true_bye	; @TODO!! for __WATCOMC__
+	sbb ax, ax	; -1 if DOS returned carry (unsupported call)
+	mov trueNameError, ax
 }
-	strcpy( target, source );
-true_bye:
+	// Fall back to the source name if DOS true name is unsupported.
+	if ( trueNameError )
+		strcpy( target, source );
 
 	return ( filecase( target ));
 }
@@ -1329,6 +1331,7 @@ _asm {
 // get the country code (for date formatting)
 void QueryCountryInfo( void )
 {
+	int useOldFunction = 1;
 	if (gnOsVersion >= 330 && ( gnOSFlags & DOS_OEM_ID ) >> 3 != 0xFC ) {
 _asm {
 		mov	ax, 06501h		; get international info
@@ -1339,11 +1342,13 @@ _asm {
 		pop	es
 		lea	di, gaCountryInfo
 		int	21h
-		jc	old_func	; @TODO!! for __WATCOMC__
+		sbb ax, ax
+		mov useOldFunction, ax
 }
-	} else {
+	}
+	// Fall back to the original country information service.
+	if ( useOldFunction ) {
 _asm {
-old_func:
 		mov	ax,03800h
 		lea	dx,gaCountryInfo
 		add	dx,7		; skip extended info

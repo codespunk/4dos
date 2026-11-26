@@ -322,6 +322,7 @@ KP_DONE:
 // resets mouse - returns non-zero if mouse installed
 int MouseReset( void )
 {
+	int mouseVector;
 	_asm {
 		mov	ax,3533h
 		push	es
@@ -329,12 +330,13 @@ int MouseReset( void )
 		mov	ax,es
 		pop	es
 		or	ax,bx	; Int 33h vector zero?
-		jz	NoMouse	; if so, don't call it even if user asks so!
+		mov mouseVector, ax
 	}
-	if ( gpIniptr->Mouse == 1 )
+	// Never call INT 33h if its interrupt vector is zero.
+	if ( mouseVector == 0 || gpIniptr->Mouse == 2 )
+		fMousePresent = 0;
+	else if ( gpIniptr->Mouse == 1 )
 		fMousePresent = 1;
-	else if ( gpIniptr->Mouse == 2 )
-NoMouse:	fMousePresent = 0;
 	else {
 _asm {
 		mov	ax, 0
