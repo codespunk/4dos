@@ -125,7 +125,7 @@ static int _fastcall __ffindit( FFIND_STRUCT * );
 
 
 // find files or text
-int _near Ffind_Cmd( LPTSTR pszCmdLine )
+int _far Ffind_Cmd( LPTSTR pszCmdLine )
 {
 
 	return ( __ffind( pszCmdLine ));

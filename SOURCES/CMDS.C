@@ -193,7 +193,7 @@ int QueryNumCmds( void )
 
 
 // display the enabled internal commands
-int _near Cmds_Cmd( TCHAR *pszCmdLine )
+int _far Cmds_Cmd( TCHAR *pszCmdLine )
 {
 	register int i, nColumn, nMaxColumns;
 

@@ -137,7 +137,7 @@ static int _near SetFromFile( LPTSTR pszLine, TCHAR _far *pchList, long fFlags )
 
 
 // create or display aliases
-int _near Alias_Cmd( LPTSTR pszCmdLine )
+int _far Alias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -154,7 +154,7 @@ int _near Alias_Cmd( LPTSTR pszCmdLine )
 
 
 // create or display user functions
-int _near Function_Cmd( LPTSTR pszCmdLine )
+int _far Function_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -171,7 +171,7 @@ int _near Function_Cmd( LPTSTR pszCmdLine )
 
 
 // create or display environment variables
-int _near Set_Cmd( LPTSTR pszCmdLine )
+int _far Set_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -311,7 +311,7 @@ do_it:	if (( fSet & SET_DEFAULT ) && pchList == glpMasterEnvironment && pchList 
 #define UNSET_VOLATILE 0x80
 
 // delete aliases
-int _near Unalias_Cmd( LPTSTR pszCmdLine )
+int _far Unalias_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -326,7 +326,7 @@ int _near Unalias_Cmd( LPTSTR pszCmdLine )
 
 
 // create or display user functions
-int _near Unfunction_Cmd( LPTSTR pszCmdLine )
+int _far Unfunction_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -342,7 +342,7 @@ int _near Unfunction_Cmd( LPTSTR pszCmdLine )
 
 
 // delete environment variables
-int _near Unset_Cmd( LPTSTR pszCmdLine )
+int _far Unset_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn;
 
@@ -445,7 +445,7 @@ int _fastcall __Unset( LPTSTR pszCmdLine, char _far *pchList )
 #define ESET_VOLATILE 0x80
 
 // edit an existing environment variable or alias
-int _near Eset_Cmd( LPTSTR pszCmdLine )
+int _far Eset_Cmd( LPTSTR pszCmdLine )
 {
 	LPTSTR pszArg;
 	register int nLength;

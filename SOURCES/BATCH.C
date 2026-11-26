@@ -364,7 +364,7 @@ LoadBTM_error:
 
 
 // clean up & exit a batch file
-int _near ExitBatchFile( void )
+int _far ExitBatchFile( void )
 {
 	register int n;
 
@@ -478,7 +478,7 @@ int _near BatchDebugger( void )
 
 
 // send a block of text to the screen
-int _near Battext_Cmd( LPTSTR pszCmdLine )
+int _far Battext_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -503,7 +503,7 @@ int _near Battext_Cmd( LPTSTR pszCmdLine )
 
 
 // make a beeping noise (optionally specifying tone & length)
-int _near Beep_Cmd( LPTSTR pszCmdLine )
+int _far Beep_Cmd( LPTSTR pszCmdLine )
 {
 	unsigned int uFrequency, uDuration, uLength;
 
@@ -539,7 +539,7 @@ int _near Beep_Cmd( LPTSTR pszCmdLine )
 
 // CALL a nested batch file (or any executable file )
 // (because the CALL argument may be a .COM or .EXE, we can't just call BATCH)
-int _near Call_Cmd( LPTSTR pszCmdLine )
+int _far Call_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn;
 
@@ -556,7 +556,7 @@ int _near Call_Cmd( LPTSTR pszCmdLine )
 
 
 // wait for the specified number of seconds
-int _near Delay_Cmd( LPTSTR pszCmdLine )
+int _far Delay_Cmd( LPTSTR pszCmdLine )
 {
 	register unsigned int i;
 	LPTSTR pszToken;
@@ -586,7 +586,7 @@ int _near Delay_Cmd( LPTSTR pszCmdLine )
 #define DOTYPE_WHILE 0x10
 
 // DO loop
-int _near Do_Cmd( LPTSTR pszCmdLine )
+int _far Do_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	LONG lRepetitor = -1L;
@@ -975,14 +975,14 @@ int _fastcall do_parsing( register LPTSTR pszCmdName )
 
 
 // echo arguments to the screen (stdout)
-int _near Echo_Cmd( LPTSTR pszCmdLine )
+int _far Echo_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echo( pszCmdLine, 0 ));
 }
 
 
 // echo arguments to the screen (stderr)
-int _near EchoErr_Cmd( LPTSTR pszCmdLine )
+int _far EchoErr_Cmd( LPTSTR pszCmdLine )
 {
 	if ( pszCmdLine == NULL )
 		pszCmdLine = NULLSTR;
@@ -1032,14 +1032,14 @@ EchoErr:
 
 
 // echo arguments to the screen (stdout) without a trailing CR/LF
-int _near Echos_Cmd( LPTSTR pszCmdLine )
+int _far Echos_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echos( pszCmdLine, 0 ));
 }
 
 
 // echo arguments to the screen (stdout) without a trailing CR/LF
-int _near EchosErr_Cmd( LPTSTR pszCmdLine )
+int _far EchosErr_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __echos( pszCmdLine, 1 ));
 }
@@ -1071,7 +1071,7 @@ static int _near _fastcall __echos( LPTSTR pszCmdLine, int fErr )
 #define FOR_GLOBAL_PASS2 0x40
 
 // FOR - allows iterative execution of DOS commands
-int _near For_Cmd( LPTSTR pszCmdLine )
+int _far For_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszArg, *pszLine;
 	TCHAR *pszForVar, *pszArgumentSet, *pszCurrentDirectory = NULL, *pszRanges = NULLSTR;
@@ -1578,7 +1578,7 @@ for_bye:
 
 
 // Call subroutine (GOSUB labelname )
-int _near Gosub_Cmd( LPTSTR pszCmdLine )
+int _far Gosub_Cmd( LPTSTR pszCmdLine )
 {
 	LONG lSaveFlags;
 	unsigned int uSavedLine;
@@ -1636,7 +1636,7 @@ int _near Gosub_Cmd( LPTSTR pszCmdLine )
 
 
 // GOTO a label in the batch file
-int _near Goto_Cmd( LPTSTR pszCmdLine )
+int _far Goto_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = ABORT_LINE;
 	long fGoto;
@@ -1773,14 +1773,14 @@ static int _fastcall goto_label( register LPTSTR pszCmdLine, int fFlags )
 
 
 // conditional IF command
-int _near If_Cmd( LPTSTR pszCmdLine )
+int _far If_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 0 ));
 }
 
 
 // conditional IFF command
-int _near Iff_Cmd( LPTSTR pszCmdLine )
+int _far Iff_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __if( pszCmdLine, 1 ));
 }
@@ -2241,14 +2241,14 @@ int _fastcall iff_parsing( LPTSTR pszCmdName, LPTSTR pszLine )
 
 // assign a single-key value to a shell variable (INKEY)
 // assign a string to a shell variable (INPUT)
-int _near Inkey_Cmd( LPTSTR pszCmdLine )
+int _far Inkey_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __input( pszCmdLine, 0 ));
 }
 
 
 // assign a string to a shell variable (INPUT)
-int _near Input_Cmd( LPTSTR pszCmdLine )
+int _far Input_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __input( pszCmdLine, 1 ));
 }
@@ -2469,7 +2469,7 @@ good_key:
 
 
 // enable/disable disk verify
-int _near LfnFor_Cmd( LPTSTR pszCmdLine )
+int _far LfnFor_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLFNFor;
 
@@ -2490,7 +2490,7 @@ int _near LfnFor_Cmd( LPTSTR pszCmdLine )
 
 
 // switch a file between .BAT and .BTM types
-int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
+int _far Loadbtm_Cmd( LPTSTR pszCmdLine )
 {
 	register int nLoad;
 
@@ -2526,7 +2526,7 @@ int _near Loadbtm_Cmd( LPTSTR pszCmdLine )
 
 
 // ON [BREAK | ERROR | ERRORMSG | ...] condition
-int _near On_Cmd( LPTSTR pszCmdLine )
+int _far On_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszToken;
 
@@ -2577,7 +2577,7 @@ int _near On_Cmd( LPTSTR pszCmdLine )
 
 
 // wait for a keystroke; display optional message
-int _near Pause_Cmd( LPTSTR pszCmdLine )
+int _far Pause_Cmd( LPTSTR pszCmdLine )
 {
 	// make sure STDOUT hasn't been redirected
 	qprintf( ( _isatty( STDOUT ) ? STDOUT : STDERR ), FMT_STR, (( pszCmdLine == NULL ) ? PAUSE_PROMPT : pszCmdLine ));
@@ -2588,7 +2588,7 @@ int _near Pause_Cmd( LPTSTR pszCmdLine )
 
 
 // cancel nested batch files
-int _near Cancel_Cmd( register LPTSTR pszCmdLine )
+int _far Cancel_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 1 ));
 }
@@ -2597,7 +2597,7 @@ int _near Cancel_Cmd( register LPTSTR pszCmdLine )
 // exit batch file
 //   NOTE: you can also use this command to set the ERRORLEVEL (even from
 //   the command line!)
-int _near Quit_Cmd( register LPTSTR pszCmdLine )
+int _far Quit_Cmd( register LPTSTR pszCmdLine )
 {
 	return ( __quit( pszCmdLine, 0 ));
 }
@@ -2630,14 +2630,14 @@ static int _near _fastcall __quit( register LPTSTR pszCmdLine, BOOL bCancel )
 
 
 // REM - do nothing
-int _near Remark_Cmd( LPTSTR pszCmdLine )
+int _far Remark_Cmd( LPTSTR pszCmdLine )
 {
 	return 0;
 }
 
 
 // RETURN from a GOSUB
-int _near Ret_Cmd( LPTSTR pszCmdLine )
+int _far Ret_Cmd( LPTSTR pszCmdLine )
 {
 	// check for a previous GOSUB
 	if ( bframe[cv.bn].nGosubOffset <= 0 )
@@ -2655,7 +2655,7 @@ int _near Ret_Cmd( LPTSTR pszCmdLine )
 
 
 // set cursor position
-int _near Scr_Cmd( LPTSTR pszCmdLine )
+int _far Scr_Cmd( LPTSTR pszCmdLine )
 {
 	int nRow, nColumn;
 	LPTSTR pszText;
@@ -2696,7 +2696,7 @@ int _near Scr_Cmd( LPTSTR pszCmdLine )
 
 // set screen position and print a string with the specified attribute
 //   directly to the screen (vertically)
-int _near VScrput_Cmd( LPTSTR pszCmdLine )
+int _far VScrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __scrput( pszCmdLine, 1 ));
 }
@@ -2704,7 +2704,7 @@ int _near VScrput_Cmd( LPTSTR pszCmdLine )
 
 // set screen position and print a string with the specified attribute
 //   directly to the screen (vertically)
-int _near Scrput_Cmd( LPTSTR pszCmdLine )
+int _far Scrput_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __scrput( pszCmdLine, 0 ));
 }
@@ -2762,14 +2762,14 @@ static int _near _fastcall __scrput( LPTSTR pszCmdLine, int fVscrput )
 
 // save the current environment, alias list, and current drive/directory
 //   (restored by ENDLOCAL or end of batch file )
-int _near Setlocal_Cmd( LPTSTR pszCmdLine )
+int _far Setlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _setlocal() );
 }
 
 
 // restore the disk, directory, and environment (saved by SETLOCAL)
-int _near Endlocal_Cmd( LPTSTR pszCmdLine )
+int _far Endlocal_Cmd( LPTSTR pszCmdLine )
 {
 	return ( _endlocal( pszCmdLine ) );
 }
@@ -2920,7 +2920,7 @@ static int _near _fastcall _endlocal( LPTSTR pszCmdLine )
 
 
 // shift the batch arguments upwards (-n) or downwards (+n)
-int _near Shift_Cmd( LPTSTR pszCmdLine )
+int _far Shift_Cmd( LPTSTR pszCmdLine )
 {
 	int i, nShift = 1;
 
@@ -2960,7 +2960,7 @@ int _near Shift_Cmd( LPTSTR pszCmdLine )
 
 
 // Switch Case Statement
-int _near Switch_Cmd( LPTSTR pszCmdLine )
+int _far Switch_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszToken, *pszTest, *pszLine;
 	int nNestingLevel = 0;
@@ -3028,7 +3028,7 @@ int _near Switch_Cmd( LPTSTR pszCmdLine )
 
 
 // found a trailing CASE or DEFAULT - skip everything until EndSwitch
-int _near Case_Cmd( LPTSTR pszCmdLine )
+int _far Case_Cmd( LPTSTR pszCmdLine )
 {
 	extern int _near _fastcall ContinueLine( LPTSTR  );
 

@@ -281,7 +281,7 @@ typedef struct
 typedef struct
 {
 	LPTSTR szCommand;			// command name
-	int (_near * pFunc)( LPTSTR );	// pointer to function
+	int (_far * pFunc)( LPTSTR );	// pointer to function
 	unsigned int fParse;		// command line parse control flag
 } BUILTIN;
 

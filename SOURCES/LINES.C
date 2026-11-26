@@ -175,7 +175,7 @@ static TCHAR szLineChars[] = {
 #pragma alloc_text( _TEXT, DrawHline_Cmd )
 
 // draw a horizontal or vertical line directly to the display
-int _near DrawHline_Cmd( LPTSTR pszCmdLine )
+int _far DrawHline_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __drawline( pszCmdLine, 0 ));
 }
@@ -184,7 +184,7 @@ int _near DrawHline_Cmd( LPTSTR pszCmdLine )
 #pragma alloc_text( _TEXT, DrawVline_Cmd )
 
 // draw a horizontal or vertical line directly to the display
-int _near DrawVline_Cmd( LPTSTR pszCmdLine )
+int _far DrawVline_Cmd( LPTSTR pszCmdLine )
 {
 	return ( __drawline( pszCmdLine, 1 ));
 }
@@ -226,7 +226,7 @@ static int _fastcall __drawline( LPTSTR pszCmdLine, int fVertical )
 #pragma alloc_text( _TEXT, Drawbox_Cmd )
 
 // draw a box directly to display memory
-int _near Drawbox_Cmd( LPTSTR pszCmdLine )
+int _far Drawbox_Cmd( LPTSTR pszCmdLine )
 {
 	register TCHAR *pszArg, *pszLine;
 	int nTop, nLeft, nBottom, nRight, nStyle, nAttribute = -1, nFill = -1, n, nFlags = 0, nShade;

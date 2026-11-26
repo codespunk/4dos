@@ -412,7 +412,7 @@ _asm {
 
 
 // print OS brand string
-void _near ShowOS( void )
+void _far ShowOS( void )
 {
 	if ( fWarp ) {
 		char chOS2Major = _osminor >= 40 ? 4 : 3;

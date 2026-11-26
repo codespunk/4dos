@@ -473,7 +473,7 @@ static long fTree;
 
 
 // display a directory list or tree
-int _near Tree_Cmd( register LPTSTR pszCmdLine )
+int _far Tree_Cmd( register LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szFilename[MAXFILENAME], szSequelBuffer[MAXPATH];
@@ -699,7 +699,7 @@ static int DrawTree( register LPTSTR pszCurrent, LPTSTR pszSequelBuffer )
 
 
 // display a directory list
-int _near Dir_Cmd( LPTSTR pszCmdLine )
+int _far Dir_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg, pszTrailingSwitch;
 	TCHAR szFileName[MAXFILENAME], szFName[MAXFILENAME];

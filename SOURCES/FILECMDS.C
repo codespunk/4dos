@@ -131,7 +131,7 @@ static int fClip;
 
 
 // copy or append file(s)
-int _near Copy_Cmd( LPTSTR pszCmdLine )
+int _far Copy_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szClip[MAXFILENAME], *pszTarget = NULL;
@@ -706,7 +706,7 @@ static int _mv( MOVE_STRUCT *);
 
 
 // move files by renaming across directories or copying/deleting
-int _near Mv_Cmd( LPTSTR pszCmdLine )
+int _far Mv_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	unsigned int fTargetIsDir, fFreed;
@@ -1640,7 +1640,7 @@ static void wildname( LPTSTR pszTarget, register LPTSTR pszSource, LPTSTR pszTem
 #define REN_TOTALS 0x40
 
 // rename files (including to different directories) or directories
-int _near Ren_Cmd( LPTSTR pszCmdLine )
+int _far Ren_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	TCHAR szSource[MAXFILENAME], szTargetName[MAXFILENAME], szTarget[MAXFILENAME];
@@ -1851,7 +1851,7 @@ static int _del( DEL_STRUCT * );
 
 
 // Delete file(s)
-int _near Del_Cmd( LPTSTR pszCmdLine )
+int _far Del_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	int nArgc, nReturn = 0, i, nLength;
@@ -2163,7 +2163,7 @@ static int _attrib( ATTRIB_STRUCT * );
 
 
 // change file attributes (HIDDEN, SYSTEM, READ-ONLY, and ARCHIVE)
-int _near Attrib_Cmd( LPTSTR pszCmdLine )
+int _far Attrib_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	LPTSTR pszTrailing;
@@ -2494,7 +2494,7 @@ static int _touch( TOUCH_STRUCT *, DATETIME * );
 
 
 // change a file's date & time
-int _near Touch_Cmd( LPTSTR pszCmdLine )
+int _far Touch_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg, pszTemp;
 	int nArgc, nReturn = 0, rc;
@@ -2845,7 +2845,7 @@ static int _touch( TOUCH_STRUCT *Touch, DATETIME *sysDateTime )
 #define FO_FOLLOW 0x100
 
 // display file head to stdout
-int _near Head_Cmd( LPTSTR pszCmdLine )
+int _far Head_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
 
@@ -2857,7 +2857,7 @@ int _near Head_Cmd( LPTSTR pszCmdLine )
 
 
 // display file(s) to stdout
-int _near Tail_Cmd( LPTSTR pszCmdLine )
+int _far Tail_Cmd( LPTSTR pszCmdLine )
 {
 	register int nReturn = 0;
 
@@ -2873,7 +2873,7 @@ int _near Tail_Cmd( LPTSTR pszCmdLine )
 #define TYPE_FNAME 8
 
 // display file(s) to stdout
-int _near Type_Cmd( LPTSTR pszCmdLine )
+int _far Type_Cmd( LPTSTR pszCmdLine )
 {
 	int nReturn = 0;
 
@@ -3243,7 +3243,7 @@ CloseHandles:
 
 // y reads the standard input and writes to standard output, then invokes TYPE
 //   to put one or more files to standard output
-int _near Y_Cmd( LPTSTR pszCmdLine )
+int _far Y_Cmd( LPTSTR pszCmdLine )
 {
 
 	extern char _osfile[];
@@ -3279,7 +3279,7 @@ int _near Y_Cmd( LPTSTR pszCmdLine )
 
 
 // tee copies standard input to output & puts a copy in the specified file(s)
-int _near Tee_Cmd( LPTSTR pszCmdLine )
+int _far Tee_Cmd( LPTSTR pszCmdLine )
 {
 	register LPTSTR pszArg;
 	register int i;

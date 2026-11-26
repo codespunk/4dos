@@ -370,7 +370,7 @@ int _near process_rexx( char *cmd_name, register char *line, int fRexx )
 #pragma alloc_text( _TEXT, External )
 
 // Execute an external program (.COM or .EXE) via the DOS EXEC call
-int _near External( char *pszCmd, char *pszCmdLine )
+int _far External( char *pszCmd, char *pszCmdLine )
 {
 	char doscmdline[130], szShortName[MAXFILENAME], *pszComspec;
 	PCH feptr;

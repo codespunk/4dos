@@ -84,7 +84,7 @@ int PASCAL DoINT2E( TCHAR _far *pszCommand )
 
 
 // find and run _4INST.BTM, 4START or 4EXIT; return NULL if not found
-LPTSTR _near _fastcall find_4files( LPTSTR lpszFileName, BOOL fInstaller )
+LPTSTR _far _fastcall find_4files( LPTSTR lpszFileName, BOOL fInstaller )
 {
 	register LPTSTR pszSearch;
 	int nSaveErrorLevel, nSaveCallFlag;
@@ -490,7 +490,7 @@ static int _fastcall CheckForNoEcho( register LPTSTR pszStartLine )
 
 // Parse the command line, perform alias & variable expansion & redirection,
 //   and execute it.
-int _near _fastcall command( register LPTSTR pszLine, int fOptions )
+int _far _fastcall command( register LPTSTR pszLine, int fOptions )
 {
 	extern LPTSTR pszBatchDebugLine;
 
@@ -1253,7 +1253,7 @@ int _near _fastcall ContinueLine( register LPTSTR pszStartLine )
 
 
 // parse the command line into Argc, Argv format
-int _near ParseLine( LPTSTR pszCmdName, register LPTSTR pszLine, int (_near *pfnCmd)(LPTSTR), unsigned int fParse, int fSetCMDLINE )
+int _near ParseLine( LPTSTR pszCmdName, register LPTSTR pszLine, int (_far *pfnCmd)(LPTSTR), unsigned int fParse, int fSetCMDLINE )
 {
 	static int Argc;		// argument count
 	static TCHAR *Argv[ARGMAX];	// argument pointers

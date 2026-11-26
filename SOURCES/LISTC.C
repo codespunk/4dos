@@ -73,7 +73,7 @@ int ListEntry( LPTSTR szFilename )
 
 
 // edit or display a file with vertical & horizontal scrolling & text searching
-int _near List_Cmd( LPTSTR pszCmdLine )
+int _far List_Cmd( LPTSTR pszCmdLine )
 {
 	int nFVal, nReturn = 0, argc;
 	TCHAR szSource[MAXFILENAME+1], szFileName[MAXFILENAME+1], *pszArg;

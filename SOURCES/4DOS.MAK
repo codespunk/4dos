@@ -207,7 +207,7 @@ $(OBJ)\select.obj : select.c selectc.c $(headers) dblspace.h
         $(COMP) /NTSCREENIO_TEXT select.c
 
 $(OBJ)\misc.obj : misc.c $(headers) md5.h sha.h
-        $(COMP) misc.c
+        $(COMP) /NTMISC_TEXT misc.c
 
 $(OBJ)\env.obj : env.c $(headers)
         $(COMP) /NT_TEXT env.c
@@ -224,7 +224,7 @@ $(OBJ)\sharware.obj : sharware.c $(headers) sharware.h version.h
 !ENDIF
 
 $(OBJ)\screenio.obj : screenio.c $(headers)
-        $(COMP) screenio.c
+        $(COMP) /NTSCREENIO_TEXT screenio.c
 
 $(OBJ)\window.obj : window.c $(headers)
         $(COMP) /NTSCREENIO_TEXT window.c
@@ -236,7 +236,7 @@ $(OBJ)\lines.obj : lines.c $(headers)
         $(COMP) /NTSCREENIO_TEXT lines.c
 
 $(OBJ)\doscmds.obj : doscmds.c $(headers) version.h build.h idle.h
-        $(COMP) /I. /NT_TEXT doscmds.c
+        $(COMP) /I. /NTSCREENIO_TEXT doscmds.c
 
 $(OBJ)\iofmt.obj : iofmt.c $(headers)
         $(COMP) /NTMISC_TEXT iofmt.c
