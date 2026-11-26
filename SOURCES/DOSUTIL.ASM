@@ -1416,7 +1416,11 @@ com_ret:  exit
           ;    AX = DSP version, or 0 if no Sound Blaster present
           ;    All other registers unchanged, interrupts on
           ;
+ifdef LEGACY_WATCOM
+          extrn     SysWait_:far
+else
           extrn     @SysWait:far
+endif
           entry	GetSBDSPver,noframe,far
           pushm     bx,cx,dx
           mov       ax,1
@@ -1430,7 +1434,11 @@ com_ret:  exit
           mov       al,5
           cwd
           mov       bx,2		; 5 ms delay, much longer than 0.1 ms
+ifdef LEGACY_WATCOM
+          call      SysWait_
+else
           call      @SysWait
+endif
           pop       dx
           add       dl,8		; read buffer status port (22Eh)
           in        al,dx
