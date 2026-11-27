@@ -318,6 +318,7 @@ E_BADFC   equ       'FB'                ;BF - bad server function code
 E_SHNEW   equ       'SN'                ;NS - no number for new shell
 E_SHEXIT  equ       'ST'                ;TS - terminated inactive shell
 E_PRTERM  equ       'TP'                ;PT - illegal process termination
+E_SWPMEM  equ       'MS'                ;SM - no memory for swap in
 E_XMSIN   equ       'IX'                ;XI - XMS swap in error
 E_EMSMPI  equ       'ME'                ;EI - EMS map for swap in error
 E_DSKINT  equ       'ID'                ;DI - disk swap in integrity error

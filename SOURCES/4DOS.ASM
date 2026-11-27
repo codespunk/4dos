@@ -419,16 +419,23 @@ ExecTerm: popf                          ;restore flags
           ; case high memory has been reserved by someone, or memory has been
           ; expanded by something like VIDRAM)
           ;
+          cmp       bx,TPLenP           ;room for the transient portion?
+           jb       LMNoMem             ;if not, cannot restore 4DOS
           mov       dx,bx               ;copy size of largest block
           calldos   ALLOC               ;allocate that block
-           jc       LMSwap              ;if can't get it go on
+           jc       LMNoMem             ;if allocation fails, stop
           sub       dx,TPLenP           ;get length without transient
           add       dx,ax               ;add base to get new server address
           mov       ServSeg,dx          ;save it for swappers
           mov       es,ax               ;copy segment
           calldos   FREE                ;and free it
+           jc       LMNoMem             ;if release fails, stop
           ;
-LMSwap:   call      wptr SwapInP        ;call swap in code
+          call      wptr SwapInP        ;call swap in code
+          jmp       short ExecDone      ;return to restored server
+          ;
+LMNoMem:  bset      LMFlags,FATALERR    ;cannot safely return or terminate
+          error     SWPMEM              ;report failed memory restoration
           ;
           ;
           ; Get back interrupt return codes, return to server
