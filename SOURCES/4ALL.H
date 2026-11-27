@@ -45,6 +45,14 @@ typedef struct {
 } t_int64;
 #endif
 
+// DOS timestamp and allocation outputs use unsigned short in older
+// Watcom CRTs, unsigned int in newer Watcom and Microsoft CRTs.
+#if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
+typedef unsigned short DOSWORD;
+#else
+typedef unsigned int DOSWORD;
+#endif
+
 #define wcmemset memset
 
 // Ensure the program pathname is passed as a four-byte far
