@@ -428,6 +428,9 @@ _MsgType  equ       1                   ;assemble initialization messages
           endif
           ;
           ;
+IncompMsg db        "Warning: Incompatible 4DOS shell; "
+          db        "reduced swapping disabled.", CR, LF, "$"
+          ;
           ; ------- Internal tables --------
           ;
           ;         Loadable module table
@@ -975,7 +978,7 @@ ClsLoop:  calldos   CLOSE               ;close it
           mov       bh,SERVNEW          ;get 4DOS ver. 2/3 new shell function
           int       SERVINT             ;call previous shell
           mov       ShellNum,bl         ;shell number is in bx
-          jmp       short NoPrvShl      ;ignore everything else as previous
+          jmp       short PSIncomp      ;ignore everything else as previous
                                         ;  shell is not 4DOS 4.0 or above
           ;
           ; Get a new shell number from 4DOS 4.0 or above
@@ -989,7 +992,7 @@ NewShel4:	mov	PrvShNum,dl	;save previous shell's shell number
           mov       ShellNum,bl         ;yes, shell number is in bx
           pop       bx                  ;get back old version
           cmp       bx,VERSION          ;same version?
-           jne      NoPrvShl            ;if not get out
+           jne      PSIncomp            ;if not warn and disable inheritance
           ;
           ; Get previous shell's code segment swap and alias / function /
           ; cmd history / dir history / INI data swap info
@@ -1004,7 +1007,7 @@ NewShel4:	mov	PrvShNum,dl	;save previous shell's shell number
                                         ;copy previous shell's info
           loadseg   ds,cs               ;reset local segment
           cmp       OldShell.ShIVer,INTVER  ;internal version match?
-           jne      NoPrvShl            ;if not, show no previous shell
+           jne      PSIncomp            ;if not warn and disable inheritance
           ;
           ; Previous shell is there, but we can't use its swap space if it
           ; doesn't have one!
@@ -1015,6 +1018,9 @@ NewShel4:	mov	PrvShNum,dl	;save previous shell's shell number
           ;
           ; No previous shell of this same version -- disable use of
           ; information from previous shell
+          ;
+PSIncomp: mov       dx,offset IncompMsg ;warn about incompatible shell
+          call      StatMsg             ;display warning
           ;
 NoPrvShl: bset      InitFlag,NOPREV+XINHERIT  ;kill inheritance
           ;
@@ -2951,6 +2957,17 @@ SAHExit:  mov       [bx].AHLenB,ax      ;store byte size
           sub       ax,di               ;code length = DGROUP - _TEXT
 ;** add length of language strings here??
           mov       CodeLenP,ax         ;save it
+          ; Disable reduced swapping if the inherited code length differs.
+          test      Flags,NOREDUCE      ;already disabled?
+           jnz      LLCodeOK            ;if so skip the check
+          cmp       ax,OldCReg.SwapLen  ;same code length in paragraphs?
+           je       LLCodeOK            ;if so keep reduced swapping
+          bset      Flags,NOREDUCE      ;use our own code image
+          push      dx                  ;preserve DGROUP address
+          mov       dx,offset IncompMsg ;warn about incompatible shell
+          call      StatMsg             ;display warning
+          pop       dx                  ;restore DGROUP address
+LLCodeOK:
           mov       ax,dx               ;get back DGROUP
           sub       ax,si               ;DGROUP offset = DGROUP - SERV_TEXT
           mov       DataOffP,ax         ;save it
