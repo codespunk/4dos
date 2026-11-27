@@ -230,7 +230,7 @@ _asm {
 		sprintf( gszFindDesc, FMT_PATH, gpIniptr->BootDrive, DOS_NAME );
 
 	// save the executable pathname
-	PROGRAM_PATH = (char _far *)strdup( gszFindDesc );
+	PROGRAM_PATH = strdup( gszFindDesc );
 
 	if ( fWin95 || ( gpIniptr->ShellLevel == 0 )) {
 		// set COMSPEC
