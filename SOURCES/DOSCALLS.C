@@ -716,31 +716,39 @@ void EnableSignals( void )
 }
 
 
-// get elapsed milliseconds since midnight (DOS) or since Windows has started
-ULONG _near GetMs( void )
+// Use the BIOS tick count together with the PIT, rather than the PIT alone.
+// The latter wraps about every 55 ms and can wrap unseen while we yield.
+static ULONG _near GetDosMs( void )
 {
 	t_int64 llClock;
 
-	if ( gnOSFlags & DOS_IS_OS2 )
-		return 0;
-	if ( gpIniptr->WinMode )
-		return GetWinMs();
 	GetTimeStamp( &llClock );
 	ShiftLeft16( &llClock );
 	return Divide64By32( &llClock, 78196354 );
 }    // 65536 * 14318180 / 12 / 1000 = 78196353.7066667
 
 
-// get the current timestamp that is relevant for the running operating system
-static ULONG _near GetOSclock( void )
+// get elapsed milliseconds since midnight (DOS) or since Windows has started
+ULONG _near GetMs( void )
 {
-	ULONG ulVal;
-	if ( gnOSFlags & DOS_IS_OS2 ) {	// OS/2 system time accuracy is 31.25 ms
+	if ( gnOSFlags & DOS_IS_OS2 )
+		return 0;
+	if ( gpIniptr->WinMode )
+		return GetWinMs();
+	return GetDosMs();
+}
+
+
+// Read the same clock for the entire delay. A zero Windows timestamp can
+// also be a valid value at rollover, so do not switch clocks mid-delay.
+static ULONG _near GetOSclock( int fWindows )
+{
+	if ( gnOSFlags & DOS_IS_OS2 ) {
 		struct dostime_t tm;
-		_dos_gettime( &tm );// return hundredths since midnight (range: 0 to 8640000)
+		_dos_gettime( &tm );
 		return (( tm.hour * 60L + tm.minute ) * 60L + tm.second ) * 100L + tm.hsecond;
 	}
-	return gpIniptr->WinMode && (ulVal = GetWinMs()) ? ulVal : GetTimer();
+	return fWindows ? GetWinMs() : GetDosMs();
 }
 
 
