@@ -872,6 +872,8 @@ SCAvail:  test      Flags,TPARES        ;TPA reserved?
 SATPASz:  call      FreeTPA             ;free the TPA
           call      ResTPA              ;reserve it again (cleans things up)
           mov       ax,TPASize          ;get TPA size
+          or        ax,ax               ;is the TPA reserved?
+           jz       SCDone              ;no MCB to recover
           inc       ax                  ;bump for extra MCB
           jmp       SCDone              ;and go on
           ;
