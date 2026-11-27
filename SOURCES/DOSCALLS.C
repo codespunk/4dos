@@ -903,6 +903,88 @@ delayRet:		GetKeystroke( EDIT_NO_ECHO );
 }
 
 
+#ifdef __WATCOMC__
+#define DSP_INP inp
+#define DSP_OUTP outp
+#else
+#pragma intrinsic( _inp, _outp )
+#define DSP_INP _inp
+#define DSP_OUTP _outp
+#endif
+
+// Read the Sound Blaster base address from BLASTER.
+// Default to 220h if the address is missing or invalid.
+static unsigned int _near GetSBDSPbase( void )
+{
+	char _far *lpBlaster = get_variable( "BLASTER" );
+	unsigned int uBase;
+	int n = 0;
+
+	if ( lpBlaster != 0L ) {
+		while ( *lpBlaster ) {
+			while ( iswhite( *lpBlaster ))
+				lpBlaster++;
+
+			if ( *lpBlaster == 'A' || *lpBlaster == 'a' ) {
+				lpBlaster++;
+				sscanf_far( lpBlaster, "%3x%n", &uBase, &n );
+
+				if ( n == 3 && uBase >= 0x210 &&
+				     uBase <= 0x2E0 && !( uBase & 0x0F ) &&
+				     ( !lpBlaster[n] || iswhite( lpBlaster[n] )))
+					return uBase;
+
+				break;
+			}
+
+			while ( *lpBlaster && !iswhite( *lpBlaster ))
+				lpBlaster++;
+		}
+	}
+
+	return 0x220;
+}
+
+
+// Get the Sound Blaster DSP version at the configured base address.
+// Return zero if the DSP does not acknowledge the reset.
+int _far _pascal GetSBDSPver( void )
+{
+	volatile unsigned int uDelay = 0;
+	unsigned int uBase = GetSBDSPbase();
+	unsigned int uVersion;
+
+	DSP_OUTP( uBase + 0x06, 1 );
+	// Preserve the original 65536-iteration reset pulse delay.
+	do {
+		--uDelay;
+	} while ( uDelay != 0 );
+	DSP_OUTP( uBase + 0x06, 0 );
+	SysWait( 5UL, 2 );
+
+	if (( DSP_INP( uBase + 0x0E ) & 0x80 ) == 0 ||
+	     DSP_INP( uBase + 0x0A ) != 0xAA )
+		return 0;
+
+	// Wait until the DSP can accept the version command.
+	while ( DSP_INP( uBase + 0x0C ) & 0x80 )
+		;
+	DSP_OUTP( uBase + 0x0C, 0xE1 );
+
+	// Read the major and minor version bytes in order.
+	while (( DSP_INP( uBase + 0x0E ) & 0x80 ) == 0 )
+		;
+	uVersion = (unsigned int)( DSP_INP( uBase + 0x0A ) & 0xFF ) << 8;
+	while (( DSP_INP( uBase + 0x0E ) & 0x80 ) == 0 )
+		;
+	return (int)( uVersion | ( DSP_INP( uBase + 0x0A ) & 0xFF ));
+}
+
+
+#undef DSP_INP
+#undef DSP_OUTP
+
+
 // check if arg is a +, -, or 0-9
 int _fastcall is_signed_digit( register char nDigit )
 {

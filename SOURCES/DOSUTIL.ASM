@@ -1410,68 +1410,6 @@ com_dsr:  and       ax,100000b		; mask DSR bit
 com_ret:  exit
 
           ;
-          ; GetSBDSPver - get Sound Blaster DSP version (see SBHWPG.PDF)
-          ;
-          ; On exit:
-          ;    AX = DSP version, or 0 if no Sound Blaster present
-          ;    All other registers unchanged, interrupts on
-          ;
-ifdef LEGACY_WATCOM
-          extrn     SysWait_:far
-else
-          extrn     @SysWait:far
-endif
-          entry	GetSBDSPver,noframe,far
-          pushm     bx,cx,dx
-          mov       ax,1
-          mov       dx,226h		; DSP reset port
-          out       dx,al
-          xor       cx,cx
-          loop      $			; must wait at least 3 microseconds
-          dec       ax
-          out       dx,al
-          push      dx
-          mov       al,5
-          cwd
-          mov       bx,2		; 5 ms delay, much longer than 0.1 ms
-ifdef LEGACY_WATCOM
-          call      SysWait_
-else
-          call      @SysWait
-endif
-          pop       dx
-          add       dl,8		; read buffer status port (22Eh)
-          in        al,dx
-          and       ax,10000000b	; any data to read?
-          jz        SBDSPretn		; no, return 0 (no SB found)
-          sub       dl,4		; yes, read DSP data port (22Ah)
-          in        al,dx
-          cmp       al,0AAh		; OK?
-          mov       al,0		; (assume no)
-          jne       SBDSPretn		; no SB found - return 0
-          add       dl,2		; a SB was found
-SBDSPbsy1:in        al,dx		; read DSP write buffer status (22Ch)
-          or        al,al		; can we write to the DSP?
-          js        SBDSPbsy1		; not yet, try again
-          mov       al,0E1h		; yes, send the Get DSP Version command
-          out       dx,al
-          add       dl,2		; read buffer status port (22Eh)
-SBDSPbsy2:in        al,dx
-          or        al,al		; any data to read?
-          jns       SBDSPbsy2		; not yet, try again
-          sub       dl,4		; read data port (22Ah)
-          in        al,dx		; read the version MSB
-          mov       ah,al		; save it
-          add       dl,4		; read buffer status port (22Eh)
-SBDSPbsy3:in        al,dx		; repeat the procedure for the LSB
-          or        al,al
-          jns       SBDSPbsy3
-          sub       dl,4
-          in        al,dx		; read the version LSB
-SBDSPretn:popm      dx,cx,bx
-          exit				; return the DSP version in AX
-
-          ;
           ; InV86mode - return 1 if CPU is in V86 mode, else 0 (386+ only)
           ;
           ; On exit:
