@@ -6536,6 +6536,8 @@ Int2EF    proc      far                 ;full INT 2E handler module
            jz       I2ESaveState        ;if not keep resident server address
           mov       bx,0FFFFh           ;get max paragraphs
           calldos   ALLOC               ;get size of largest block
+          cmp       bx,TPLenP           ;room for the transient portion?
+           jb       I2ERestorePSP       ;if not, reject the callback
           mov       dx,bx               ;copy size of largest block
           calldos   ALLOC               ;allocate that block
            jc       I2ERestorePSP       ;restore PSP if allocation fails
