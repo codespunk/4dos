@@ -230,7 +230,7 @@ got_switchar:
           ;
 
           entry     SetSwitchChar,argframe,far
-          argB      SwitchChar
+          argW      SwitchChar       ; char occupies a word on the stack
           push      cx
           push      si
           push      di
