@@ -45,6 +45,9 @@ typedef struct {
 } t_int64;
 #endif
 
+// Match the 16-bit DOS CRT type for timestamp and allocation values
+typedef unsigned int DOSWORD;
+
 #define wcmemset memset
 
 // Ensure the program pathname is passed as a four-byte far
