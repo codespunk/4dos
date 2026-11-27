@@ -187,7 +187,7 @@ static void _near MoveFiles( unsigned int uNewSeg, DIR_ENTRY _huge *Files, unsig
 	// Don't move if there's no files array
 	if (Files != 0L) {
 		
-		uOldSeg = SELECTOROF( (char _huge *)Files );
+		uOldSeg = SELECTOROF( Files );
 		uFileBlocks = (unsigned int)( ulOldFileSize >> 15 );
 		uRemaining = (unsigned int)( ulOldFileSize - (( (ULONG)uFileBlocks ) << 15 ));
 		

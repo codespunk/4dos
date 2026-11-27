@@ -530,7 +530,7 @@ int _pascal DosError( int );
 void _pascal SetExtError( int );
 LPTSTR _pascal GetError( int, LPTSTR );
 void _pascal GetDOSVersion( void );
-int _pascal InstalledCheck( int );
+int _pascal InstalledCheck( unsigned int );
 int _pascal PowerInstalled( void );
 BYTE _pascal NetworkInstalled( void );
 void _pascal GetMachineName( LPTSTR );
