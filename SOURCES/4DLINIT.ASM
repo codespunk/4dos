@@ -6532,6 +6532,8 @@ Int2EF    proc      far                 ;full INT 2E handler module
           push      bx                  ;save caller's PSP before switching
           mov       bx,PSPSeg           ;get our PSP segment
           calldos   SETPSP              ;set the current PSP
+          test      LMFlags,SWAPENAB    ;is swapping enabled?
+           jz       I2ESaveState        ;if not keep resident server address
           mov       bx,0FFFFh           ;get max paragraphs
           calldos   ALLOC               ;get size of largest block
           mov       dx,bx               ;copy size of largest block
@@ -6546,12 +6548,16 @@ Int2EF    proc      far                 ;full INT 2E handler module
           ;         Next 3 items are restored by server
           ;
           ; Caller's PSP is already saved on the stack.
+I2ESaveState:
           push      wptr LMFlags        ;save flags (2 bytes)
           push      wptr ExecSig        ;save EXEC signature (and next byte)
           ;
+          test      LMFlags,SWAPENAB    ;is swapping enabled?
+           jz       I2EEnterServer      ;if not server is already resident
           pushm     di,si               ;save command address
           call      wptr SwapInP        ;swap server back in
           popm      si,di               ;restore address to DI:SI for server
+I2EEnterServer:
           loadseg   es,cs               ;set ES for server
           mov       ax,cs:ServSeg       ;get server segment
           mov       ds,ax               ;set DS for server
