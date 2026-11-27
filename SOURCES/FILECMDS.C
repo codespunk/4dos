@@ -1509,8 +1509,10 @@ no_ea_copy:
 	// set the file date & time to the same as the source
 	if (( fFlags & COPY_CREATE ) && (( fFlags & ( APPEND_FLAG | DEVICE_SOURCE | DEVICE_TARGET | PIPE_SOURCE | PIPE_TARGET )) == 0 )) {
 
-		_dos_getftime( nInputFile, &nBytesRead, &nBytesWritten );
-		_dos_setftime( nOutputFile, nBytesRead, nBytesWritten );
+		DOSWORD uDate, uTime;
+
+		if ( _dos_getftime( nInputFile, &uDate, &uTime ) == 0 )
+			_dos_setftime( nOutputFile, uDate, uTime );
 
 	}
 

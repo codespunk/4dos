@@ -598,7 +598,7 @@ void _fastcall FreeMem( void _far *fptr )
 void _far * PASCAL AllocMem( register unsigned int *size )
 {
 	register unsigned int uParagraphs;
-	unsigned int uSegment;
+	DOSWORD uSegment;
 
 	// get the number of paragraphs we want (rounded up)
 	uParagraphs = (( *size + 0xF ) >> 4 );
@@ -1632,7 +1632,7 @@ char * PASCAL find_file( int fflag, register char *arg, unsigned long attrib, FI
 	char *pszFileName, *pszNext, *pszNamePart;
 	int rval, fval = fflag, i, mode, nPathLength, fWildBrackets = 0;
 	unsigned short uTime, uDate;
-	unsigned int fUnicode = 0, fWildcards = 1;
+	unsigned int fUnicode = 0, fWildcards = 1, uAttribute;
 	unsigned long ulDTRange;
 	WIN32_FIND_DATA *pWin95Dir;
 
@@ -1654,7 +1654,7 @@ char * PASCAL find_file( int fflag, register char *arg, unsigned long attrib, FI
 		if (( *arg == '@' ) || ( arg[ i ] == '@' )) {
 	
 			// if the file exists with the @ prefix, leave it alone!
-			if ( _dos_getfileattr( arg, &i ) != 0 ) {
+			if ( _dos_getfileattr( arg, &uAttribute ) != 0 ) {
 
 				// remove the '@' and look again
 				if ( *arg == '@' )
@@ -1679,7 +1679,7 @@ char * PASCAL find_file( int fflag, register char *arg, unsigned long attrib, FI
 						dir->lFileOffset = 0L;
 						goto ReturnAtFile;
 							
-					} else if ( _dos_getfileattr( dir->pszFileList, &i ) == 0 ) {
+					} else if ( _dos_getfileattr( dir->pszFileList, &uAttribute ) == 0 ) {
 						// read the first line
 						dir->lFileOffset = 0L;
 						goto ReturnAtFile;
