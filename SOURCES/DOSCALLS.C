@@ -811,6 +811,52 @@ delayRet:		GetKeystroke( EDIT_NO_ECHO );
 }
 
 
+#ifdef __WATCOMC__
+#define DSP_INP inp
+#define DSP_OUTP outp
+#else
+#pragma intrinsic( _inp, _outp )
+#define DSP_INP _inp
+#define DSP_OUTP _outp
+#endif
+
+// Get the Sound Blaster DSP version at the default base address (220h).
+// Return zero if the DSP does not acknowledge the reset.
+int _far _pascal GetSBDSPver( void )
+{
+	volatile unsigned int uDelay = 0;
+	unsigned int uVersion;
+
+	DSP_OUTP( 0x226, 1 );
+	// Preserve the original 65536-iteration reset pulse delay.
+	do {
+		--uDelay;
+	} while ( uDelay != 0 );
+	DSP_OUTP( 0x226, 0 );
+	SysWait( 5UL, 2 );
+
+	if (( DSP_INP( 0x22E ) & 0x80 ) == 0 || DSP_INP( 0x22A ) != 0xAA )
+		return 0;
+
+	// Wait until the DSP can accept the version command.
+	while ( DSP_INP( 0x22C ) & 0x80 )
+		;
+	DSP_OUTP( 0x22C, 0xE1 );
+
+	// Read the major and minor version bytes in order.
+	while (( DSP_INP( 0x22E ) & 0x80 ) == 0 )
+		;
+	uVersion = (unsigned int)( DSP_INP( 0x22A ) & 0xFF ) << 8;
+	while (( DSP_INP( 0x22E ) & 0x80 ) == 0 )
+		;
+	return (int)( uVersion | ( DSP_INP( 0x22A ) & 0xFF ));
+}
+
+
+#undef DSP_INP
+#undef DSP_OUTP
+
+
 // check if arg is a +, -, or 0-9
 int _fastcall is_signed_digit( register char nDigit )
 {
