@@ -716,31 +716,39 @@ void EnableSignals( void )
 }
 
 
-// get elapsed milliseconds since midnight (DOS) or since Windows has started
-ULONG _near GetMs( void )
+// Use the BIOS tick count together with the PIT, rather than the PIT alone.
+// The latter wraps about every 55 ms and can wrap unseen while we yield.
+static ULONG _near GetDosMs( void )
 {
 	t_int64 llClock;
 
-	if ( gnOSFlags & DOS_IS_OS2 )
-		return 0;
-	if ( gpIniptr->WinMode )
-		return GetWinMs();
 	GetTimeStamp( &llClock );
 	ShiftLeft16( &llClock );
 	return Divide64By32( &llClock, 78196354 );
 }    // 65536 * 14318180 / 12 / 1000 = 78196353.7066667
 
 
-// get the current timestamp that is relevant for the running operating system
-static ULONG _near GetOSclock( void )
+// get elapsed milliseconds since midnight (DOS) or since Windows has started
+ULONG _near GetMs( void )
 {
-	ULONG ulVal;
-	if ( gnOSFlags & DOS_IS_OS2 ) {	// OS/2 system time accuracy is 31.25 ms
+	if ( gnOSFlags & DOS_IS_OS2 )
+		return 0;
+	if ( gpIniptr->WinMode )
+		return GetWinMs();
+	return GetDosMs();
+}
+
+
+// Read the same clock for the entire delay. A zero Windows timestamp can
+// also be a valid value at rollover, so do not switch clocks mid-delay.
+static ULONG _near GetOSclock( int fWindows )
+{
+	if ( gnOSFlags & DOS_IS_OS2 ) {
 		struct dostime_t tm;
-		_dos_gettime( &tm );// return hundredths since midnight (range: 0 to 8640000)
+		_dos_gettime( &tm );
 		return (( tm.hour * 60L + tm.minute ) * 60L + tm.second ) * 100L + tm.hsecond;
 	}
-	return gpIniptr->WinMode && (ulVal = GetWinMs()) ? ulVal : GetTimer();
+	return fWindows ? GetWinMs() : GetDosMs();
 }
 
 
@@ -752,18 +760,43 @@ void _fastcall SysWait( unsigned long ulSeconds, int fFlags )
 
 	// milliseconds (2) or seconds?
 	if ( fFlags & 2 ) {
-		ULONG ulWrap = 65536, ulNew, ulOld = i = GetOSclock();
+		// The DOS BIOS resets its tick count at 1800B0h. Converted by
+		// GetDosMs(), that corresponds to approximately 86399877 ms.
+		ULONG ulWrap = 86399877UL, ulNew, ulOld, ulElapsed;
+		int fWindows = 0;
+
 		if ( gnOSFlags & DOS_IS_OS2 ) {
-			ulSeconds = ( ulSeconds + 5 ) / 10;
-			ulWrap = 8640000;
-		} else if ( !gpIniptr->WinMode || !GetWinMs() )
-			ulSeconds *= 1193;
-		for ( i += ulSeconds; (ulNew = GetOSclock()) < i && ( ulOld <= ulNew || i > ulWrap && (i -= ulWrap) >= 0 ); ulOld = ulNew )
+			ulSeconds = ulSeconds / 10 + ( ulSeconds % 10 >= 5 );
+			ulWrap = 8640000UL;
+		} else if ( gpIniptr->WinMode && (ulOld = GetWinMs()) != 0 ) {
+			fWindows = 1;
+			ulWrap = 0; // unsigned 32-bit subtraction handles Windows rollover
+		}
+		if ( !fWindows )
+			ulOld = GetOSclock( 0 );
+
+		while ( ulSeconds ) {
+			ulNew = GetOSclock( fWindows );
+			ulElapsed = ulNew - ulOld;
+			if ( ulNew < ulOld )
+				ulElapsed += ulWrap;
+			if ( ulElapsed >= ulSeconds )
+				break;
+			ulSeconds -= ulElapsed;
+			ulOld = ulNew;
+
+			// On plain DOS, do not yield through an entire BIOS tick
+			// when less than one tick remains. Still check for keys.
+			if ( !gpIniptr->WinMode && !( gnOSFlags & DOS_IS_OS2 ) &&
+			     ulSeconds <= 55 && !bios_kbhit() )
+				continue;
+
 			if (( key = bios_keystroke()) != -1 )
 				if ( !key || key == 0x2E03 ) // Ctrl-Break or Ctrl-C
 					goto delayRet;
 				else if ( fFlags & 1 )
 					goto getChr;
+		}
 	} else for ( nInterval = 5, ulSeconds <<= 2, i = 0; i < ulSeconds; i++ ) {
 		if (( fFlags & 1 ) && ( _kbhit() )) {
 getChr:			_getch();
