@@ -77,6 +77,12 @@ extern char _far *glpProgramPath;
 #endif
 #endif
 
+// Watcom exposes stackavail() with a prototype in malloc.h.
+#ifdef __WATCOMC__
+#include <malloc.h>
+#define _stackavail stackavail
+#endif
+
 // The legacy Watcom CRT exports these routines without a leading underscore.
 #if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
 #include <conio.h>
@@ -85,7 +91,6 @@ extern char _far *glpProgramPath;
 #include <malloc.h>
 #define _read read
 #define _write write
-#define _stackavail stackavail
 #define _kbhit kbhit
 #define _isatty isatty
 #define _dup2 dup2
