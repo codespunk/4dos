@@ -45,8 +45,9 @@ typedef struct {
 } t_int64;
 #endif
 
+// Match the 16-bit DOS CRT type for timestamp and allocation values.
 // DOS timestamp and allocation outputs use unsigned short in older
-// Watcom CRTs, unsigned int in newer Watcom and Microsoft CRTs.
+// Watcom CRTs, unsigned int in newer Watcom and Microsoft CRTs
 #if defined(__WATCOMC__) && (__WATCOMC__ < 1280)
 typedef unsigned short DOSWORD;
 #else
