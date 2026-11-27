@@ -83,7 +83,7 @@ void BreakOut( void )
 // look for (& execute if found) a TSR installed via INT 2F function AEh
 int _near installable_cmd( char *line )
 {
-	extern int _pascal noappend( void );
+	extern int _far _pascal noappend( void );
 	extern char szAppendBlock[];
 
 	static char DELIMS[] = "%9[^  \t;,.\"`\\+=]";
@@ -154,6 +154,7 @@ _asm {
 		rval = CTRLC;
 
 	else {
+		int (_far _pascal *lpNoAppend)( void ) = noappend;
 
 		// turn off swapping & free low DOS memory
 		SwapFlag = ServCtrl( SERV_SWAP, -1 );
@@ -165,9 +166,7 @@ _asm {
 		push	di
 		push	si
 
-		push	cs			; these 3 lines short-circuit
-		pop	es			;   attempts by APPEND to run
-		mov	di, offset cs:noappend	;   code inside COMMAND.COM
+		les	di, dword ptr lpNoAppend	; use the actual far address to short-circuit APPEND
 
 		mov	ax, 0AE01h		; execute the command
 		lea	bx, word ptr dosline
