@@ -788,18 +788,24 @@ SCSwap:   test      Flags,TRANSHI       ;are we loaded high?
            jne      SwapOn              ;if non-zero turn swapping on
           test      es:LMFlags,SWAPENAB  ;is it already off?
            jz       SCDone              ;if so skip it
-          bclr      es:LMFlags,SWAPENAB ;zero -- turn off
-          mov       bx,INISeg           ;get INI file data segment
-          mov       es:ShellInf.DSwpMLoc,bx  ;set for secondary shells
           call      FreeTPA             ;free TPA
           mov       ax,TranLenP         ;get length of high area
           inc       ax                  ;bump for extra paragraph at end
-          mov       dx,cs               ;get local segment 
+          mov       dx,cs               ;get local segment
           mov       bx,dx               ;copy as requested segment
           call      ResHigh             ;reserve transient 4DOS memory
            jc       SwResErr            ;if error complain
           cmp       ax,dx               ;does it match?
-           jne      SwResErr            ;if not, complain
+           je       SwOffOK             ;if so commit the new state
+          push      es                  ;save loader segment
+          mov       es,ax               ;release misplaced reservation
+          calldos   FREE
+          pop       es                  ;restore loader segment
+          jmp       short SwResErr      ;keep swapping enabled
+          ;
+SwOffOK:  bclr      es:LMFlags,SWAPENAB ;turn off after reservation
+          mov       bx,INISeg           ;get INI file data segment
+          mov       es:ShellInf.DSwpMLoc,bx  ;set for secondary shells
           call      ResTPA              ;and re-reserve smaller TPA
           jmp       short SwapGood      ;all done
           ;
@@ -807,16 +813,16 @@ SwResErr: call      ResTPA              ;re-reserve TPA
           jmp       short SwapErr       ;and return error
           ;
 SwapOn:   test      es:LMFlags,SWAPENAB  ;is it already on?
-          jnz       SCDone              ;if so skip it
-          bset      es:LMFlags,SWAPENAB  ;set swap flag
-          mov       es:ShellInf.DSwpMLoc,0  ;clear mem res inheritance
+          jnz       SwapGood            ;already enabled, success
           call      FreeTPA             ;free TPA
+          push      es                  ;save loader segment
           loadseg   es,cs               ;get local segment address
           calldos   FREE                ;free transient 4DOS memory
-          pushf                         ;save result
+          pop       es                  ;restore loader segment
+           jc       SwResErr            ;keep swapping disabled on error
+          bset      es:LMFlags,SWAPENAB ;commit after successful release
+          mov       es:ShellInf.DSwpMLoc,0  ;clear mem res inheritance
           call      ResTPA              ;re-reserve TPA at full size
-          popf                          ;get back result of DOS call
-          jc        SwapErr             ;holler if it didn't work
           jmp       short SwapGood      ;all done
           ;
 SwapInq:  test      es:LMFlags,SWAPENAB  ;check flag
