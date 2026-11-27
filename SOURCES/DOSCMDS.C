@@ -927,6 +927,7 @@ int _far Reboot_Cmd( char *pszCmdLine )
 	if ( fWin95 )
 		RebootW9x( );
 	Reboot( chBootType );		// do a "soft" or "hard" reset
+	return ERROR_EXIT;		// defensive fallback if reset unexpectedly returns
 }
 
 

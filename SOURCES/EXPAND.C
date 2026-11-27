@@ -3560,7 +3560,7 @@ static LPTSTR _near _fastcall var_internal( LPTSTR lpszVar )
 	static TCHAR szBrandString[48];
 	TCHAR *ptr;
 	int i = 0, n, nOffset;
-	unsigned int uDay, uYear, uDOY;
+	unsigned int uDay, uYear, uDOY, uTSR;
 	DATETIME sysDateTime;
 	ULONG ulUnixTime;
 	t_int64 lla, llb;
@@ -4316,10 +4316,10 @@ DPMI_version:
 			break;
 
 		case VAR_NLSFUNC:
-			n = 0x1400;
+			uTSR = 0x1400;
 TSRcheck:
 			// TSR installed? (1=yes, 0=OK to install, -1=not OK
-			IntToAscii( -InstalledCheck( n ), lpszVar );
+			IntToAscii( -InstalledCheck( uTSR ), lpszVar );
 			break;
 
 		case VAR_POWER:
@@ -4329,47 +4329,47 @@ TSRcheck:
 			break;
 
 		case VAR_PRINT:
-			n = 0x100;
+			uTSR = 0x100;
 			goto TSRcheck;
 
 		case VAR_ASSIGN:
-			n = 0x600;
+			uTSR = 0x600;
 			goto TSRcheck;
 
 		case VAR_DRIVER:
-			n = 0x800;
+			uTSR = 0x800;
 			goto TSRcheck;
 
 		case VAR_SHARE:
-			n = 0x1000;
+			uTSR = 0x1000;
 			goto TSRcheck;
 
 		case VAR_MSCDEX:
-			n = 0x1100;
+			uTSR = 0x1100;
 			goto TSRcheck;
 
 		case VAR_TASKMAX:
-			n = 0x2700;
+			uTSR = 0x2700;
 			goto TSRcheck;
 
 		case VAR_GRAPHICS:
-			n = 0xAC00;
+			uTSR = 0xAC00;
 			goto TSRcheck;
 
 		case VAR_DISPLAY:
-			n = 0xAD00;
+			uTSR = 0xAD00;
 			goto TSRcheck;
 
 		case VAR_GRAFTABL:
-			n = 0xB000;
+			uTSR = 0xB000;
 			goto TSRcheck;
 
 		case VAR_APPEND:
-			n = 0xB700;
+			uTSR = 0xB700;
 			goto TSRcheck;
 
 		case VAR_EGA:
-			n = 0xBC00;
+			uTSR = 0xBC00;
 			goto TSRcheck;
 
 		case VAR_NUMLOCK:
