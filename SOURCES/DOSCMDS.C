@@ -1337,7 +1337,8 @@ int _far Swap_Cmd( char *pszCmdLine )
 			return ( Usage( SWAPPING_USAGE ));
 
 		// reset the 4DOS swap server
-		ServCtrl( SERV_SWAP, nSwapState );
+		if ( ServCtrl( SERV_SWAP, nSwapState ) != 0 )
+			return ERROR_EXIT;
 	}
 
 	return 0;
