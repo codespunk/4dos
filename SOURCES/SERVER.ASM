@@ -1338,6 +1338,8 @@ LowStack  endp                          ;can't use EXIT, don't want a RET!
           mov       bx,0FFFFh           ;get maximum reserve
           calldos   ALLOC               ;find out how much we have (in BX)
           mov       cs:TPASize,bx       ;save size
+          or        bx,bx               ;any memory to reserve?
+           jz       RTExit              ;no, nothing to reserve
           calldos   ALLOC,TALLOC        ;and reserve that
           mov       cs:TPAAddr,ax       ;save address
           ;
