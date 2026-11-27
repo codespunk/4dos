@@ -6529,14 +6529,18 @@ Int2EF    proc      far                 ;full INT 2E handler module
           test      LMFlags,DOS3        ;DOS 3 or above?
            jz       I2EErr              ;if not go on
           calldos   GETPSP              ;get caller's PSP
-          mov       cx,bx               ;copy it
+          push      bx                  ;save caller's PSP before switching
           mov       bx,PSPSeg           ;get our PSP segment
           calldos   SETPSP              ;set the current PSP
+          test      LMFlags,SWAPENAB    ;is swapping enabled?
+           jz       I2ESaveState        ;if not keep resident server address
           mov       bx,0FFFFh           ;get max paragraphs
           calldos   ALLOC               ;get size of largest block
+          cmp       bx,TPLenP           ;room for the transient portion?
+           jb       I2ERestorePSP       ;if not, reject the callback
           mov       dx,bx               ;copy size of largest block
           calldos   ALLOC               ;allocate that block
-           jc       I2EErr              ;if can't get it complain
+           jc       I2ERestorePSP       ;restore PSP if allocation fails
           sub       dx,TPLenP           ;get length without transient
           add       dx,ax               ;add base to get new server address
           mov       ServSeg,dx          ;save it for swappers
@@ -6545,13 +6549,17 @@ Int2EF    proc      far                 ;full INT 2E handler module
           ;
           ;         Next 3 items are restored by server
           ;
-          push      cx                  ;save caller's PSP 
+          ; Caller's PSP is already saved on the stack.
+I2ESaveState:
           push      wptr LMFlags        ;save flags (2 bytes)
           push      wptr ExecSig        ;save EXEC signature (and next byte)
           ;
+          test      LMFlags,SWAPENAB    ;is swapping enabled?
+           jz       I2EEnterServer      ;if not server is already resident
           pushm     di,si               ;save command address
           call      wptr SwapInP        ;swap server back in
           popm      si,di               ;restore address to DI:SI for server
+I2EEnterServer:
           loadseg   es,cs               ;set ES for server
           mov       ax,cs:ServSeg       ;get server segment
           mov       ds,ax               ;set DS for server
@@ -6559,6 +6567,9 @@ Int2EF    proc      far                 ;full INT 2E handler module
           push      cs:ServI2E          ;get offset of INT 2E routine
           retf                          ;and go to it (never returns)
           ;
+I2ERestorePSP:
+          pop       bx                  ;get caller's PSP
+          calldos   SETPSP              ;restore it before returning
 I2EErr:   mov       ax,0FFFFh           ;set error value
           iret                          ;and return
           ;
