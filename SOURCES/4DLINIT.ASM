@@ -176,6 +176,7 @@ ASM_TEXT  ends
 _DATA     segment   para public 'DATA'  ;transient portion data segment
           extrn     _END:far, _edata:far, _STKHQQ:far
           extrn     _gszCmdline:far, _gszFindDesc:far
+          extrn     _gpIniptr:word
 _DATA     ends
           ;
 STACK     segment   para stack 'STACK'  ;transient portion stack segment
@@ -5152,7 +5153,8 @@ HookDone: pop       ds                  ;restore DS
           ; Figure out the length of the data segment including the INI file
           ; data, and any local alias / function / history storage
           ;
-          mov       ax,offset DGROUP:_end  ;get end of data segment
+          mov       ax,INIOffP          ;get aligned INI paragraph offset
+          shln      ax,4,cl             ;convert to DGROUP byte offset
           push      ax                  ;save it for copying INI data
           mov       bx,ExtraPar         ;get length of INI, alias, history
           shln      bx,4,cl             ;make it bytes
@@ -5198,6 +5200,7 @@ ITCSPEnd:	xor	al,al		;get 0
           ;
           mov       si,offset IFData    ;point to source
           pop       di                  ;restore INI data address
+          mov       es:[_gpIniptr],di    ;publish actual INI byte offset
           push      di                  ;save again alias / history pointer
                                         ;  storage below
           mov       ax,di               ;copy to AX
