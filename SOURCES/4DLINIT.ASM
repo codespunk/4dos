@@ -6282,18 +6282,33 @@ DDevExit: popm      es,di,si,cx,bx      ;restore registers
           ;
           mov       dx,LMHandle         ;get EMS handle
           callems   SMAP                ;save the current mapping state
-          xor       al,al               ;clear physical page number
-          xor       bx,bx               ;clear logical page number
-          callems   MAP,EMSMPI          ;map the first page
-          mov       cx,ServLenW         ;get word count for transfer
+          mov       cx,ServLenW         ;get total word count for transfer
           mov       es,ServSeg          ;set destination segment
+          xor       bx,bx               ;start at logical page zero
+          xor       di,di               ;destination starts at zero
+          cld                           ;moves go forward
+          jcxz      EMSRest             ;nothing to copy
+          ;
+EMSPage:  xor       al,al               ;use physical page zero each time
+          callems   MAP,EMSMPI          ;map next logical page
+          push      cx                  ;save remaining word count
+          cmp       cx,2000h            ;one 16K page = 2000h words
+          jbe       EMSCopy             ;last page may be partial
+          mov       cx,2000h            ;limit copy to mapped page
+EMSCopy:  push      ds                  ;keep resident data segment
           mov       ds,FrameSeg         ;set source
           assume    ds:nothing          ;fix assumes
-          xor       si,si               ;source starts at zero
-          xor       di,di               ;same for destination
-          cld                           ;moves go forward
-          rep       movsw               ;copy the block
-          callems   RMAP                ;restore the mapping state
+          xor       si,si               ;source starts at zero each page
+          rep       movsw               ;copy this page, advancing DI
+          pop       ds                  ;restore resident data segment
+          assume    ds:@curseg          ;fix assumes
+          pop       cx                  ;get remaining word count
+          sub       cx,2000h            ;account for one page
+          jbe       EMSRest             ;finished if full or partial page
+          inc       bx                  ;advance logical page number
+          jmp       short EMSPage       ;continue with next page
+          ;
+EMSRest:  callems   RMAP                ;restore the mapping state
           ;
           exit                          ;and return
           ;

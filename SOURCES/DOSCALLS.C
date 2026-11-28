@@ -188,7 +188,8 @@ int _near installable_cmd( char *line )
 		char len;
 		char name[16];
 	} cmd;
-	int rval, SwapFlag = 0;
+	int rval;
+	volatile int SwapFlag = 0;
 	jmp_buf saved_env;
 
 	if (( line[1] == ':' ) || (*line == '\\' ))
@@ -249,8 +250,15 @@ _asm {
 		int (_far _pascal *lpNoAppend)( void ) = noappend;
 
 		// turn off swapping & free low DOS memory
-		SwapFlag = ServCtrl( SERV_SWAP, -1 );
-		ServCtrl( SERV_SWAP, 0 );
+		if ( gpIniptr->SwapMeth != SWAP_NONE ) {
+			if ( ServCtrl( SERV_SWAP, -1 ) ) {
+				if ( ServCtrl( SERV_SWAP, 0 ) != 0 ) {
+					rval = ERROR_EXIT;
+					goto restore_env;
+				}
+				SwapFlag = 1;
+			}
+		}
 		ServCtrl( SERV_TPA, 0 );
 
 _asm {
@@ -283,12 +291,13 @@ _asm {
 		}
 	}
 
+restore_env:
 	// restore the old "env"
 	memmove( cv.env, saved_env, sizeof(saved_env) );
 
-	// reenable swapping?
-	if ( SwapFlag )
-		ServCtrl( SERV_SWAP, 1 );
+	// reenable swapping only if we disabled it successfully
+	if ( SwapFlag && ( ServCtrl( SERV_SWAP, 1 ) != 0 ))
+		rval = ERROR_EXIT;
 
 	return rval;
 }
