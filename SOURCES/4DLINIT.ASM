@@ -211,7 +211,7 @@ INSERVER  equ       0                   ;show we are not in server
 DBLevel   db        -1                  ;debug message level
 InitFlg2  db        0                   ;initialization flags byte 2 (byte 1,
                                         ;  InitFlag, is in SERVDATA.ASM)
-InitMemSwap db      SWAPNONE            ;owned EMS or XMS allocation
+InitMemSwap db      SWAPNONE            ;locally owned swap resource
 CurDrive  db        ?                   ;current disk drive
 CurDisk   db        ?                   ;current disk number (0 = A, ...)
 MaxDrive  db        ?                   ;maximum drive allowed (0 = A, ...)
@@ -3602,6 +3602,7 @@ USRenameFail:
           mov       dx,offset TempPath  ;delete only the owned source
 ;;LFN
           calldos   DELETE
+           jc       DiskDeleteErr       ;cannot release owned source
           jmp       DiskNoFile          ;never delete the failed destination
           ;
           ; Disk swapping using standard name (4DOSSWAP.nnn)
@@ -3652,6 +3653,8 @@ DoReOpen: mov       al,dl               ;copy access bits
           calldos   OPEN                ;re-open the file
            jc       DiskDelete          ;owned file, but no open handle
           mov       bx,ax               ;copy handle
+          mov       LMHandle,bx         ;record our opened file handle
+          mov       InitMemSwap,SWAPDISK ;record local ownership
           calldos   GETTIME             ;get current time in CX / DX
           mov       wptr DSigTime,dx    ;store seconds / hundredths
           mov       wptr DSigTime+2,cx  ;store hour / minute
@@ -3659,6 +3662,8 @@ DoReOpen: mov       al,dl               ;copy access bits
           mov       dx,offset DiskSig   ;point to signature
           mov       cx,SIGBYTES         ;get signature length
           calldos   WRITE,SWWRIT        ;write the block to disk
+          cmp       ax,SIGBYTES         ;was the entire signature written?
+          errne     SWWRIT              ;abort and release our swap file
           ;
           ; Disk swapping is all set up, tell the user
           ;
@@ -3670,14 +3675,26 @@ DoReOpen: mov       al,dl               ;copy access bits
           ; Disk file operation failed -- try to close and delete file
           ;
 DiskFail: calldos   CLOSE               ;try to close our open handle
+           jc       DiskCloseErr        ;cannot release owned handle
+          bclr      Flags,DISKOPEN      ;our handle is closed
 DiskDelete:
           mov       dx,offset SwapPath  ;point to owned file name
 ;;LFN
-          calldos   DELETE              ;try to delete it, ignore errors
+          calldos   DELETE              ;delete our file
+           jc       DiskDeleteErr       ;cannot release owned file
 DiskNoFile:
           bclr      Flags,DISKOPEN      ;no local swap file is open
           mov       SwapPLen,0          ;no swap path
           stc                           ;show error
+          jmp       short DiskExit      ;try another swap device
+          ;
+DiskCloseErr:
+          mov       dx,E_DSKCLS+8000h    ;fatal swap file close failure
+          jmp       ErrHandl            ;do not retry uncertain cleanup
+          ;
+DiskDeleteErr:
+          mov       dx,E_DSKDEL+8000h    ;fatal swap file delete failure
+          jmp       ErrHandl            ;do not retry uncertain cleanup
           ;
 DiskExit: exit                          ;all done
           ;
@@ -5489,14 +5506,16 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           test      LMFlags,FATALERR    ;loader state unsafe?
            jnz      fatal               ;do not release uncertain resources
           ;
-          ; Release only the swap memory allocated by this loader.  The
+          ; Release only the swap resources owned by this loader.  The
           ; inherited code and data handles belong to an earlier shell.
           ;
           mov       dx,LMHandle         ;get local swap handle
           cmp       InitMemSwap,SWAPEMS ;own an EMS allocation?
            je       ErrFreeEMS          ;if so release it
+          cmp       InitMemSwap,SWAPDISK ;own a disk swap file?
+           je       ErrFreeDisk         ;if so close and delete it
           cmp       InitMemSwap,SWAPXMS ;own an XMS allocation?
-           jne      ErrRelShell         ;if not skip memory cleanup
+           jne      ErrRelShell         ;if not skip swap cleanup
           callxms   DALOC,XMSDrvr       ;release local XMS handle
           or        ax,ax               ;did the release succeed?
            jnz      ErrSwapFreed        ;yes, continue cleanup
@@ -5512,8 +5531,24 @@ ErrFreeFail:
           mov       sp,bp               ;discard the previous error buffer
           jmp       ErrHandl            ;report fatal error, skip cleanup
           ;
+ErrFreeDisk:
+          mov       bx,dx               ;get our local file handle
+          calldos   CLOSE               ;close only our file
+           jc       ErrDiskClose        ;do not delete if close failed
+          bclr      Flags,DISKOPEN      ;our handle is closed
+          mov       dx,offset SwapPath  ;get our owned swap filename
+;;LFN
+          calldos   DELETE              ;delete only our file
+           jnc      ErrSwapFreed        ;yes, continue cleanup
+          mov       dx,E_DSKDEL+8000h    ;fatal swap file delete failure
+          jmp       short ErrFreeFail
+          ;
+ErrDiskClose:
+          mov       dx,E_DSKCLS+8000h    ;fatal swap file close failure
+          jmp       short ErrFreeFail
+          ;
 ErrSwapFreed:
-          mov       InitMemSwap,SWAPNONE ;no longer own swap memory
+          mov       InitMemSwap,SWAPNONE ;no longer own swap resources
           bclr      LMFlags,SWAPENAB    ;swapping storage no longer exists
           ;
 ErrRelShell:

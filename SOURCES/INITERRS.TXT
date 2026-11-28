@@ -63,6 +63,8 @@ InitErrs  label     byte
 #E_RELOC Address table missing
 #E_RLSIZE Invalid relocation table size
 #E_INHERIT Inherited data source unavailable
+#E_DSKCLS Swap file close failed
+#E_DSKDEL Swap file delete failed
         ;
           db        0FFh, 0             ;end of table
           ;
