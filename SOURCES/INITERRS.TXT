@@ -45,10 +45,14 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_XMSMOV XMS move failed
 #E_EMSMAP EMS mapping failed
 #E_EMSMSR EMS map save or restore failed
 #E_SWSEEK Swap file seek failed
 #E_SWWRIT Swap file write failed
+#E_SWREAD Swap file read failed
+#E_SWDBAD Disk swap file corrupted
+#E_NOHDL  No file handle available
           ;
 #E_DSIZE Cannot reduce data segment size
 #E_MEMDA Memory deallocation error
@@ -56,6 +60,7 @@ InitErrs  label     byte
 #E_MODFIT Insufficient load space
 #E_RELOC Address table missing
 #E_RLSIZE Invalid relocation table size
+#E_INHERIT Inherited data source unavailable
         ;
           db        0FFh, 0             ;end of table
           ;

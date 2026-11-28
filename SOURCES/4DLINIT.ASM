@@ -1503,9 +1503,13 @@ F4Exit:   exit                          ;all done
           add       bx,dx               ;make absolute segment offset
           mov       dx,OldShell.DSwpILen  ;get data length in bytes
           call      Inherit             ;inherit the INI file data
-           jc       IIClear             ;if we can't, go clear it instead
+          pop       si                  ;restore offset, preserving carry
+           jnc      IIValidate          ;check inherited data on success
+          or        ax,ax               ;was a source device available?
+           jnz      ErrHdlAX            ;abort on actual transfer failure
+          jmp       short IINoCopy      ;no source, disable inheritance
           ;
-          pop       si                  ;get source pointer
+IIValidate:
           cmp       [si].I_Sig,INISIG   ;test signature
            jne      IINoCopy		;if match fails don't copy the data
 	cmp	[si].I_Build,INTVER	;also check internal build number
@@ -5330,6 +5334,11 @@ AHInhGo:  mov       ax,[bx].AHPSeg      ;get previous relative segment
           mov       bx,es               ;set BX to dest seg
           call      Inherit             ;inherit the data
           popm      dx,bx               ;get back data pointer, final seg
+           jnc      AHDone              ;publish the data only on success
+          or        ax,ax               ;was a source device available?
+           jnz      ErrHdlAX            ;abort on actual transfer failure
+          mov       ax,E_INHERIT        ;missing source for local data
+          jmp       ErrHdlAX            ;do not publish incomplete data
           ;
 AHDone:   mov       [bx].AHSeg,dx       ;save final segment
           mov       ax,dx               ;copy to AX
@@ -5348,7 +5357,9 @@ AHDone:   mov       [bx].AHSeg,dx       ;save final segment
           ;              paragraph)
           ;
           ; On exit:
-          ;         AX, BX, CX, DX, SI, DI destroyed
+          ;         Carry clear on success; set on failure
+          ;         AX = swap error if carry set, 0 if no source device
+          ;         BX, CX, DX, SI, DI destroyed
           ;         Other registers and interrupt state unchanged
           ;         Moves local data to transient portion
           ;
@@ -5361,7 +5372,8 @@ AHDone:   mov       [bx].AHSeg,dx       ;save final segment
            jnz      InhMem              ;if so handle that
           cmp       OldShell.DSwpType,0FFh  ;is data swap type set?
            jne      InhGo               ;if so go on
-          stc                           ;oops, didn't work
+          xor       ax,ax               ;no source device
+          stc                           ;report unavailable data
           jmp       short InhExit       ;so exit
           ;
 InhGo:    add       ax,0Fh              ;add for roundoff
@@ -5389,7 +5401,7 @@ InhGo:    add       ax,0Fh              ;add for roundoff
           mov       ax,offset SERV_TEXT:SwapOne  ;get call offset
           push      ax                  ;stack for call
           call      TranCall            ;swap block in
-          jmp       short InhOK         ;and exit
+          jmp       short InhExit       ;preserve the swap result
           ;
 InhMem:   mov       es,bx               ;copy destination segment
           xor       di,di               ;destination offset is 0
