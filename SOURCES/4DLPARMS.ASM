@@ -320,7 +320,9 @@ E_SHEXIT  equ       'ST'                ;TS - terminated inactive shell
 E_PRTERM  equ       'TP'                ;PT - illegal process termination
 E_SWPMEM  equ       'MS'                ;SM - no memory for swap in
 E_XMSIN   equ       'IX'                ;XI - XMS swap in error
-E_EMSMPI  equ       'ME'                ;EI - EMS map for swap in error
+E_EMSMPI  equ       'ME'                ;EM - EMS map for swap in error
+E_EMSMSI  equ       'SE'                ;ES - EMS mapping save failed
+E_EMSMRI  equ       'RE'                ;ER - EMS mapping restore failed
 E_DSKINT  equ       'ID'                ;DI - disk swap in integrity error
 E_DSKSK   equ       'SD'                ;DS - disk swap in seek error
 E_DSKRD   equ       'RD'                ;DR - disk swap in read error

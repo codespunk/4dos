@@ -6285,6 +6285,8 @@ DDevExit: popm      es,di,si,cx,bx      ;restore registers
           ;
           mov       dx,LMHandle         ;get EMS handle
           callems   SMAP                ;save the current mapping state
+          or        ah,ah               ;did the save succeed?
+           jnz      EMSSaveErr          ;do not restore an old map
           mov       cx,ServLenW         ;get total word count for transfer
           mov       es,ServSeg          ;set destination segment
           xor       bx,bx               ;start at logical page zero
@@ -6293,7 +6295,9 @@ DDevExit: popm      es,di,si,cx,bx      ;restore registers
           jcxz      EMSRest             ;nothing to copy
           ;
 EMSPage:  xor       al,al               ;use physical page zero each time
-          callems   MAP,EMSMPI          ;map next logical page
+          callems   MAP                 ;map next logical page
+          or        ah,ah               ;did the mapping succeed?
+           jnz      EMSPageErr          ;restore saved map on failure
           push      cx                  ;save remaining word count
           cmp       cx,2000h            ;one 16K page = 2000h words
           jbe       EMSCopy             ;last page may be partial
@@ -6311,7 +6315,27 @@ EMSCopy:  push      ds                  ;keep resident data segment
           inc       bx                  ;advance logical page number
           jmp       short EMSPage       ;continue with next page
           ;
-EMSRest:  callems   RMAP                ;restore the mapping state
+EMSPageErr:
+          ; Restore the saved map before reporting an incomplete transfer.
+          mov       dx,LMHandle         ;get EMS handle
+          callems   RMAP                ;restore the mapping state
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;mapping state is uncertain
+          bset      LMFlags,FATALERR    ;server image is incomplete
+          error     EMSMPI              ;report the page mapping error
+          ;
+EMSSaveErr:
+          bset      LMFlags,FATALERR    ;server image is not restored
+          error     EMSMSI              ;report mapping save failure
+          ;
+EMSRestoreErr:
+          bset      LMFlags,FATALERR    ;mapping state is uncertain
+          error     EMSMRI              ;report mapping restore failure
+          ;
+EMSRest:  mov       dx,LMHandle         ;get EMS handle
+          callems   RMAP                ;restore the mapping state
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;do not enter the server
           ;
           exit                          ;and return
           ;
