@@ -1343,13 +1343,18 @@ LowStack  endp                          ;can't use EXIT, don't want a RET!
           entry     ResTPA,noframe,,local   ;reserve the TPA
           test      Flags,TPARES        ;should it be reserved?
            jz       RTExit              ;if not go on
+          cmp       cs:TPASize,0        ;already reserved?
+           jne      RTExit              ;keep the existing reservation
           mov       bx,0FFFFh           ;get maximum reserve
           calldos   ALLOC               ;find out how much we have (in BX)
-          mov       cs:TPASize,bx       ;save size
           or        bx,bx               ;any memory to reserve?
            jz       RTExit              ;no, nothing to reserve
-          calldos   ALLOC,TALLOC        ;and reserve that
+          push      bx                  ;save requested size
+          calldos   ALLOC               ;reserve that block
+          pop       bx                  ;restore requested size
+          errc      TALLOC              ;do not publish failed allocation
           mov       cs:TPAAddr,ax       ;save address
+          mov       cs:TPASize,bx       ;save size only after success
           ;
 RTExit:   exit                          ;all done
           ;
@@ -1360,7 +1365,7 @@ RTExit:   exit                          ;all done
           ;         DS = server data segment
           ;
           ; On exit:
-          ;         AX destroyed
+          ;         AX destroyed; does not return if DOS rejects release
           ;         Other registers and interrupt state unchanged
           ;
           entry     FreeTPA,noframe,,local   ;free the TPA
@@ -1375,7 +1380,9 @@ RTExit:   exit                          ;all done
           mov       es,cs:TPAAddr       ;get TPA address
           calldos   FREE                ;free transient memory
           pop       es                  ;restore ES
+          errc      TFREE               ;stop without recursive cleanup
           mov       cs:TPASize,0        ;clear size
+          mov       cs:TPAAddr,0        ;clear address
           ;
 FTExit:   exit                          ;all done
           ;
@@ -1738,6 +1745,11 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           mov       dx,offset CrLf      ;point to cr/lf
           ;
 ErrWrite: calldos   MESSAGE             ;output swap error or cr/lf
+          ;
+          pop       ax                  ;inspect saved error code
+          push      ax                  ;keep it for normal cleanup
+          cmp       ax,E_TFREE          ;memory ownership is uncertain?
+           je       Fatal               ;do not call FreeTPA again
           ;
           mov       es,LMSeg            ;get loader segment
           mov       bl,es:ShellNum      ;get shell number
