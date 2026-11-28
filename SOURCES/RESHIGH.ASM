@@ -62,7 +62,9 @@
           ;
           ; On exit:
           ;         Carry flag clear if block reserved, otherwise set
-          ;         AX = Reserved block segment address
+          ;         AX = reserved block segment address if carry clear
+          ;              0 on failure with no outstanding allocation
+          ;              FFFFh on failure with incomplete cleanup
           ;         BX = adjusted length
           ;         All other registers and interrupt state unchanged
           ;
@@ -88,7 +90,7 @@ ResTry:   mov       cx,ax               ;copy caller's size
           sub       bx,1                ;leave space for MCB chain
           jbe       nohole              ;if nothing left forget hole
           calldos   ALLOC               ;reserve hole
-          jc        return              ;if can't do it get outta here
+          jc        retfail             ;if can't do it get outta here
           mov       es,ax               ;copy hole segment
           mov       bx,cx               ;copy user's size
           calldos   ALLOC               ;allocate user's block, get seg in AX
@@ -96,7 +98,7 @@ ResTry:   mov       cx,ax               ;copy caller's size
           push      ax                  ;save high block address
           calldos   FREE                ;now free hole
           pop       ax                  ;restore high block address
-          jc        return              ;complain if we can't free hole
+          jc        holefail            ;release high block if possible
           mov       bx,reqseg           ;get segment request
           or        bx,bx               ;anything there?
           je        retOK               ;if not we're done
@@ -112,22 +114,35 @@ ResTry:   mov       cx,ax               ;copy caller's size
           calldos   FREE                ;free original block
           pop       ax                  ;restore adjusted size
           jnc       restry              ;go on if no error
-          jmp       short return        ;holler if error
+          jmp       short retleak       ;original block still allocated
           ;
 adjust:   mov       es,ax               ;copy block address
           mov       bx,ressize          ;get caller's size
-          calldos   REALLOC             ;adjust block size, then drop through
+          push      ax                  ;preserve allocated segment
+          calldos   REALLOC             ;adjust block size
+          pop       ax                  ;restore allocated segment
+          jc        retfree             ;release block if resize fails
           ;
 retOK:    clc                           ;all OK - clear carry
           jmp       short return        ;and return
           ;
-retfree:  calldos   FREE                ;second reserve failed - free hole
+holefail: mov       es,ax               ;release high block if possible
+          calldos   FREE                ;hole release already failed
+          jmp       short retleak       ;cannot guarantee complete cleanup
+          ;
+retfree:  calldos   FREE                ;release temporary allocation
+          jc        retleak             ;cleanup failed
+retfail:  xor       ax,ax               ;no outstanding allocation
+          stc                           ;show error
+          jmp       short return        ;and return
+          ;
+retleak:  mov       ax,0FFFFh           ;incomplete allocation cleanup
           stc                           ;show error
           jmp       short return        ;and return
           ;
 nohole:   mov       bx,cx               ;just reserve user memory, not hole
           calldos   ALLOC               ;allocate user's block, get seg in AX
-                                        ;return with carry from ALLOC
+          jc        retfail             ;normalize clean failure
           ;
 return:   popm      es,cx               ;restore registers
           mov       bx,ressize          ;get reserved size
