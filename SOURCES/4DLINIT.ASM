@@ -5425,10 +5425,11 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           sub       sp,ERRMAX           ;make frame for output buffer
           loadseg   ds,cs               ;set ds
           assume    ds:@curseg          ;fix assumes
-          push      dx                  ;save error code
+          pushm     dx,dx               ;save error code twice
           mov       dx,offset InitEMsg  ;get error message offset
           calldos   MESSAGE             ;display message
           pop       ax                  ;get back major error code
+          and       ah,7Fh              ;isolate error number
           ;
           mov       si,offset InitErrs  ;get error table address
           loadseg   es,ss               ;destination is on stack
@@ -5444,6 +5445,9 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           pop       ds                  ;restore local segment
           mov       dx,offset CrLf      ;point to cr/lf
           calldos   MESSAGE             ;output that
+          pop       dx                  ;get original error code
+          test      dh,80h              ;fatal error flag set?
+           jnz      fatal               ;do not attempt normal cleanup
           ;
           ; Release shell number
           ;

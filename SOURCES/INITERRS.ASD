@@ -43,39 +43,47 @@ InitErrs  label     byte
           ; Translation table
           ;
           db        0DEh
-          db        065h, 020h, 068h, 069h, 06Ch, 072h, 061h, 06Eh
-          db        063h, 067h, 073h, 064h, 074h, 070h, 053h, 062h
-          db        066h, 075h, 077h, 055h, 06Fh, 041h, 046h, 047h
-          db        04Ch, 052h, 05Ah, 06Bh, 07Ah, 081h
+          db        065h, 020h, 06Eh, 06Ch, 072h, 068h, 069h, 061h
+          db        067h, 073h, 063h, 064h, 074h, 070h, 053h, 062h
+          db        066h, 075h, 077h, 06Fh, 045h, 04Dh, 055h, 05Ah
+          db        06Bh, 02Fh, 041h, 046h, 047h, 04Ch
           ;
+          ; #E_EMSMAP EMS Zuordnungsfehler
+          db        E_EMSMAP, 01Ch, 000h, 016h, 017h, 010h, 031h, 091h, 031h
+          db        056h, 0D4h, 013h, 04Ah, 0B1h, 022h, 075h, 026h
+          ; #E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden
+          db        E_EMSMSR, 03Ah, 000h, 016h, 017h, 010h, 030h, 045h, 091h
+          db        012h, 055h, 023h, 01Ah, 094h, 043h, 048h, 0C7h
+          db        0E3h, 0A2h, 0BFh, 028h, 0C7h, 026h, 0E1h, 0BAh
+          db        025h, 02Bh, 024h, 031h, 042h, 06Dh, 024h
           ; #E_SWSEEK Swapdatei suchen fehlgeschlagen
-          db        E_SWSEEK, 023h, 000h, 010h, 014h, 08Fh, 0D8h, 0E2h, 053h
-          db        0C1h, 03Ah, 042h, 093h, 012h, 024h, 06Bh, 02Ch
-          db        0A4h, 068h, 0B2h, 090h
+          db        E_SWSEEK, 023h, 000h, 010h, 014h, 09Fh, 0D9h, 0E2h, 083h
+          db        0B1h, 03Ch, 072h, 043h, 012h, 027h, 05Ah, 02Bh
+          db        0C7h, 059h, 0A2h, 040h
           ; #E_SWWRIT Swapdatei speichern fehlgeschlagen
-          db        E_SWWRIT, 025h, 000h, 010h, 014h, 08Fh, 0D8h, 0E2h, 053h
-          db        0CFh, 025h, 0A4h, 027h, 093h, 012h, 024h, 06Bh
-          db        02Ch, 0A4h, 068h, 0B2h, 090h
+          db        E_SWWRIT, 025h, 000h, 010h, 014h, 09Fh, 0D9h, 0E2h, 083h
+          db        0BFh, 028h, 0C7h, 026h, 043h, 012h, 027h, 05Ah
+          db        02Bh, 0C7h, 059h, 0A2h, 040h
           ;
           ; #E_MEMDA Fehler bei der Speicherfreigabe
-          db        E_MEMDA, 024h, 000h, 018h, 024h, 062h, 073h, 011h, 025h
-          db        03Dh, 027h, 031h, 00Fh, 025h, 0A4h, 027h, 012h
-          db        072h, 05Bh, 081h, 012h
+          db        E_MEMDA, 024h, 000h, 01Dh, 027h, 052h, 063h, 011h, 028h
+          db        03Dh, 026h, 031h, 00Fh, 028h, 0C7h, 026h, 012h
+          db        062h, 08Ah, 091h, 012h
           ; #E_NOMEM Zu wenig Speicher
-          db        E_NOMEM, 015h, 000h, 01Ch, 013h, 031h, 042h, 095h, 0B3h
-          db        010h, 0F2h, 05Ah, 042h, 070h
+          db        E_NOMEM, 015h, 000h, 019h, 013h, 031h, 042h, 048h, 0A3h
+          db        010h, 0F2h, 08Ch, 072h, 060h
           ; #E_MODFIT Unzureichender Ladespeicher
-          db        E_MODFIT, 01Fh, 000h, 015h, 091h, 0E1h, 037h, 025h, 0A4h
-          db        029h, 0D2h, 073h, 01Ah, 08Dh, 02Ch, 0F2h, 05Ah
-          db        042h, 070h
+          db        E_MODFIT, 020h, 000h, 018h, 040h, 0A7h, 013h, 062h, 08Ch
+          db        072h, 04Dh, 026h, 031h, 0F9h, 0D2h, 0BFh, 028h
+          db        0C7h, 026h
           ; #E_RELOC Adressentabelle fehlt
-          db        E_RELOC, 018h, 000h, 017h, 0D7h, 02Ch, 0C2h, 09Eh, 081h
-          db        012h, 066h, 023h, 012h, 024h, 06Eh
+          db        E_RELOC, 018h, 000h, 01Ch, 0D6h, 02Bh, 0B2h, 04Eh, 091h
+          db        012h, 055h, 023h, 012h, 027h, 05Eh
           ; #E_RLSIZE UngÅltige Grî·e der Relokationstabelle
-          db        E_RLSIZE, 032h, 000h, 015h, 09Bh, 01Fh, 06Eh, 05Bh, 023h
-          db        019h, 070h, 049h, 001h, 0E2h, 03Dh, 027h, 031h
-          db        0B2h, 061h, 061h, 0D8h, 0E5h, 016h, 09Ch, 0E8h
-          db        011h, 026h, 062h
+          db        E_RLSIZE, 034h, 000h, 018h, 04Ah, 001h, 085h, 0E8h, 0A2h
+          db        031h, 0E6h, 004h, 090h, 01Eh, 023h, 0D2h, 063h
+          db        002h, 052h, 051h, 051h, 0A9h, 0E8h, 015h, 04Bh
+          db        0E9h, 011h, 025h, 052h
         ;
           db        0FFh, 0             ;end of table
           ;

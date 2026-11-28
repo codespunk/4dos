@@ -45,6 +45,8 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_EMSMAP EMS mapping failed
+#E_EMSMSR EMS map save or restore failed
 #E_SWSEEK Swap file seek failed
 #E_SWWRIT Swap file write failed
           ;

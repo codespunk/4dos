@@ -54,7 +54,7 @@ ServErrs  label     byte
 #E_DAXMS  XMS Freigabe fehlgeschlagen   
 #E_XMSMOV XMS Verlagerung fehlgeschlagen
 #E_EMSMAP EMS Zuordnungsfehler    
-          ;#E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden
+#E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden
 #E_SWSEEK Swapdatei suchen fehlgeschlagen
 #E_SWWRIT Swapdatei speichern fehlgeschlagen 
 #E_SWREAD Swapdatei lesen fehlgeschlagen 

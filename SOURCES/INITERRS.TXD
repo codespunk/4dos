@@ -44,6 +44,8 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_EMSMAP EMS Zuordnungsfehler
+#E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden
 #E_SWSEEK Swapdatei suchen fehlgeschlagen
 #E_SWWRIT Swapdatei speichern fehlgeschlagen
           ;
