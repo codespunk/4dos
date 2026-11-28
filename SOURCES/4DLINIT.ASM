@@ -374,7 +374,7 @@ AEBreak   db        " ", TAB, " ", 0    ;break table for /A and /P parsing
                                         ;  (second space is replaced by '"'
                                         ;  when appropriate)
           ;
-SwDeflt   db        "EMS XMS "          ;try XMS, then EMS
+SwDeflt   db        "EMS XMS "          ;try EMS, then XMS
 SwDefD    db        " :\", 0            ;then disk (drive gets filled in, or
                                         ;  set to null on floppy systems to
                                         ;  terminate string at this point)
