@@ -44,14 +44,23 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_DAEMS  EMS Freigabe fehlgeschlagen
+#E_DAXMS  XMS Freigabe fehlgeschlagen
+#E_XMSMOV XMS Verlagerung fehlgeschlagen
+#E_EMSMAP EMS Zuordnungsfehler
+#E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden
 #E_SWSEEK Swapdatei suchen fehlgeschlagen
 #E_SWWRIT Swapdatei speichern fehlgeschlagen
+#E_SWREAD Swapdatei lesen fehlgeschlagen
+#E_SWDBAD Disk Swapdatei zerstîrt
+#E_NOHDL  Datei Handling nicht verfÅgbar
           ;
 #E_MEMDA Fehler bei der Speicherfreigabe
 #E_NOMEM Zu wenig Speicher
 #E_MODFIT Unzureichender Ladespeicher
 #E_RELOC Adressentabelle fehlt         
 #E_RLSIZE UngÅltige Grî·e der Relokationstabelle
+#E_INHERIT Quelle der vererbten Daten fehlt
         ;
           db        0FFh, 0             ;end of table
           ;

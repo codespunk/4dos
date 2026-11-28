@@ -145,7 +145,9 @@ SOGo:     mov       bl,[di].SwapType    ;get swap type
           mov       dx,[di].SwapHdl     ;get handle
           mov       LocHdl,dx           ;save it here
           callems   SMAP                ;save the current mapping state
-          mov       ax,[si].SwapOff     ;get XMS offset in paragraphs
+          or        ah,ah               ;did the save succeed?
+           jnz      EMSSaveErr          ;do not restore an old map
+          mov       ax,[si].SwapOff     ;get EMS offset in paragraphs
           mov       CurOff,ax           ;save as current offset
           mov       ax,[si].SwapLen     ;get length of block
           mov       CurLen,ax           ;save as current (remaining) length
@@ -221,11 +223,27 @@ EMSGo:    mov       ds,ax               ;set source segment
           ;
 EMSDone:  mov       dx,LocHdl           ;get EMS handle
           callems   RMAP                ;restore the mapping state
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;mapping state is uncertain
           xor       ax,ax               ;show swap performed, clear carry
           jmp       short EMSExit       ;all done
           ;
-MapErr:   mov       ax,E_EMSMAP         ;get error code
-          stc                           ;show error
+MapErr:   pop       ax                  ;discard saved physical page
+          pop       ax                  ;discard transfer paragraph count
+          mov       dx,LocHdl           ;get EMS handle
+          callems   RMAP                ;restore the successfully saved map
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;report restore failure instead
+          mov       ax,E_EMSMAP         ;get page mapping error code
+          jmp       short EMSFail        ;return failure
+          ;
+EMSSaveErr:
+          mov       ax,E_EMSMSR         ;save failed, no map was changed
+          jmp       short EMSFail        ;return failure
+          ;
+EMSRestoreErr:
+          mov       ax,E_EMSMSR+8000h   ;restore failed, state uncertain
+EMSFail:  stc                           ;show error
           ;
 EMSExit:  exit                          ;all done
           ;
