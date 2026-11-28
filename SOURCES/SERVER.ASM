@@ -794,8 +794,12 @@ SCSwap:   test      Flags,TRANSHI       ;are we loaded high?
           mov       dx,cs               ;get local segment
           mov       bx,dx               ;copy as requested segment
           call      ResHigh             ;reserve transient 4DOS memory
-           jc       SwResErr            ;if error complain
-          cmp       ax,dx               ;does it match?
+           jnc      SwResCheck          ;check successful reservation
+          cmp       ax,0FFFFh           ;incomplete allocation cleanup?
+          erre      TFREE               ;stop if ownership is uncertain
+          jmp       short SwResErr      ;ordinary allocation failure
+          ;
+SwResCheck: cmp     ax,dx               ;does it match?
            je       SwOffOK             ;if so commit the new state
           push      es                  ;save loader segment
           mov       es,ax               ;release misplaced reservation
