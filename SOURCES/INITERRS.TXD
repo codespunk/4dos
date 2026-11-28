@@ -44,6 +44,8 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_DAEMS  EMS Freigabe fehlgeschlagen
+#E_DAXMS  XMS Freigabe fehlgeschlagen
 #E_XMSMOV XMS Verlagerung fehlgeschlagen
 #E_EMSMAP EMS Zuordnungsfehler
 #E_EMSMSR EMS Tabelle kann nicht gespeichert/gelesen werden

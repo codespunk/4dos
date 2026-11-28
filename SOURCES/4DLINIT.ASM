@@ -211,6 +211,7 @@ INSERVER  equ       0                   ;show we are not in server
 DBLevel   db        -1                  ;debug message level
 InitFlg2  db        0                   ;initialization flags byte 2 (byte 1,
                                         ;  InitFlag, is in SERVDATA.ASM)
+InitMemSwap db      SWAPNONE            ;owned EMS or XMS allocation
 CurDrive  db        ?                   ;current disk drive
 CurDisk   db        ?                   ;current disk number (0 = A, ...)
 MaxDrive  db        ?                   ;maximum drive allowed (0 = A, ...)
@@ -3410,6 +3411,8 @@ SwapExit: exit                          ;all done
           callxms   ALLOC,XMSDrvr       ;allocate pages
           or        ax,ax               ;any error?
            jz       NoXMS               ;if so don't use XMS
+          mov       LMHandle,dx         ;record our allocated handle
+          mov       InitMemSwap,SWAPXMS ;record local ownership
           Status    2,'XU'              ;(Using XMS swap)
           bset      ModXMS.ModFlags,LOADME  ;load XMS swap in code
           ;
@@ -3470,6 +3473,8 @@ SwXExit:  exit                          ;all done
           callems   ALLOC               ;allocate pages
           or        ah,ah               ;any error?
            jnz      EMSErr              ;if so don't use EMS
+          mov       LMHandle,dx         ;record our allocated handle
+          mov       InitMemSwap,SWAPEMS ;record local ownership
           Status    2,'EU'              ;(Using EMS swap)
           loadseg   es,ds               ;set ES for shell number store
           mov       si,offset EMSName   ;point to handle name buffer
@@ -5460,6 +5465,37 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           pop       dx                  ;get original error code
           test      dh,80h              ;fatal error flag set?
            jnz      fatal               ;do not attempt normal cleanup
+          test      LMFlags,FATALERR    ;loader state unsafe?
+           jnz      fatal               ;do not release uncertain resources
+          ;
+          ; Release only the swap memory allocated by this loader.  The
+          ; inherited code and data handles belong to an earlier shell.
+          ;
+          mov       dx,LMHandle         ;get local swap handle
+          cmp       InitMemSwap,SWAPEMS ;own an EMS allocation?
+           je       ErrFreeEMS          ;if so release it
+          cmp       InitMemSwap,SWAPXMS ;own an XMS allocation?
+           jne      ErrRelShell         ;if not skip memory cleanup
+          callxms   DALOC,XMSDrvr       ;release local XMS handle
+          or        ax,ax               ;did the release succeed?
+           jnz      ErrSwapFreed        ;yes, continue cleanup
+          mov       dx,E_DAXMS+8000h    ;fatal XMS deallocation error
+          jmp       short ErrFreeFail   ;report without retrying
+          ;
+ErrFreeEMS: callems DALOC               ;release local EMS handle
+          or        ah,ah               ;did the release succeed?
+           jz       ErrSwapFreed        ;yes, continue cleanup
+          mov       dx,E_DAEMS+8000h    ;fatal EMS deallocation error
+          ;
+ErrFreeFail:
+          mov       sp,bp               ;discard the previous error buffer
+          jmp       ErrHandl            ;report fatal error, skip cleanup
+          ;
+ErrSwapFreed:
+          mov       InitMemSwap,SWAPNONE ;no longer own swap memory
+          bclr      LMFlags,SWAPENAB    ;swapping storage no longer exists
+          ;
+ErrRelShell:
           ;
           ; Release shell number
           ;

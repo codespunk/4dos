@@ -45,6 +45,8 @@ InitErrs  label     byte
           ;
 ##
           ;
+#E_DAEMS  EMS deallocation failed
+#E_DAXMS  XMS deallocation failed
 #E_XMSMOV XMS move failed
 #E_EMSMAP EMS mapping failed
 #E_EMSMSR EMS map save or restore failed
