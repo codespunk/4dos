@@ -440,6 +440,8 @@ void _pascal ServTtl( char _far *, int );
 #define SERV_SIGNAL 7
 #define SERV_SIG_DISABLE (-2)	// disable signal code
 #define SERV_SIG_ENABLE (-3)	// enable signal code
+#define SERV_SIG_DEFER (-4)	// defer enabled signals
+#define SERV_SIG_RESUME (-5)	// resume and report pending break
 
 
 // DOSCALLS.C
@@ -457,6 +459,8 @@ void _far * PASCAL ReallocMem( void _far *, unsigned long );
 extern char _far * PASCAL AllocHigh( char _far *, unsigned long );
 void _cdecl HoldSignals( void );
 void _cdecl EnableSignals( void );
+int _cdecl DeferSignals( void );
+void _cdecl ResumeSignals( int );
 ULONG _near GetMs( void );
 void  _fastcall SysWait( unsigned long, int );
 int _far _pascal GetSBDSPver( void );

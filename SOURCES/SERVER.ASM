@@ -920,8 +920,17 @@ SCUReg:	mov	bx,ax		;copy caller's pointer address
           ;         so they can't conflict with actual function pointers).
           ;         If the actual value is below SIGENAB it is saved as the
           ;         new function pointer and signals are left DISabled.
+          ;         SIGDEFER returns the previous state and defers breaks
+          ;         only if enabled.  SIGRESUME restores enabled signals
+          ;         from a deferred state and returns 1 if a break was
+          ;         pending, 0 otherwise.  The caller resumes only if
+          ;         SIGDEFER returned SIGENAB (the outermost scope).
           ;
 SCSignal: cli                           ;hold interrupts
+          cmp       ax,SIGDEFER         ;begin deferred signal scope?
+           je       SigDeferGo
+          cmp       ax,SIGRESUME        ;end deferred signal scope?
+           je       SigResumeGo
           cmp       ax,SIGENAB          ;check function ptr against enable
            jae      SigSet              ;if enable or disable go save it
           mov       cs:SigAdr,ax        ;not enable or disable -- must be new
@@ -929,7 +938,24 @@ SCSignal: cli                           ;hold interrupts
           mov       ax,SIGDISAB         ;set up for disable
           ;
 SigSet:   mov       cs:SigState,ax      ;set new signal state
-          sti                           ;allow interrupts
+          jmp       short SigDone
+          ;
+SigDeferGo: mov       ax,cs:SigState      ;return previous state
+          cmp       ax,SIGENAB          ;were signals enabled?
+           jne      SigDone             ;preserve disabled/deferred state
+          mov       cs:SigState,SIGDEFER ;defer without losing breaks
+          jmp       short SigDone
+          ;
+SigResumeGo: xor      ax,ax               ;assume no pending break
+          cmp       cs:SigState,SIGPEND ;is there a pending break?
+           jne      SigResumeCheck
+          inc       ax                  ;report pending break
+          jmp       short SigEnable
+SigResumeCheck:
+          cmp       cs:SigState,SIGDEFER ;are signals deferred?
+           jne      SigDone             ;otherwise leave state unchanged
+SigEnable: mov      cs:SigState,SIGENAB ;resume normal signal handling
+SigDone:  sti                           ;allow interrupts
           ;
           ;
 SCDone:   mov       ds,SaveDS           ;restore DS
@@ -1581,9 +1607,11 @@ SFBreak   equ       $                   ;here to fake a ^Break
 I23Break: push      ds                  ;save ds
           loadseg   ds,cs               ;set ds
           cmp       SigState,SIGENAB    ;check pointer value
-          je        ProcBrk             ;if low enough, must be handler addr
-                                        ;otherwise no handler so ignore ^C
-          pop       ds                  ;restore ds
+          je        ProcBrk             ;deliver enabled break immediately
+          cmp       SigState,SIGDEFER   ;are breaks deferred?
+           jne      BrkReturn           ;disabled or already pending
+          mov       SigState,SIGPEND    ;remember break, let DOS finish
+BrkReturn: pop      ds                  ;restore ds
           clc                           ;show no error
           sti                           ;leave interrrupts enabled
           retf                          ;return to DOS
