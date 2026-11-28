@@ -1776,6 +1776,12 @@ ErrWrite: calldos   MESSAGE             ;output swap error or cr/lf
           push      ax                  ;keep it for normal cleanup
           cmp       ax,E_TFREE          ;memory ownership is uncertain?
            je       Fatal               ;do not call FreeTPA again
+          cmp       ax,E_EMSMAP         ;incomplete EMS transfer?
+           je       Fatal               ;do not resume or release memory
+          cmp       ax,E_EMSMSR         ;EMS context save failed?
+           je       Fatal               ;do not release a saved context
+          cmp       ax,E_EMSMSR+8000h   ;EMS context restore failed?
+           je       Fatal               ;do not release uncertain mappings
           ;
           mov       es,LMSeg            ;get loader segment
           mov       bl,es:ShellNum      ;get shell number

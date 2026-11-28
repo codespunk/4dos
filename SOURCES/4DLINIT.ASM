@@ -211,6 +211,7 @@ INSERVER  equ       0                   ;show we are not in server
 DBLevel   db        -1                  ;debug message level
 InitFlg2  db        0                   ;initialization flags byte 2 (byte 1,
                                         ;  InitFlag, is in SERVDATA.ASM)
+InitMemSwap db      SWAPNONE            ;owned EMS or XMS allocation
 CurDrive  db        ?                   ;current disk drive
 CurDisk   db        ?                   ;current disk number (0 = A, ...)
 MaxDrive  db        ?                   ;maximum drive allowed (0 = A, ...)
@@ -374,7 +375,7 @@ AEBreak   db        " ", TAB, " ", 0    ;break table for /A and /P parsing
                                         ;  (second space is replaced by '"'
                                         ;  when appropriate)
           ;
-SwDeflt   db        "EMS XMS "          ;try XMS, then EMS
+SwDeflt   db        "EMS XMS "          ;try EMS, then XMS
 SwDefD    db        " :\", 0            ;then disk (drive gets filled in, or
                                         ;  set to null on floppy systems to
                                         ;  terminate string at this point)
@@ -1503,9 +1504,13 @@ F4Exit:   exit                          ;all done
           add       bx,dx               ;make absolute segment offset
           mov       dx,OldShell.DSwpILen  ;get data length in bytes
           call      Inherit             ;inherit the INI file data
-           jc       IIClear             ;if we can't, go clear it instead
+          pop       si                  ;restore offset, preserving carry
+           jnc      IIValidate          ;check inherited data on success
+          or        ax,ax               ;was a source device available?
+           jnz      ErrHdlAX            ;abort on actual transfer failure
+          jmp       short IINoCopy      ;no source, disable inheritance
           ;
-          pop       si                  ;get source pointer
+IIValidate:
           cmp       [si].I_Sig,INISIG   ;test signature
            jne      IINoCopy		;if match fails don't copy the data
 	cmp	[si].I_Build,INTVER	;also check internal build number
@@ -3406,6 +3411,8 @@ SwapExit: exit                          ;all done
           callxms   ALLOC,XMSDrvr       ;allocate pages
           or        ax,ax               ;any error?
            jz       NoXMS               ;if so don't use XMS
+          mov       LMHandle,dx         ;record our allocated handle
+          mov       InitMemSwap,SWAPXMS ;record local ownership
           Status    2,'XU'              ;(Using XMS swap)
           bset      ModXMS.ModFlags,LOADME  ;load XMS swap in code
           ;
@@ -3466,6 +3473,8 @@ SwXExit:  exit                          ;all done
           callems   ALLOC               ;allocate pages
           or        ah,ah               ;any error?
            jnz      EMSErr              ;if so don't use EMS
+          mov       LMHandle,dx         ;record our allocated handle
+          mov       InitMemSwap,SWAPEMS ;record local ownership
           Status    2,'EU'              ;(Using EMS swap)
           loadseg   es,ds               ;set ES for shell number store
           mov       si,offset EMSName   ;point to handle name buffer
@@ -5330,6 +5339,11 @@ AHInhGo:  mov       ax,[bx].AHPSeg      ;get previous relative segment
           mov       bx,es               ;set BX to dest seg
           call      Inherit             ;inherit the data
           popm      dx,bx               ;get back data pointer, final seg
+           jnc      AHDone              ;publish the data only on success
+          or        ax,ax               ;was a source device available?
+           jnz      ErrHdlAX            ;abort on actual transfer failure
+          mov       ax,E_INHERIT        ;missing source for local data
+          jmp       ErrHdlAX            ;do not publish incomplete data
           ;
 AHDone:   mov       [bx].AHSeg,dx       ;save final segment
           mov       ax,dx               ;copy to AX
@@ -5348,7 +5362,9 @@ AHDone:   mov       [bx].AHSeg,dx       ;save final segment
           ;              paragraph)
           ;
           ; On exit:
-          ;         AX, BX, CX, DX, SI, DI destroyed
+          ;         Carry clear on success; set on failure
+          ;         AX = swap error if carry set, 0 if no source device
+          ;         BX, CX, DX, SI, DI destroyed
           ;         Other registers and interrupt state unchanged
           ;         Moves local data to transient portion
           ;
@@ -5361,7 +5377,8 @@ AHDone:   mov       [bx].AHSeg,dx       ;save final segment
            jnz      InhMem              ;if so handle that
           cmp       OldShell.DSwpType,0FFh  ;is data swap type set?
            jne      InhGo               ;if so go on
-          stc                           ;oops, didn't work
+          xor       ax,ax               ;no source device
+          stc                           ;report unavailable data
           jmp       short InhExit       ;so exit
           ;
 InhGo:    add       ax,0Fh              ;add for roundoff
@@ -5389,7 +5406,7 @@ InhGo:    add       ax,0Fh              ;add for roundoff
           mov       ax,offset SERV_TEXT:SwapOne  ;get call offset
           push      ax                  ;stack for call
           call      TranCall            ;swap block in
-          jmp       short InhOK         ;and exit
+          jmp       short InhExit       ;preserve the swap result
           ;
 InhMem:   mov       es,bx               ;copy destination segment
           xor       di,di               ;destination offset is 0
@@ -5425,10 +5442,11 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           sub       sp,ERRMAX           ;make frame for output buffer
           loadseg   ds,cs               ;set ds
           assume    ds:@curseg          ;fix assumes
-          push      dx                  ;save error code
+          pushm     dx,dx               ;save error code twice
           mov       dx,offset InitEMsg  ;get error message offset
           calldos   MESSAGE             ;display message
           pop       ax                  ;get back major error code
+          and       ah,7Fh              ;isolate error number
           ;
           mov       si,offset InitErrs  ;get error table address
           loadseg   es,ss               ;destination is on stack
@@ -5444,6 +5462,40 @@ ErrHandl: mov       bp,sp               ;save frame pointer
           pop       ds                  ;restore local segment
           mov       dx,offset CrLf      ;point to cr/lf
           calldos   MESSAGE             ;output that
+          pop       dx                  ;get original error code
+          test      dh,80h              ;fatal error flag set?
+           jnz      fatal               ;do not attempt normal cleanup
+          test      LMFlags,FATALERR    ;loader state unsafe?
+           jnz      fatal               ;do not release uncertain resources
+          ;
+          ; Release only the swap memory allocated by this loader.  The
+          ; inherited code and data handles belong to an earlier shell.
+          ;
+          mov       dx,LMHandle         ;get local swap handle
+          cmp       InitMemSwap,SWAPEMS ;own an EMS allocation?
+           je       ErrFreeEMS          ;if so release it
+          cmp       InitMemSwap,SWAPXMS ;own an XMS allocation?
+           jne      ErrRelShell         ;if not skip memory cleanup
+          callxms   DALOC,XMSDrvr       ;release local XMS handle
+          or        ax,ax               ;did the release succeed?
+           jnz      ErrSwapFreed        ;yes, continue cleanup
+          mov       dx,E_DAXMS+8000h    ;fatal XMS deallocation error
+          jmp       short ErrFreeFail   ;report without retrying
+          ;
+ErrFreeEMS: callems DALOC               ;release local EMS handle
+          or        ah,ah               ;did the release succeed?
+           jz       ErrSwapFreed        ;yes, continue cleanup
+          mov       dx,E_DAEMS+8000h    ;fatal EMS deallocation error
+          ;
+ErrFreeFail:
+          mov       sp,bp               ;discard the previous error buffer
+          jmp       ErrHandl            ;report fatal error, skip cleanup
+          ;
+ErrSwapFreed:
+          mov       InitMemSwap,SWAPNONE ;no longer own swap memory
+          bclr      LMFlags,SWAPENAB    ;swapping storage no longer exists
+          ;
+ErrRelShell:
           ;
           ; Release shell number
           ;
@@ -6285,6 +6337,8 @@ DDevExit: popm      es,di,si,cx,bx      ;restore registers
           ;
           mov       dx,LMHandle         ;get EMS handle
           callems   SMAP                ;save the current mapping state
+          or        ah,ah               ;did the save succeed?
+           jnz      EMSSaveErr          ;do not restore an old map
           mov       cx,ServLenW         ;get total word count for transfer
           mov       es,ServSeg          ;set destination segment
           xor       bx,bx               ;start at logical page zero
@@ -6293,7 +6347,9 @@ DDevExit: popm      es,di,si,cx,bx      ;restore registers
           jcxz      EMSRest             ;nothing to copy
           ;
 EMSPage:  xor       al,al               ;use physical page zero each time
-          callems   MAP,EMSMPI          ;map next logical page
+          callems   MAP                 ;map next logical page
+          or        ah,ah               ;did the mapping succeed?
+           jnz      EMSPageErr          ;restore saved map on failure
           push      cx                  ;save remaining word count
           cmp       cx,2000h            ;one 16K page = 2000h words
           jbe       EMSCopy             ;last page may be partial
@@ -6311,7 +6367,27 @@ EMSCopy:  push      ds                  ;keep resident data segment
           inc       bx                  ;advance logical page number
           jmp       short EMSPage       ;continue with next page
           ;
-EMSRest:  callems   RMAP                ;restore the mapping state
+EMSPageErr:
+          ; Restore the saved map before reporting an incomplete transfer.
+          mov       dx,LMHandle         ;get EMS handle
+          callems   RMAP                ;restore the mapping state
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;mapping state is uncertain
+          bset      LMFlags,FATALERR    ;server image is incomplete
+          error     EMSMPI              ;report the page mapping error
+          ;
+EMSSaveErr:
+          bset      LMFlags,FATALERR    ;server image is not restored
+          error     EMSMSI              ;report mapping save failure
+          ;
+EMSRestoreErr:
+          bset      LMFlags,FATALERR    ;mapping state is uncertain
+          error     EMSMRI              ;report mapping restore failure
+          ;
+EMSRest:  mov       dx,LMHandle         ;get EMS handle
+          callems   RMAP                ;restore the mapping state
+          or        ah,ah               ;did the restore succeed?
+           jnz      EMSRestoreErr       ;do not enter the server
           ;
           exit                          ;and return
           ;
