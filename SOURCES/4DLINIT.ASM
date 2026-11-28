@@ -3519,7 +3519,7 @@ SwEExit:  exit                          ;all done
           assume    ds:@curseg          ;fix assumes
           ;
           varW      USwCount            ;unique name retry count
-          varW      SavPEnd             ;saved end of path location
+          varW      SavPEnd             ;last character of unique basename
           varend
           ;
           ; Disk swap -- set up swap file
@@ -3551,11 +3551,10 @@ USLoop:   mov       bptr [di],0         ;terminate path after backslash
           dec       bptr USwCount       ;if not count retries
            jnz      USLoop              ;loop and try again
           ;
-FailJmp:  jmp       DiskFail            ;if error we can't use disk
+          jmp       DiskNoFile          ;no file was created
           ;
-UniqOpen: mov       SavPend,di          ;save end of path if we have to retry
-          call      SetDSLen            ;set file length and close it
-           jc       FailJmp             ;if error we can't use disk
+UniqOpen: call      SetDSLen            ;set file length and close it
+           jc       DiskFail            ;close and delete our file
           mov       si,offset SwapPath  ;get unique name address
           call      STR_LEN             ;get name length
           pushm     cx,si               ;save length and address
@@ -3568,23 +3567,42 @@ UniqOpen: mov       SavPend,di          ;save end of path if we have to retry
           mov       di,dx               ;copy for string copy
           rep       movsb               ;copy old name to temp buffer
           popm      di,cx               ;get back swap path addr and length
-          push      di                  ;save address again
-          add       di,cx               ;skip to end
+          add       di,cx               ;skip to end of basename
+          dec       di                  ;point to last basename character
+          mov       SavPEnd,di          ;save for rename retries
+          inc       di                  ;point to extension
           mov       si,offset USwExt    ;point to extension
           mov       cx,USwExtL          ;get its length
           rep       movsb               ;move extension into place
-          pop       di                  ;get back original address
+          stocb     0                   ;terminate the destination name
+          mov       bptr USwCount,URETRIES  ;set rename retry count
+          ;
+          ; Keep the original temporary file and try distinct destinations.
+          ; DOS may generate the same temporary name again if we delete it.
+          ;
+USRename: mov       dx,offset TempPath  ;owned source file
+          mov       di,offset SwapPath  ;candidate destination
 ;;LFN
           calldos   RENAME              ;try to rename to .4SW extension
            jnc      DSReOpen            ;if it worked go on
-          mov       dx,offset TempPath  ;get original name address
-;;LFN
-          calldos   DELETE              ;rename failed, delete original
           dec       bptr USwCount       ;count retries
-           jz       FailJmp             ;if out of retries, give up
-          mov       dx,offset SwapPath  ;point to swap path again
-          mov       di,SavPEnd          ;get saved end of path for retry
-          jmp       short USLoop        ;loop and try again
+           jz       USRenameFail        ;if out of retries, give up
+          mov       bx,SavPEnd          ;point to last basename character
+          mov       al,[bx]             ;get current character
+          inc       al                  ;advance within A through Z
+          cmp       al,'B'              ;was current character A through Y?
+           jb       USWrap              ;if not wrap to A
+          cmp       al,'Z'
+           jbe      USNext              ;if in range, use it
+USWrap:   mov       al,'A'              ;start or wrap the sequence
+USNext:   mov       [bx],al             ;try a different destination
+          jmp       short USRename      ;retry without recreating source
+          ;
+USRenameFail:
+          mov       dx,offset TempPath  ;delete only the owned source
+;;LFN
+          calldos   DELETE
+          jmp       DiskNoFile          ;never delete the failed destination
           ;
           ; Disk swapping using standard name (4DOSSWAP.nnn)
           ;
@@ -3612,7 +3630,7 @@ PutExt:   dec       di                  ;point to last byte of extension
                                              ;  system file
 ;;LFN
           calldos   CREATE              ;try to create or truncate it
-           jc       DiskFail            ;if error we can't use disk
+           jc       DiskNoFile          ;no file was created
           ;
           Status    2,'DL'              ;(Set swap file length)
           call      SetDSLen            ;set the file to the right length
@@ -3632,7 +3650,7 @@ DoReOpen: mov       al,dl               ;copy access bits
           mov       dx,offset SwapPath  ;point to name
 ;;LFN
           calldos   OPEN                ;re-open the file
-           jc       DiskFail            ;if error we can't use disk
+           jc       DiskDelete          ;owned file, but no open handle
           mov       bx,ax               ;copy handle
           calldos   GETTIME             ;get current time in CX / DX
           mov       wptr DSigTime,dx    ;store seconds / hundredths
@@ -3651,10 +3669,13 @@ DoReOpen: mov       al,dl               ;copy access bits
           ;
           ; Disk file operation failed -- try to close and delete file
           ;
-DiskFail: calldos   CLOSE               ;try to close it, ignore errors
-          mov       dx,offset SwapPath  ;point to name
+DiskFail: calldos   CLOSE               ;try to close our open handle
+DiskDelete:
+          mov       dx,offset SwapPath  ;point to owned file name
 ;;LFN
           calldos   DELETE              ;try to delete it, ignore errors
+DiskNoFile:
+          bclr      Flags,DISKOPEN      ;no local swap file is open
           mov       SwapPLen,0          ;no swap path
           stc                           ;show error
           ;
