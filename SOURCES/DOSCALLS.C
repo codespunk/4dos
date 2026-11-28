@@ -96,7 +96,7 @@ int _near installable_cmd( char *line )
 		char len;
 		char name[16];
 	} cmd;
-	int rval;
+	int rval, SignalState;
 	volatile int SwapFlag = 0;
 	jmp_buf saved_env;
 
@@ -157,17 +157,21 @@ _asm {
 	else {
 		int (_far _pascal *lpNoAppend)( void ) = noappend;
 
+		// Defer breaks until swapping and TPA changes are complete.
+		SignalState = DeferSignals();
 		// turn off swapping & free low DOS memory
 		if ( gpIniptr->SwapMeth != SWAP_NONE ) {
 			if ( ServCtrl( SERV_SWAP, -1 ) ) {
 				if ( ServCtrl( SERV_SWAP, 0 ) != 0 ) {
 					rval = ERROR_EXIT;
+					ResumeSignals( SignalState );
 					goto restore_env;
 				}
 				SwapFlag = 1;
 			}
 		}
 		ServCtrl( SERV_TPA, 0 );
+		ResumeSignals( SignalState );
 
 _asm {
 		push	ds
@@ -200,6 +204,8 @@ _asm {
 	}
 
 restore_env:
+	// Keep the caller's recovery path from interrupting restoration.
+	SignalState = DeferSignals();
 	// restore the old "env"
 	memmove( cv.env, saved_env, sizeof(saved_env) );
 
@@ -207,6 +213,7 @@ restore_env:
 	if ( SwapFlag && ( ServCtrl( SERV_SWAP, 1 ) != 0 ))
 		rval = ERROR_EXIT;
 
+	ResumeSignals( SignalState );
 	return rval;
 }
 
@@ -707,7 +714,7 @@ void _far * PASCAL ReallocMem( void _far *fptr, unsigned long ulSize )
 }
 
 
-#pragma alloc_text( _TEXT, HoldSignals, EnableSignals )
+#pragma alloc_text( _TEXT, HoldSignals, EnableSignals, DeferSignals, ResumeSignals )
 
 // temporarily disable the ^C / ^BREAK / KILLPROCESS signals
 void HoldSignals( void )
@@ -721,6 +728,25 @@ void EnableSignals( void )
 {
 	ServCtrl( SERV_SIGNAL, (int)(long)BreakHandler );
 	ServCtrl( SERV_SIGNAL, SERV_SIG_ENABLE );
+}
+
+
+// Defer enabled signals without discarding a break.  Nested scopes and
+// callers with signals already disabled leave the original state intact.
+int DeferSignals( void )
+{
+	return ServCtrl( SERV_SIGNAL, SERV_SIG_DEFER );
+}
+
+
+// Only the outermost deferred scope resumes and delivers a pending break.
+// The caller must have completed its transaction and restored its jump
+// environment before calling this function.
+void ResumeSignals( int SignalState )
+{
+	if (( SignalState == SERV_SIG_ENABLE ) &&
+	    ( ServCtrl( SERV_SIGNAL, SERV_SIG_RESUME ) != 0 ))
+		BreakHandler();
 }
 
 

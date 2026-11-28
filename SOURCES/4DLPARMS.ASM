@@ -40,6 +40,9 @@
           ;
 SIGDISAB  equ       0FFFEh              ;signal disable pointer value
 SIGENAB   equ       0FFFDh              ;signal enable pointer value
+SIGDEFER  equ       0FFFCh              ;defer enabled signals
+SIGRESUME equ       0FFFBh              ;resume and report pending break
+SIGPEND   equ       0FFFAh              ;deferred break pending
           ;
           ;
 CTRLCVAL  equ       -3                  ;error return value for ^C

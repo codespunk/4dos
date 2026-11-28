@@ -1323,6 +1323,7 @@ _asm {
 int _far Swap_Cmd( char *pszCmdLine )
 {
 	register int nSwapState;
+	int SignalState, rval;
 
 	if (gpIniptr->SwapMeth == SWAP_NONE)	// check if resident mode
 		return (error(ERROR_4DOS_NOT_SWAPPING_MODE,NULL));
@@ -1336,8 +1337,11 @@ int _far Swap_Cmd( char *pszCmdLine )
 		if (( nSwapState = OffOn( pszCmdLine )) == -1 )
 			return ( Usage( SWAPPING_USAGE ));
 
-		// reset the 4DOS swap server
-		if ( ServCtrl( SERV_SWAP, nSwapState ) != 0 )
+		// Complete the memory transaction before delivering a break.
+		SignalState = DeferSignals();
+		rval = ServCtrl( SERV_SWAP, nSwapState );
+		ResumeSignals( SignalState );
+		if ( rval != 0 )
 			return ERROR_EXIT;
 	}
 
