@@ -805,6 +805,7 @@ SwResCheck: cmp     ax,dx               ;does it match?
           mov       es,ax               ;release misplaced reservation
           calldos   FREE
           pop       es                  ;restore loader segment
+          errc      TFREE               ;stop if cleanup failed
           jmp       short SwResErr      ;keep swapping enabled
           ;
 SwOffOK:  bclr      es:LMFlags,SWAPENAB ;turn off after reservation
