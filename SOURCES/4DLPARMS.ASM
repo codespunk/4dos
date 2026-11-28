@@ -358,4 +358,6 @@ E_MODFIT  equ       24                  ;loadable modules don't fit
 E_RELOC   equ       25                  ;can't find relocation table
 E_RLSIZE  equ       26                  ;invalid relocation table size
 E_INHERIT equ       27                  ;inherited data source unavailable
+E_DSKCLS  equ       28                  ;cannot close owned swap file
+E_DSKDEL  equ       29                  ;cannot delete owned swap file
 

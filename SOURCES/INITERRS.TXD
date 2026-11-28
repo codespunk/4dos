@@ -61,6 +61,8 @@ InitErrs  label     byte
 #E_RELOC Adressentabelle fehlt         
 #E_RLSIZE UngÅltige Grî·e der Relokationstabelle
 #E_INHERIT Quelle der vererbten Daten fehlt
+#E_DSKCLS Swapdatei schlie·en fehlgeschlagen
+#E_DSKDEL Swapdatei lîschen fehlgeschlagen
         ;
           db        0FFh, 0             ;end of table
           ;
